@@ -3,6 +3,8 @@
 import Image from "next/image"
 import { GitlabIcon as GitHub, Linkedin, Mail, ArrowDown } from "lucide-react"
 import { motion } from "framer-motion"
+import { useStore } from "@/lib/store"
+import UserRegister from "@/pages/components/signup"
 
 const CodePattern = () => (
   <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
@@ -22,8 +24,9 @@ const CodePattern = () => (
 )
 
 export default function Hero() {
+  const user = useStore(state => state?.user)
   return (
-    <section
+    user?.username ? <section
       id="hero"
       className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
     >
@@ -121,7 +124,6 @@ export default function Hero() {
       >
         <div className="w-1 h-12 bg-gradient-to-b from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 rounded-full animate-pulse"></div>
       </motion.div>
-    </section>
+    </section> : <UserRegister />
   )
 }
-
