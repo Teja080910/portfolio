@@ -2,19 +2,25 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { useStore } from "@/lib/store"
 
 const sections = [
-  { id: "hero", label: "Home" },
+  { id: "user", label: "Home" },
   { id: "about", label: "About" },
   { id: "experience", label: "Experience" },
   { id: "skills", label: "Skills" },
-  { id: "services", label: "Services" },
+  { id: "projects", label: "Projects" },
+  { id: "certificate", label: "Certiticates" },
   { id: "education", label: "Education" },
   { id: "contact", label: "Contact" },
 ]
 
 export default function FloatingNav() {
-  const [activeSection, setActiveSection] = useState("hero")
+  const [activeSection, setActiveSection] = useState("user")
+
+  const store:any = useStore()
+
+  const showSections = sections.filter(section => store[`${section.id}`]?.id && section)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -44,7 +50,7 @@ export default function FloatingNav() {
       transition={{ delay: 1 }}
     >
       <div className="flex flex-col gap-3">
-        {sections.map(({ id, label }) => (
+        {showSections?.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
@@ -55,11 +61,10 @@ export default function FloatingNav() {
               {label}
             </span>
             <div
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                activeSection === id
-                  ? "bg-blue-600 dark:bg-blue-400 scale-125"
-                  : "bg-gray-400 dark:bg-gray-600 hover:scale-110"
-              }`}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${activeSection === id
+                ? "bg-blue-600 dark:bg-blue-400 scale-125"
+                : "bg-gray-400 dark:bg-gray-600 hover:scale-110"
+                }`}
             />
           </button>
         ))}
@@ -67,4 +72,3 @@ export default function FloatingNav() {
     </motion.div>
   )
 }
-

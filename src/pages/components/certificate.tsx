@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Code, Layout, Server, Smartphone } from "lucide-react"
 import Image from "next/image"
 
-export default function Services() {
+export default function Certificate() {
   const services = [
     {
       icon: <Layout className="w-12 h-12 text-blue-500" />,
@@ -31,7 +31,7 @@ export default function Services() {
 
   return (
     <section
-      id="services"
+      id="certificate"
       className="py-20 bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-blue-900 transition-colors duration-300 overflow-hidden relative"
     >
       <div className="container mx-auto px-6 relative z-10">

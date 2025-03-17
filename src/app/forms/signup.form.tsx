@@ -9,44 +9,38 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { Check, ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Lock } from "lucide-react"
-
-// This would be your server action
-const registerUserAction = async (formData: FormData) => {
-  // Simulate server delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  // Validation logic would go here
-  const errors: Record<string, string> = {}
-
-  // Return success or errors
-  return {
-    success: Object.keys(errors).length === 0,
-    errors: Object.keys(errors).length > 0 ? errors : null,
-  }
-}
+import { IUser } from "@/lib/interfaces"
+import { useState, useEffect } from "react"
+import { useRegister } from "@refinedev/core"
+import { useRouter } from "next/router"
+import { useStore } from "@/lib/store"
+import Link from "next/link"
+import { supabase } from "@/lib/db"
 
 const roleOptions = ["Developer", "Designer", "Product Manager", "Marketing", "Sales", "Customer Support", "Other"]
 
 export function UserRegistrationForm({ className }: React.ComponentProps<typeof Card>) {
-  const [step, setStep] = React.useState(1)
-  const [pending, setPending] = React.useState(false)
-  const [success, setSuccess] = React.useState(false)
-  const [formData, setFormData] = React.useState({
-    firstName: "",
-    lastName: "",
+  const [step, setStep] = useState(1)
+  const [pending, setPending] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [formData, setFormData] = useState<IUser>({
+    firstname: "",
+    lastname: "",
+    username: "",
     email: "",
     phone: "",
     role: "",
     password: "",
-    confirmPassword: "",
+    confirmpassword: "",
   })
-  const [errors, setErrors] = React.useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const router = useRouter()
+  const { user } = useStore()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-
-    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev }
@@ -58,8 +52,6 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
 
   const handleRoleChange = (value: string) => {
     setFormData((prev) => ({ ...prev, role: value }))
-
-    // Clear error when user selects
     if (errors.role) {
       setErrors((prev) => {
         const newErrors = { ...prev }
@@ -72,13 +64,12 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required"
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required"
+    if (!formData.firstname.trim()) newErrors.firstname = "First name is required"
+    if (!formData.lastname.trim()) newErrors.lastname = "Last name is required"
     if (!formData.email.trim()) newErrors.email = "Email is required"
     else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Invalid email format"
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required"
     if (!formData.role) newErrors.role = "Please select a role"
-    console.log(newErrors)
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -89,15 +80,14 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
     if (!formData.password) newErrors.password = "Password is required"
     else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters"
 
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password"
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match"
+    if (!formData.confirmpassword) newErrors.confirmpassword = "Please confirm your password"
+    else if (formData.password !== formData.confirmpassword) newErrors.confirmpassword = "Passwords do not match"
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleNextStep = () => {
-    console.log("Step 1")
     if (validateStep1()) {
       setStep(2)
     }
@@ -109,24 +99,19 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!validateStep2()) return
-
     setPending(true)
-
     try {
-      // Convert form data to FormData object
-      const submitData = new FormData()
-      Object.entries(formData).forEach(([key, value]) => {
-        submitData.append(key, value)
-      })
-
-      const result = await registerUserAction(submitData)
-
-      if (result.success) {
+      const { confirmpassword, ...changeFormData } = formData
+      const { data, error } = await supabase.from('profiles').insert(changeFormData).single()
+      console.log("User registered successfully:", data)
+      if (data) {
         setSuccess(true)
-      } else if (result.errors) {
-        setErrors(result.errors)
+        setTimeout(() => {
+          router.push('/sign-in')
+        }, 1000);
+      } else {
+        console.log(error)
       }
     } catch (error) {
       console.error("Form submission error:", error)
@@ -227,66 +212,66 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
                   <div className="grid grid-cols-2 gap-4">
                     <motion.div
                       className="group/field space-y-2"
-                      data-invalid={!!errors.firstName}
+                      data-invalid={!!errors.firstname}
                       custom={0}
                       variants={inputVariants}
                       initial="initial"
                       animate="animate"
                     >
                       <Label
-                        htmlFor="firstName"
+                        htmlFor="firstname"
                         className="group-data-[invalid=true]/field:text-destructive flex items-center gap-2"
                       >
                         <User className="size-3.5" />
                         First Name <span aria-hidden="true">*</span>
                       </Label>
                       <Input
-                        id="firstName"
-                        name="firstName"
+                        id="firstname"
+                        name="firstname"
                         placeholder="John"
                         className="group-data-[invalid=true]/field:border-destructive focus-visible:group-data-[invalid=true]/field:ring-destructive transition-all duration-300 focus:shadow-[0_0_0_2px_rgba(var(--primary-500),0.3)]"
                         disabled={pending}
-                        aria-invalid={!!errors.firstName}
-                        aria-errormessage="error-firstName"
-                        value={formData.firstName}
+                        aria-invalid={!!errors.firstname}
+                        aria-errormessage="error-firstname"
+                        value={formData.firstname}
                         onChange={handleChange}
                       />
-                      {errors.firstName && (
-                        <p id="error-firstName" className="text-destructive text-sm text-white">
-                          {errors.firstName}
+                      {errors.firstname && (
+                        <p id="error-firstname" className="text-destructive text-sm text-white">
+                          {errors.firstname}
                         </p>
                       )}
                     </motion.div>
 
                     <motion.div
                       className="group/field space-y-2"
-                      data-invalid={!!errors.lastName}
+                      data-invalid={!!errors.lastname}
                       custom={1}
                       variants={inputVariants}
                       initial="initial"
                       animate="animate"
                     >
                       <Label
-                        htmlFor="lastName"
+                        htmlFor="lastname"
                         className="group-data-[invalid=true]/field:text-destructive flex items-center gap-2"
                       >
                         <User className="size-3.5" />
                         Last Name <span aria-hidden="true">*</span>
                       </Label>
                       <Input
-                        id="lastName"
-                        name="lastName"
+                        id="lastname"
+                        name="lastname"
                         placeholder="Doe"
                         className="group-data-[invalid=true]/field:border-destructive focus-visible:group-data-[invalid=true]/field:ring-destructive transition-all duration-300 focus:shadow-[0_0_0_2px_rgba(var(--primary-500),0.3)]"
                         disabled={pending}
-                        aria-invalid={!!errors.lastName}
-                        aria-errormessage="error-lastName"
-                        value={formData.lastName}
+                        aria-invalid={!!errors.lastname}
+                        aria-errormessage="error-lastname"
+                        value={formData.lastname}
                         onChange={handleChange}
                       />
-                      {errors.lastName && (
-                        <p id="error-lastName" className="text-destructive text-sm">
-                          {errors.lastName}
+                      {errors.lastname && (
+                        <p id="error-lastname" className="text-destructive text-sm">
+                          {errors.lastname}
                         </p>
                       )}
                     </motion.div>
@@ -311,7 +296,7 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="john.doe@gmail.com"
+                      placeholder="yourname@gmail.com"
                       className="group-data-[invalid=true]/field:border-destructive focus-visible:group-data-[invalid=true]/field:ring-destructive transition-all duration-300 focus:shadow-[0_0_0_2px_rgba(var(--primary-500),0.3)]"
                       disabled={pending}
                       aria-invalid={!!errors.email}
@@ -399,7 +384,15 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
                     )}
                   </motion.div>
                 </CardContent>
-                <CardFooter className="flex justify-end">
+                <CardFooter className="flex justify-between">
+                  <Link
+                    href={'/sign-in'}
+                    className="group relative overflow-hidden"
+                    title="Next Step"
+                    aria-label="Next Step"
+                  >
+                    Login in
+                  </Link>
                   <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                     <Button
                       type="button"
@@ -471,34 +464,34 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
 
                       <motion.div
                         className="group/field space-y-2"
-                        data-invalid={!!errors.confirmPassword}
+                        data-invalid={!!errors.confirmpassword}
                         custom={1}
                         variants={inputVariants}
                         initial="initial"
                         animate="animate"
                       >
                         <Label
-                          htmlFor="confirmPassword"
+                          htmlFor="confirmpassword"
                           className="group-data-[invalid=true]/field:text-destructive flex items-center gap-2"
                         >
                           <Lock className="size-3.5" />
                           Confirm Password <span aria-hidden="true">*</span>
                         </Label>
                         <Input
-                          id="confirmPassword"
-                          name="confirmPassword"
+                          id="confirmpassword"
+                          name="confirmpassword"
                           type="password"
                           placeholder="••••••••"
                           className="group-data-[invalid=true]/field:border-destructive focus-visible:group-data-[invalid=true]/field:ring-destructive transition-all duration-300 focus:shadow-[0_0_0_2px_rgba(var(--primary-500),0.3)]"
                           disabled={pending}
-                          aria-invalid={!!errors.confirmPassword}
-                          aria-errormessage="error-confirmPassword"
-                          value={formData.confirmPassword}
+                          aria-invalid={!!errors.confirmpassword}
+                          aria-errormessage="error-confirmpassword"
+                          value={formData.confirmpassword}
                           onChange={handleChange}
                         />
-                        {errors.confirmPassword && (
-                          <p id="error-confirmPassword" className="text-destructive text-sm">
-                            {errors.confirmPassword}
+                        {errors.confirmpassword && (
+                          <p id="error-confirmpassword" className="text-destructive text-sm">
+                            {errors.confirmpassword}
                           </p>
                         )}
                       </motion.div>
@@ -557,7 +550,6 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
                       </motion.div>
                     </>
                   )}
-                  {success && <Button className="w-full">Go to Login</Button>}
                 </CardFooter>
               </motion.div>
             )}

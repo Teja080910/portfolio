@@ -1,14 +1,12 @@
 // utility/authProvider.ts
 
 import { supabase } from "@/lib/db";
+import { IUser } from "@/lib/interfaces";
 import { AuthBindings } from "@refinedev/core";
 
 export const authProvider: AuthBindings = {
     login: async ({ email, password }) => {
-        const { error, data } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        const { error, data } = await supabase.from('user').select(email,password);
 
         if (error) {
             return {
@@ -58,5 +56,23 @@ export const authProvider: AuthBindings = {
     onError: async (error) => {
         console.error(error);
         return {};
+    },
+
+    register: async (userData:IUser) => {
+        const { error, data } = await supabase.from('user').insert(userData);
+        if (error) {
+            return {
+                success: false,
+                error: {
+                    message: error.message,
+                    name: "RegisterError",
+                },
+            };
+        }
+
+        return {
+            success: true,
+            redirectTo: "/",
+        };
     },
 };

@@ -11,14 +11,16 @@ export const TUser = {
     likedlin: "",
     resumelink: "",
     phone: "",
-    password: ""
+    password: "",
+    show: true,
 };
 
 export const TAboutMe = {
     id: "",
     type: "",
     list: [],
-    person: ""
+    person: "",
+    show: false,
 };
 
 export const TCertificate = [{
@@ -27,7 +29,8 @@ export const TCertificate = [{
     name: "",
     duration: "",
     link: "",
-    photo: ""
+    photo: "",
+    show: false,
 }]
 
 export const TEducation = [{
@@ -37,7 +40,8 @@ export const TEducation = [{
     duration: "",
     course: "",
     branch: "",
-    keyachivements: ""
+    keyachivements: "",
+    show: false,
 }];
 
 export const TExperience = [{
@@ -47,7 +51,8 @@ export const TExperience = [{
     location: "",
     duration: "",
     role: "",
-    decription: ""
+    decription: "",
+    show: false,
 }];
 
 export const TProjects = [{
@@ -59,7 +64,8 @@ export const TProjects = [{
     gitlink: "",
     weblink: "",
     logo: "",
-    skills: []
+    skills: [],
+    show: false,
 }];
 
 export const TSkills = [{
@@ -67,5 +73,6 @@ export const TSkills = [{
     person: "",
     skilltype: "",
     skills: [],
-    description: ""
+    description: "",
+    show: false,
 }];

@@ -1,5 +1,5 @@
 export interface IUser {
-    id: string;
+    id?: string;
     username: string;
     email: string;
     photo?: string;
@@ -12,6 +12,8 @@ export interface IUser {
     resumelink?: string;
     phone: string;
     password: string;
+    confirmpassword?: string;
+    show?: boolean;
 }
 
 export interface IAboutMe {
@@ -19,6 +21,7 @@ export interface IAboutMe {
     type: string;
     list: string[];
     person: string;
+    show: boolean;
 }
 
 export interface ICertificate {
@@ -28,6 +31,7 @@ export interface ICertificate {
     duration: string;
     link: string;
     photo: string;
+    show: boolean;
 }
 
 export interface IEducation {
@@ -38,6 +42,7 @@ export interface IEducation {
     course: string;
     branch: string;
     keyachivements: string;
+    show: boolean;
 }
 
 export interface IExperience {
@@ -48,6 +53,7 @@ export interface IExperience {
     duration: string;
     role: string;
     decription: string;
+    show: boolean;
 }
 
 export interface IProjects {
@@ -60,6 +66,7 @@ export interface IProjects {
     weblink: string;
     logo: string;
     skills: string[];
+    show: boolean;
 }
 
 export interface ISkills {
@@ -68,6 +75,7 @@ export interface ISkills {
     skilltype: string;
     skills: string[];
     description: string;
+    show: boolean;
 }
 
 export type CheckResponse = {
@@ -75,4 +83,5 @@ export type CheckResponse = {
     redirectTo?: string;
     logout?: boolean;
     error?: Error;
+    show: boolean;
   };

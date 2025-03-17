@@ -19,6 +19,8 @@ export default function App({ Component, pageProps }: AppProps) {
         authProvider={authProvider}
         resources={[
           { name: "posts", list: "/posts" },
+          { name: "user", list: "/user" },
+          { name: "signup", list: "/signup" }
         ]}
         options={{
           syncWithLocation: true,
