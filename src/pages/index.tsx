@@ -6,8 +6,10 @@ import Education from "./components/education";
 import Experience from "./components/experience";
 import Services from "./components/services";
 import Skills from "./components/skills";
+import { useStore } from "@/lib/store";
 
 export default function Home() {
+  const { user } = useStore()
   return (
     <main className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <FloatingNav />
@@ -21,4 +23,3 @@ export default function Home() {
     </main>
   )
 }
-

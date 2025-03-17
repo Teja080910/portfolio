@@ -69,3 +69,10 @@ export interface ISkills {
     skills: string[];
     description: string;
 }
+
+export type CheckResponse = {
+    authenticated: boolean;
+    redirectTo?: string;
+    logout?: boolean;
+    error?: Error;
+  };

@@ -78,7 +78,7 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
     else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Invalid email format"
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required"
     if (!formData.role) newErrors.role = "Please select a role"
-
+    console.log(newErrors)
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -97,6 +97,7 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
   }
 
   const handleNextStep = () => {
+    console.log("Step 1")
     if (validateStep1()) {
       setStep(2)
     }
@@ -405,6 +406,8 @@ export function UserRegistrationForm({ className }: React.ComponentProps<typeof 
                       onClick={handleNextStep}
                       disabled={pending}
                       className="group relative overflow-hidden"
+                      title="Next Step"
+                      aria-label="Next Step"
                     >
                       Next Step
                       <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
