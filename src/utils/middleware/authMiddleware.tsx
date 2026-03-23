@@ -6,7 +6,12 @@ import { AuthBindings } from "@refinedev/core";
 
 export const authProvider: AuthBindings = {
     login: async ({ email, password }) => {
-        const { error, data } = await supabase.from('user').select(email,password);
+        const { error, data } = await supabase
+            .from("profiles")
+            .select("id,email,password")
+            .eq("email", email)
+            .eq("password", password)
+            .single();
 
         if (error) {
             return {
@@ -19,7 +24,7 @@ export const authProvider: AuthBindings = {
         }
 
         return {
-            success: true,
+            success: !!data,
             redirectTo: "/",
         };
     },
@@ -59,7 +64,8 @@ export const authProvider: AuthBindings = {
     },
 
     register: async (userData:IUser) => {
-        const { error, data } = await supabase.from('user').insert(userData);
+        const { confirmpassword, ...payload } = userData;
+        const { error, data } = await supabase.from("profiles").insert(payload).single();
         if (error) {
             return {
                 success: false,
