@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react"
-import Image from "next/image"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { motion } from "framer-motion"
+import { Loader2, Mail, MapPin, Phone, Send } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
 import * as z from "zod"
 
 const formSchema = z.object({
@@ -33,6 +33,7 @@ export default function Contact() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
+      void data
       // Here you would typically send the form data to your backend
       await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
       setSubmitSuccess(true)
@@ -46,17 +47,14 @@ export default function Contact() {
   }
 
   return (
-    <section
-      id="contact"
-      className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 transition-colors duration-300 overflow-hidden relative"
-    >
-      <div className="container mx-auto px-6 relative z-10">
+    <section id="contact" className="section-shell">
+      <div className="surface-grid relative z-10">
         <motion.h2
-          className="text-4xl font-bold mb-12 text-center dark:text-white"
-          initial={{ opacity: 0, y: 20 }}
+          className="mb-12 text-center text-3xl font-bold text-slate-900 dark:text-slate-100 md:text-4xl"
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.55 }}
         >
           Get in Touch
         </motion.h2>
@@ -65,28 +63,28 @@ export default function Contact() {
             className="lg:w-1/3"
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.55 }}
           >
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-              <h3 className="text-2xl font-semibold mb-6 dark:text-white">Contact Information</h3>
+            <div className="glass-card p-8">
+              <h3 className="mb-6 text-2xl font-semibold text-slate-900 dark:text-slate-100">Contact Information</h3>
               <div className="space-y-6">
                 <a
                   href="mailto:musmanzafar53@gmail.com"
-                  className="flex items-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
+                  className="flex items-center text-slate-600 transition-colors duration-300 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
                 >
-                  <Mail className="w-6 h-6 mr-3 text-blue-600" />
+                  <Mail className="mr-3 h-6 w-6 text-cyan-600" />
                   musmanzafar53@gmail.com
                 </a>
                 <a
                   href="tel:+923055356766"
-                  className="flex items-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
+                  className="flex items-center text-slate-600 transition-colors duration-300 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
                 >
-                  <Phone className="w-6 h-6 mr-3 text-blue-600" />
+                  <Phone className="mr-3 h-6 w-6 text-cyan-600" />
                   +92-305-5356766
                 </a>
-                <div className="flex items-center text-gray-600 dark:text-gray-300">
-                  <MapPin className="w-6 h-6 mr-3 text-blue-600" />
+                <div className="flex items-center text-slate-600 dark:text-slate-300">
+                  <MapPin className="mr-3 h-6 w-6 text-cyan-600" />
                   Lahore, Pakistan
                 </div>
               </div>
@@ -96,61 +94,61 @@ export default function Contact() {
             className="lg:w-2/3"
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.55 }}
           >
-            <form onSubmit={handleSubmit(onSubmit)} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+            <form onSubmit={handleSubmit(onSubmit)} className="glass-card p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                     Name
                   </label>
                   <input
                     {...register("name")}
                     type="text"
-                    className={`w-full px-4 py-2 rounded-md border ${
-                      errors.name ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white`}
+                    className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
+                      errors.name ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                    }`}
                   />
                   {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                     Email
                   </label>
                   <input
                     {...register("email")}
                     type="email"
-                    className={`w-full px-4 py-2 rounded-md border ${
-                      errors.email ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white`}
+                    className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
+                      errors.email ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                    }`}
                   />
                   {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
                 </div>
               </div>
               <div className="mt-6">
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="subject" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Subject
                 </label>
                 <input
                   {...register("subject")}
                   type="text"
-                  className={`w-full px-4 py-2 rounded-md border ${
-                    errors.subject ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white`}
+                  className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
+                    errors.subject ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                  }`}
                 />
                 {errors.subject && <p className="mt-1 text-sm text-red-500">{errors.subject.message}</p>}
               </div>
               <div className="mt-6">
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="message" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Message
                 </label>
                 <textarea
                   {...register("message")}
                   rows={4}
-                  className={`w-full px-4 py-2 rounded-md border ${
-                    errors.message ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white`}
+                  className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
+                    errors.message ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                  }`}
                 ></textarea>
                 {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>}
               </div>
@@ -158,16 +156,16 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center ${
+                  className={`flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 px-4 py-2.5 text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 ${
                     isSubmitting ? "opacity-75 cursor-not-allowed" : ""
                   }`}
                 >
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Send className="w-5 h-5 mr-2" />}
+                  {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </div>
               {submitSuccess && (
-                <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-md">
+                <div className="mt-4 rounded-xl bg-emerald-100 p-4 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
                   Message sent successfully!
                 </div>
               )}
@@ -175,8 +173,8 @@ export default function Contact() {
           </motion.div>
         </div>
       </div>
-      <div className="absolute bottom-0 right-0 w-64 h-64 -mb-32 -mr-32 opacity-20">
-        <Image src="/placeholder.svg?height=256&width=256" alt="Decorative background" width={256} height={256} />
+      <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
+        <Image src="/placeholder.svg?height=160&width=160" alt="Decorative background" width={160} height={160} />
       </div>
     </section>
   )

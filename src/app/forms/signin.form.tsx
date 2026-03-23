@@ -7,15 +7,14 @@ import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useLogin } from "@refinedev/core"
 import { AnimatePresence, motion } from "framer-motion"
-import { Loader2, Lock, Mail } from "lucide-react"
+import { Lock, Mail } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
 export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
-    const { mutate: register } = useLogin<IUser>()
+    const { mutate: login } = useLogin<IUser>()
     const [pending, setPending] = useState(false)
-    const [success, setSuccess] = useState(false)
     const [formData, setFormData] = useState<IUser>({
         firstname: "",
         lastname: "",
@@ -28,23 +27,13 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const router = useRouter()
-    const { user } = useStore()
-
-    if (!user) {
-        return (
-            <motion.div>
-                <Card className={cn(className, "flex flex-col gap-4")}>
-                    <Loader2 />
-                </Card>
-            </motion.div>
-        )
-    }
+    const user = useStore((state) => state.user)
 
     useEffect(() => {
         if (user?.id) {
-            router.push('/')
+            void router.push('/')
         }
-    }, [user?.id])
+    }, [router, user?.id])
 
     const validateStep = () => {
         const newErrors: Record<string, string> = {}
@@ -60,34 +49,37 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         e.preventDefault()
         const valid = validateStep()
         if (!valid) {
-            setPending(false);
             return
         }
         setPending(true)
-        try {
-            register(formData, {
+        setErrors((prev) => {
+            const newErrors = { ...prev }
+            delete newErrors.form
+            return newErrors
+        })
+
+        login(
+            {
+                email: formData.email.trim().toLowerCase(),
+                password: formData.password,
+            } as IUser,
+            {
                 onSuccess: (data) => {
-                    if (data.succes) {
-                        setSuccess(true)
-                        setPending(true);
-                    } else {
-                        setSuccess(false)
-                        setPending(false);
+                    if (data?.success) {
+                        void router.push(data.redirectTo || '/')
+                        return
                     }
+
+                    setErrors({ form: data?.error?.message || "Login failed. Please try again." })
+                    setPending(false)
                 },
                 onError: (error) => {
                     console.error("Login failed:", error)
-                    setSuccess(false)
-                    setPending(false);
+                    setErrors({ form: error.message || "Login failed. Please try again." })
+                    setPending(false)
                 },
-            })
-        } catch (error) {
-            console.error("Form submission error:", error)
-            setErrors({ form: "An unexpected error occurred. Please try again." })
-            setPending(false)
-        } finally {
-            setPending(false)
-        }
+            },
+        )
     }
 
     const cardVariants = {
@@ -129,10 +121,11 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
-        if (errors[name]) {
+        if (errors[name] || errors.form) {
             setErrors((prev) => {
                 const newErrors = { ...prev }
                 delete newErrors[name]
+                delete newErrors.form
                 return newErrors
             })
         }
@@ -235,41 +228,46 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
                                         </p>
                                     )}
                                 </motion.div>
+
+                                {errors.form && (
+                                    <p className="rounded-md border border-red-300/70 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700/70 dark:bg-red-950/40 dark:text-red-300">
+                                        {errors.form}
+                                    </p>
+                                )}
                             </CardContent>
                             <CardFooter className="flex justify-between">
                                 <Link href={'/sign-up'}>Create Account</Link>
-                                {!pending &&
-                                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                        <Button type="submit" disabled={pending} className="relative overflow-hidden">
-                                            {pending ? (
-                                                <span className="flex items-center">
-                                                    <svg
-                                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <circle
-                                                            className="opacity-25"
-                                                            cx="12"
-                                                            cy="12"
-                                                            r="10"
-                                                            stroke="currentColor"
-                                                            strokeWidth="4"
-                                                        ></circle>
-                                                        <path
-                                                            className="opacity-75"
-                                                            fill="currentColor"
-                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                        ></path>
-                                                    </svg>
-                                                    Processing...
-                                                </span>
-                                            ) : (
-                                                "Login"
-                                            )}
-                                        </Button>
-                                    </motion.div>}
+                                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                    <Button type="submit" disabled={pending} className="relative overflow-hidden">
+                                        {pending ? (
+                                            <span className="flex items-center">
+                                                <svg
+                                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <circle
+                                                        className="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        strokeWidth="4"
+                                                    ></circle>
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    ></path>
+                                                </svg>
+                                                Processing...
+                                            </span>
+                                        ) : (
+                                            "Login"
+                                        )}
+                                    </Button>
+                                </motion.div>
                             </CardFooter>
                         </motion.div>
                     </AnimatePresence>

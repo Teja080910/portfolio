@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "./interfaces";
 import { TAboutMe, TCertificate, TEducation, TExperience, TProjects, TSkills, TUser } from "./setvalues";
 
-type State = {
+export type StoreState = {
     user: IUser;
     about: IAboutMe;
     certificate: ICertificate[];
@@ -22,7 +22,7 @@ type State = {
 };
 
 export const useStore = create(
-    persist<State>(
+    persist<StoreState>(
         (set) => ({
             user: TUser,
             about: TAboutMe,

@@ -1,12 +1,13 @@
 "use client"
 
 import { motion } from "framer-motion"
+import type { LucideIcon } from "lucide-react"
 import { Code, Cpu, Database, GitBranch, Globe, Layers, Layout, Server, Terminal, Workflow } from "lucide-react"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
-const SkillIcon = ({ icon: Icon, color }: { icon: any; color: string }) => (
-  <div className={`p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg`}>
-    <Icon className={`w-6 h-6 ${color}`} />
+const SkillIcon = ({ icon: Icon, color }: { icon: LucideIcon; color: string }) => (
+  <div className="rounded-xl border border-slate-200/70 bg-white/80 p-2.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+    <Icon className={`h-5 w-5 ${color}`} />
   </div>
 )
 
@@ -86,11 +87,9 @@ const skills = [
 
 export default function Skills() {
   return (
-    <section id="skills" className="py-20 relative overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"></div>
+    <section id="skills" className="section-shell">
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-50/50 to-transparent dark:from-cyan-950/20 dark:to-transparent"></div>
 
-      {/* Skill Illustrations */}
       <div className="absolute inset-0 opacity-10">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -103,28 +102,28 @@ export default function Skills() {
         </svg>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="surface-grid relative z-10">
         <AnimatedSectionHeader title="Skills & Expertise" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {skills.map((skill, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 26 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.35 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <div className="glass-card group h-full">
                 <div className="flex items-center mb-4">
                   <SkillIcon icon={skill.icon} color={skill.color} />
                   <div className="ml-4">
-                    <h3 className="text-lg font-semibold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                    <h3 className="text-lg font-semibold text-slate-900 transition-colors duration-300 group-hover:text-cyan-600 dark:text-slate-100 dark:group-hover:text-cyan-300">
                       {skill.name}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{skill.tech}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">{skill.tech}</p>
                   </div>
                 </div>
-                <p className="text-gray-700 dark:text-gray-300 text-sm">{skill.description}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{skill.description}</p>
               </div>
             </motion.div>
           ))}

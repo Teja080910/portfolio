@@ -1,10 +1,10 @@
 "use client"
 
-import Image from "next/image"
-import { GitlabIcon as GitHub, Linkedin, Mail, ArrowDown } from "lucide-react"
-import { motion } from "framer-motion"
 import { useStore } from "@/lib/store"
 import UserRegister from "@/pages/components/signup"
+import { motion } from "framer-motion"
+import { ArrowDown, GitlabIcon as GitHub, Linkedin, Mail } from "lucide-react"
+import Image from "next/image"
 
 const CodePattern = () => (
   <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
@@ -24,84 +24,81 @@ const CodePattern = () => (
 )
 
 export default function Hero() {
-  const user = useStore(state => state?.user)
-  return (
-    user?.username ? <section
-      id="user"
-      className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
-    >
-      {/* Programming-themed Background */}
+  const user = useStore((state) => state?.user)
+
+  return user?.username ? (
+    <section id="user" className="relative min-h-screen overflow-hidden pt-24">
       <div className="absolute inset-0 z-0">
         <CodePattern />
       </div>
+      <div className="pointer-events-none absolute -left-20 top-16 h-64 w-64 rounded-full bg-cyan-300/25 blur-3xl dark:bg-cyan-500/20" />
+      <div className="pointer-events-none absolute -right-20 bottom-20 h-72 w-72 rounded-full bg-teal-300/25 blur-3xl dark:bg-teal-500/20" />
 
-      {/* Animated Gradient */}
-      <div className="absolute inset-0 z-0 opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600 animate-gradient-x"></div>
-      </div>
-
-      <div className="container mx-auto px-6 pt-32 pb-20 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+      <div className="surface-grid relative z-10 px-6 pb-16">
+        <div className="grid items-center gap-12 rounded-[2rem] border border-slate-200/70 bg-white/70 p-8 shadow-xl backdrop-blur-lg dark:border-slate-700/70 dark:bg-slate-900/65 lg:grid-cols-2 lg:p-12">
           <motion.div
-            className="lg:w-1/2 text-center lg:text-left"
-            initial={{ opacity: 0, y: 20 }}
+            className="text-center lg:text-left"
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.65, ease: "easeOut" }}
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+            <span className="accent-chip">Full Stack Engineer</span>
+            <h1 className="mt-5 bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-4xl font-bold text-transparent dark:from-cyan-300 dark:to-teal-300 md:text-5xl lg:text-6xl">
               Usman Zafar
             </h1>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-700 dark:text-gray-300">
-              MERN Stack Developer
+            <h2 className="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-300 md:text-2xl">
+              Building polished products with the MERN stack
             </h2>
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto lg:mx-0">
-              Crafting exceptional digital experiences with modern web technologies. Specialized in building scalable
-              full-stack applications using MongoDB, Express.js, React, and Node.js.
+            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300 lg:mx-0 md:text-lg">
+              I design and deliver resilient web applications with thoughtful UX, fast APIs, and scalable architecture
+              across MongoDB, Express.js, React, and Node.js.
             </p>
-            <div className="flex justify-center lg:justify-start space-x-4 mb-8">
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
               <a
                 href="#"
-                className="p-3 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="rounded-full border border-slate-300/70 bg-white/80 p-3 text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:text-cyan-600 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200 dark:hover:border-cyan-500"
                 aria-label="GitHub Profile"
               >
-                <GitHub className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <GitHub className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="p-3 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="rounded-full border border-slate-300/70 bg-white/80 p-3 text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:text-cyan-600 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200 dark:hover:border-cyan-500"
                 aria-label="LinkedIn Profile"
               >
-                <Linkedin className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <Linkedin className="h-5 w-5" />
               </a>
               <a
                 href="mailto:musmanzafar53@gmail.com"
-                className="p-3 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="rounded-full border border-slate-300/70 bg-white/80 p-3 text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:text-cyan-600 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200 dark:hover:border-cyan-500"
                 aria-label="Email Contact"
               >
-                <Mail className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <Mail className="h-5 w-5" />
               </a>
             </div>
+
             <motion.button
               onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-teal-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-300 hover:-translate-y-0.5"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
             >
-              Learn More
-              <ArrowDown className="w-4 h-4" />
+              Explore Portfolio
+              <ArrowDown className="h-4 w-4" />
             </motion.button>
           </motion.div>
 
           <motion.div
-            className="lg:w-1/2"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative mx-auto"
+            initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 0.75, delay: 0.12, ease: "easeOut" }}
           >
-            <div className="relative w-72 h-72 md:w-96 md:h-96 mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 dark:from-blue-600 dark:to-purple-600 rounded-3xl transform rotate-6 opacity-50"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 dark:from-purple-600 dark:to-blue-600 rounded-3xl transform -rotate-6 opacity-50"></div>
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+            <div className="animate-float relative h-72 w-72 sm:h-80 sm:w-80 md:h-96 md:w-96">
+              <div className="absolute inset-0 -rotate-6 rounded-[2rem] bg-gradient-to-r from-cyan-400/60 to-teal-500/60 blur-sm" />
+              <div className="absolute inset-0 rotate-6 rounded-[2rem] border border-white/50 bg-white/25 backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-800/30" />
+              <div className="relative h-full overflow-hidden rounded-[1.75rem] border border-white/60 shadow-2xl dark:border-slate-600/70">
                 <Image
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_0812.jpg-jQSxWaycmtpBR7IUnsPV8C8L3vlrQ2.jpeg"
                   alt="Usman Zafar"
@@ -114,16 +111,8 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
-
-      {/* Decorative Elements */}
-      <motion.div
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.6 }}
-      >
-        <div className="w-1 h-12 bg-gradient-to-b from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 rounded-full animate-pulse"></div>
-      </motion.div>
-    </section> : <UserRegister />
+    </section>
+  ) : (
+    <UserRegister />
   )
 }
