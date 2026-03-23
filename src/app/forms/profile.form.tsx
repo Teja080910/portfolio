@@ -6,19 +6,19 @@ import { useStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
 import {
-  ArrowLeft,
-  Briefcase,
-  FileText,
-  Github,
-  ImageIcon,
-  Linkedin,
-  Loader2,
-  Mail,
-  PencilLine,
-  Phone,
-  Save,
-  ShieldCheck,
-  UserRound,
+    ArrowLeft,
+    Briefcase,
+    FileText,
+    Github,
+    ImageIcon,
+    Linkedin,
+    Loader2,
+    Mail,
+    PencilLine,
+    Phone,
+    Save,
+    ShieldCheck,
+    UserRound,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -836,7 +836,7 @@ export default function ProfileForm() {
               <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
                 <p>Your hero section uses your name, role, bio, photo, GitHub, LinkedIn, and email.</p>
                 <p>Your contact section uses your name, email, phone, and role.</p>
-                <p>Portfolio sections like About, Experience, Skills, and Education are still demo-driven and can be made editable next.</p>
+                <p>Portfolio sections are now editable from the Edit Portfolio Content area below this form.</p>
               </div>
             </motion.div>
           </div>

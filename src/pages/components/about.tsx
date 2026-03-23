@@ -1,29 +1,28 @@
 "use client"
 
+import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { Code, Database, Server, Zap } from "lucide-react"
+import { Sparkles } from "lucide-react"
 import Image from "next/image"
+import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 export default function About() {
-  const skills = [
-    { icon: <Code className="h-7 w-7 text-cyan-600 dark:text-cyan-300" />, title: "Frontend", description: "React, Next.js, Redux" },
-    { icon: <Server className="h-7 w-7 text-teal-600 dark:text-teal-300" />, title: "Backend", description: "Node.js, Express, Fastify" },
-    { icon: <Database className="h-7 w-7 text-sky-600 dark:text-sky-300" />, title: "Database", description: "MongoDB, Mongoose" },
-    { icon: <Zap className="h-7 w-7 text-amber-600 dark:text-amber-300" />, title: "Performance", description: "Optimization, Caching" },
-  ]
+  const about = useStore((state) => state.about)
+  const skills = useStore((state) => state.skills)
+
+  const aboutPoints = (about.list ?? []).map((item) => item.trim()).filter(Boolean)
+  const skillHighlights = skills
+    .filter((item) => item.show)
+    .slice(0, 4)
+    .map((item) => ({
+      title: item.skilltype || "Skill Group",
+      description: item.skills.length ? item.skills.join(", ") : item.description || "Update this card from Edit Portfolio Content.",
+    }))
 
   return (
     <section id="about" className="section-shell">
       <div className="surface-grid relative z-10">
-        <motion.h2
-          className="mb-8 text-center text-3xl font-bold text-slate-900 dark:text-slate-100 md:text-4xl"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.55 }}
-        >
-          About Me
-        </motion.h2>
+        <AnimatedSectionHeader title="About Me" />
         <div className="grid items-center gap-10 lg:grid-cols-2">
           <motion.div
             className="glass-card"
@@ -33,16 +32,19 @@ export default function About() {
             transition={{ duration: 0.55 }}
           >
             <span className="accent-chip">Who I Am</span>
-            <p className="mb-6 mt-4 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-              As a passionate MERN Stack Developer, I specialize in building robust and scalable web applications. With
-              a strong foundation in MongoDB, Express.js, React, and Node.js, I create seamless full-stack solutions
-              that deliver exceptional user experiences.
-            </p>
-            <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-              My expertise extends to modern frameworks like Next.js and state management tools like Redux. I&apos;m
-              committed to writing clean, efficient code and staying up-to-date with the latest industry trends to
-              deliver cutting-edge solutions for my clients.
-            </p>
+            {aboutPoints.length > 0 ? (
+              <div className="mt-4 space-y-4">
+                {aboutPoints.map((point, index) => (
+                  <p key={`${point}-${index}`} className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+                    {point}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="mb-2 mt-4 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+                Add your about details from <strong>Edit Portfolio Content</strong> to replace this empty state.
+              </p>
+            )}
           </motion.div>
           <motion.div
             className="grid grid-cols-1 gap-4 sm:grid-cols-2"
@@ -51,9 +53,9 @@ export default function About() {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.55 }}
           >
-            {skills.map((skill, index) => (
+            {(skillHighlights.length > 0 ? skillHighlights : [{ title: "No skills yet", description: "Create skills from Edit Portfolio Content." }]).map((skill, index) => (
               <div key={index} className="glass-card">
-                {skill.icon}
+                <Sparkles className="h-7 w-7 text-cyan-600 dark:text-cyan-300" />
                 <h3 className="mb-2 mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{skill.title}</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-300">{skill.description}</p>
               </div>

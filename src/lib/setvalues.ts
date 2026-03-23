@@ -20,59 +20,15 @@ export const TAboutMe = {
     type: "",
     list: [],
     person: "",
-    show: false,
+    show: true,
 };
 
-export const TCertificate = [{
-    id: "",
-    person: "",
-    name: "",
-    duration: "",
-    link: "",
-    photo: "",
-    show: false,
-}]
+export const TCertificate = []
 
-export const TEducation = [{
-    id: "",
-    person: "",
-    name: "",
-    duration: "",
-    course: "",
-    branch: "",
-    keyachivements: "",
-    show: false,
-}];
+export const TEducation = [];
 
-export const TExperience = [{
-    id: "",
-    person: "",
-    type: "",
-    location: "",
-    duration: "",
-    role: "",
-    decription: "",
-    show: false,
-}];
+export const TExperience = [];
 
-export const TProjects = [{
-    id: "",
-    person: "",
-    name: "",
-    description: "",
-    duration: "",
-    gitlink: "",
-    weblink: "",
-    logo: "",
-    skills: [],
-    show: false,
-}];
+export const TProjects = [];
 
-export const TSkills = [{
-    id: "",
-    person: "",
-    skilltype: "",
-    skills: [],
-    description: "",
-    show: false,
-}];
+export const TSkills = [];

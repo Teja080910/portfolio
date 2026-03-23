@@ -1,3 +1,4 @@
+import PortfolioContentForm from "@/app/forms/portfolio-content.form"
 import ProfileForm from "@/app/forms/profile.form"
 
 export default function UserProfilePage() {
@@ -9,6 +10,7 @@ export default function UserProfilePage() {
 
       <div className="relative z-10 mx-auto max-w-7xl">
         <ProfileForm />
+        <PortfolioContentForm />
       </div>
     </main>
   )

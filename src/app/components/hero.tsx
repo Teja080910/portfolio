@@ -115,6 +115,13 @@ export default function Hero() {
                 <PencilLine className="h-4 w-4" />
                 Edit Profile
               </Link>
+              <Link
+                href="/user#portfolio-content"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-6 py-3 font-semibold text-slate-700 shadow-lg transition-transform duration-300 hover:-translate-y-0.5 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100"
+              >
+                <PencilLine className="h-4 w-4" />
+                Edit Portfolio Content
+              </Link>
               <motion.button
                 onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-teal-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-300 hover:-translate-y-0.5"

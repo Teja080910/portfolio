@@ -1,48 +1,26 @@
 "use client"
 
+import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { Code, Layout, Server, Smartphone } from "lucide-react"
+import { Award, Calendar, Link as LinkIcon } from "lucide-react"
 import Image from "next/image"
+import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 export default function Certificate() {
-  const services = [
-    {
-      icon: <Layout className="h-10 w-10 text-cyan-500" />,
-      title: "Web Application Development",
-      description: "Custom web applications built with React and Next.js, focusing on performance and user experience.",
-    },
-    {
-      icon: <Server className="h-10 w-10 text-teal-500" />,
-      title: "Backend Development",
-      description: "Robust and scalable server-side solutions using Node.js, Express, and Fastify.",
-    },
-    {
-      icon: <Code className="h-10 w-10 text-sky-500" />,
-      title: "API Development",
-      description:
-        "RESTful and GraphQL API design and implementation for seamless data flow between client and server.",
-    },
-    {
-      icon: <Smartphone className="h-10 w-10 text-amber-500" />,
-      title: "Responsive Design",
-      description: "Mobile-first, responsive web designs that work flawlessly across all devices and screen sizes.",
-    },
-  ]
+  const certificates = useStore((state) =>
+    state.certificate.filter((item) => item.show && (item.name || item.duration || item.link)),
+  )
+
+  if (certificates.length === 0) {
+    return null
+  }
 
   return (
     <section id="certificate" className="section-shell">
       <div className="surface-grid relative z-10">
-        <motion.h2
-          className="mb-12 text-center text-3xl font-bold text-slate-900 dark:text-slate-100 md:text-4xl"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.55 }}
-        >
-          My Services
-        </motion.h2>
+        <AnimatedSectionHeader title="Certificates" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {services.map((service, index) => (
+          {certificates.map((certificate, index) => (
             <motion.div
               key={index}
               className="glass-card h-full"
@@ -52,10 +30,26 @@ export default function Certificate() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div className="flex items-center mb-4">
-                {service.icon}
-                <h3 className="ml-4 text-xl font-semibold text-slate-900 dark:text-slate-100">{service.title}</h3>
+                <Award className="h-10 w-10 text-cyan-500" />
+                <h3 className="ml-4 text-xl font-semibold text-slate-900 dark:text-slate-100">{certificate.name}</h3>
               </div>
-              <p className="text-slate-600 dark:text-slate-300">{service.description}</p>
+              {certificate.duration && (
+                <p className="mb-2 flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                  <Calendar className="h-4 w-4" />
+                  {certificate.duration}
+                </p>
+              )}
+              {certificate.link && (
+                <a
+                  href={certificate.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-cyan-600 transition-colors hover:text-cyan-500 dark:text-cyan-300"
+                >
+                  <LinkIcon className="h-4 w-4" />
+                  View Credential
+                </a>
+              )}
             </motion.div>
           ))}
         </div>

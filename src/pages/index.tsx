@@ -1,7 +1,7 @@
 import FloatingNav from "@/app/components/floating-nav";
 import Hero from "@/app/components/hero";
 import { supabase } from "@/lib/db";
-import { IUser } from "@/lib/interfaces";
+import { IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "@/lib/interfaces";
 import { useStore } from "@/lib/store";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/router";
@@ -11,6 +11,7 @@ import Certificate from "./components/certificate";
 import Contact from "./components/contact";
 import Education from "./components/education";
 import Experience from "./components/experience";
+import Projects from "./components/projects";
 import Skills from "./components/skills";
 
 const mapProfileToStoreUser = (profile: Partial<IUser>): IUser => ({
@@ -45,16 +46,114 @@ const mapSessionUserToStoreUser = (user: User): IUser => {
   })
 }
 
+const toString = (value: unknown) => (typeof value === "string" ? value : "")
+
+const toStringArray = (value: unknown) =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean) : []
+
+const mapAboutContent = (value: unknown, userId: string): IAboutMe => {
+  const raw = (value && typeof value === "object" ? value : {}) as Record<string, unknown>
+  return {
+    id: toString(raw.id) || `about-${userId}`,
+    person: userId,
+    type: toString(raw.type),
+    list: toStringArray(raw.list),
+    show: typeof raw.show === "boolean" ? raw.show : true,
+  }
+}
+
+const mapSkillsContent = (value: unknown, userId: string): ISkills[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `skill-${userId}-${index}`,
+          person: userId,
+          skilltype: toString(item.skilltype),
+          skills: toStringArray(item.skills),
+          description: toString(item.description),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
+const mapProjectsContent = (value: unknown, userId: string): IProjects[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `project-${userId}-${index}`,
+          person: userId,
+          name: toString(item.name),
+          description: toString(item.description),
+          duration: toString(item.duration),
+          gitlink: toString(item.gitlink),
+          weblink: toString(item.weblink),
+          logo: toString(item.logo),
+          skills: toStringArray(item.skills),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
+const mapExperienceContent = (value: unknown, userId: string): IExperience[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `experience-${userId}-${index}`,
+          person: userId,
+          type: toString(item.type),
+          location: toString(item.location),
+          duration: toString(item.duration),
+          role: toString(item.role),
+          decription: toString(item.decription),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
+const mapEducationContent = (value: unknown, userId: string): IEducation[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `education-${userId}-${index}`,
+          person: userId,
+          name: toString(item.name),
+          duration: toString(item.duration),
+          course: toString(item.course),
+          branch: toString(item.branch),
+          keyachivements: toString(item.keyachivements),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
+const mapCertificateContent = (value: unknown, userId: string): ICertificate[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `certificate-${userId}-${index}`,
+          person: userId,
+          name: toString(item.name),
+          duration: toString(item.duration),
+          link: toString(item.link),
+          photo: toString(item.photo),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
 export default function Home() {
   const store = useStore()
   const router = useRouter()
   const [isSessionReady, setIsSessionReady] = useState(false)
   const showHero = isSessionReady && Boolean(store.user.show)
-  const showAbout = isSessionReady && Boolean(store.about?.show)
-  const showExperience = isSessionReady && Boolean(store.experience?.[0]?.show)
-  const showSkills = isSessionReady && Boolean(store.skills?.[0]?.show)
-  const showCertificate = isSessionReady && Boolean(store.certificate?.[0]?.show)
-  const showEducation = isSessionReady && Boolean(store.education?.[0]?.show)
+  const hasAboutContent =
+    Boolean(store.about?.type?.trim()) || Boolean(store.about?.list?.some((item) => item.trim()))
+  const showAbout = isSessionReady && hasAboutContent && Boolean(store.about.show)
+  const showExperience = isSessionReady && store.experience.some((item) => item.show)
+  const showSkills = isSessionReady && store.skills.some((item) => item.show)
+  const showProjects = isSessionReady && store.projects.some((item) => item.show)
+  const showCertificate = isSessionReady && store.certificate.some((item) => item.show)
+  const showEducation = isSessionReady && store.education.some((item) => item.show)
   const showContact = isSessionReady && Boolean(store.user.id)
 
   useEffect(()=>{
@@ -66,6 +165,7 @@ export default function Home() {
 
       if (!sessionUser) {
         useStore.getState().removeUser()
+        useStore.getState().resetPortfolio()
         if (isActive) {
           setIsSessionReady(true)
           void router.replace('/sign-in')
@@ -94,6 +194,24 @@ export default function Home() {
         }
       }
 
+      const { data: portfolioContent } = await supabase
+        .from("portfolio_contents")
+        .select("about, skills, projects, experience, education, certificates")
+        .eq("user_id", sessionUser.id)
+        .maybeSingle()
+
+      if (portfolioContent) {
+        const storeApi = useStore.getState()
+        storeApi.setAbout(mapAboutContent(portfolioContent.about, sessionUser.id))
+        storeApi.setSkills(mapSkillsContent(portfolioContent.skills, sessionUser.id))
+        storeApi.setProjects(mapProjectsContent(portfolioContent.projects, sessionUser.id))
+        storeApi.setExperience(mapExperienceContent(portfolioContent.experience, sessionUser.id))
+        storeApi.setEducation(mapEducationContent(portfolioContent.education, sessionUser.id))
+        storeApi.setCertificate(mapCertificateContent(portfolioContent.certificates, sessionUser.id))
+      } else {
+        useStore.getState().resetPortfolio()
+      }
+
       if (isActive) {
         setIsSessionReady(true)
       }
@@ -104,6 +222,7 @@ export default function Home() {
     const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         useStore.getState().removeUser()
+        useStore.getState().resetPortfolio()
         if (isActive) {
           setIsSessionReady(true)
           void router.replace('/sign-in')
@@ -147,6 +266,7 @@ export default function Home() {
       {showAbout && <About />}
       {showExperience && <Experience />}
       {showSkills && <Skills />}
+      {showProjects && <Projects />}
       {showCertificate && <Certificate />}
       {showEducation && <Education />}
       {showContact && <Contact />}

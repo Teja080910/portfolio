@@ -24,17 +24,17 @@ export default function FloatingNav() {
       case "user":
         return store.user.show
       case "about":
-        return store.about.show
+        return Boolean(store.about.show) && (Boolean(store.about.type?.trim()) || store.about.list.some((item) => item.trim()))
       case "experience":
-        return store.experience[0]?.show
+        return store.experience.some((item) => item.show)
       case "skills":
-        return store.skills[0]?.show
+        return store.skills.some((item) => item.show)
       case "projects":
-        return store.projects[0]?.show
+        return store.projects.some((item) => item.show)
       case "certificate":
-        return store.certificate[0]?.show
+        return store.certificate.some((item) => item.show)
       case "education":
-        return store.education[0]?.show
+        return store.education.some((item) => item.show)
       case "contact":
         return Boolean(store.user.id)
       default:

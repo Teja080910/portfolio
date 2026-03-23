@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -67,15 +68,7 @@ export default function Contact() {
   return (
     <section id="contact" className="section-shell">
       <div className="surface-grid relative z-10">
-        <motion.h2
-          className="mb-12 text-center text-3xl font-bold text-slate-900 dark:text-slate-100 md:text-4xl"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.55 }}
-        >
-          Get in Touch
-        </motion.h2>
+        <AnimatedSectionHeader title="Get in Touch" />
         <div className="flex flex-col lg:flex-row gap-12">
           <motion.div
             className="lg:w-1/3"

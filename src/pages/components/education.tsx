@@ -1,23 +1,19 @@
 "use client"
 
+import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { Award, Calendar, GraduationCap } from "lucide-react"
 import Image from "next/image"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 export default function Education() {
-  const education = [
-    {
-      degree: "Bachelor's Degree in Computer Science",
-      institution: "GC University Faisalabad",
-      period: "2018 – 2022",
-      achievements: [
-        "Graduated with honors",
-        "Specialized in Web Technologies and Artificial Intelligence",
-        "Completed capstone project on 'Intelligent Web Application for Healthcare'",
-      ],
-    },
-  ]
+  const education = useStore((state) =>
+    state.education.filter((item) => item.show && (item.name || item.course || item.branch || item.keyachivements)),
+  )
+
+  if (education.length === 0) {
+    return null
+  }
 
   return (
     <section id="education" className="section-shell">
@@ -37,19 +33,24 @@ export default function Education() {
               <div className="relative z-10">
                 <h3 className="mb-2 flex items-center text-2xl font-semibold text-slate-900 dark:text-slate-100">
                   <GraduationCap className="mr-2 h-6 w-6" />
-                  {edu.degree}
+                  {edu.course || edu.name}
                 </h3>
-                <p className="mb-4 text-xl text-slate-600 dark:text-slate-300">{edu.institution}</p>
+                <p className="mb-4 text-xl text-slate-600 dark:text-slate-300">{edu.name}</p>
                 <p className="mb-4 flex items-center text-slate-600 dark:text-slate-300">
                   <Calendar className="mr-2 h-4 w-4" />
-                  {edu.period}
+                  {edu.duration}
                 </p>
+                {edu.branch && <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">{edu.branch}</p>}
                 <h4 className="mb-2 flex items-center text-lg font-medium text-slate-700 dark:text-slate-200">
                   <Award className="mr-2 h-5 w-5" />
                   Key Achievements:
                 </h4>
                 <ul className="list-disc list-inside space-y-2">
-                  {edu.achievements.map((achievement, idx) => (
+                  {(edu.keyachivements || "")
+                    .split(/\n|\.|•/)
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((achievement, idx) => (
                     <li key={idx} className="text-slate-700 dark:text-slate-300">
                       {achievement}
                     </li>
