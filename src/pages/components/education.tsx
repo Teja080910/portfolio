@@ -61,7 +61,7 @@ export default function Education() {
         </div>
       </div>
       <div className="pointer-events-none absolute top-8 left-8 h-40 w-40 opacity-20">
-        <Image src="/placeholder.svg?height=160&width=160" alt="Decorative background" width={160} height={160} />
+        <Image src="/placeholder.svg?height=160&width=160" alt="" width={160} height={160} />
       </div>
     </section>
   )

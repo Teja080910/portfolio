@@ -62,7 +62,7 @@ export default function About() {
         </div>
       </div>
       <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
-        <Image src="/placeholder.svg?height=160&width=160" alt="Decorative background" width={160} height={160} />
+        <Image src="/placeholder.svg?height=160&width=160" alt="" width={160} height={160} />
       </div>
     </section>
   )

@@ -1,10 +1,11 @@
 "use client"
 
+import { useStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
-import { Loader2, Mail, MapPin, Phone, Send } from "lucide-react"
+import { Loader2, Mail, Phone, Send, UserRound } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
@@ -18,8 +19,10 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 export default function Contact() {
+  const user = useStore((state) => state.user)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const fullName = [user.firstname, user.lastname].filter(Boolean).join(" ").trim() || user.username || ""
 
   const {
     register,
@@ -28,7 +31,22 @@ export default function Contact() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: fullName,
+      email: user.email || "",
+      subject: "",
+      message: "",
+    },
   })
+
+  useEffect(() => {
+    reset({
+      name: fullName,
+      email: user.email || "",
+      subject: "",
+      message: "",
+    })
+  }, [fullName, reset, user.email])
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
@@ -69,24 +87,38 @@ export default function Contact() {
             <div className="glass-card p-8">
               <h3 className="mb-6 text-2xl font-semibold text-slate-900 dark:text-slate-100">Contact Information</h3>
               <div className="space-y-6">
-                <a
-                  href="mailto:musmanzafar53@gmail.com"
-                  className="flex items-center text-slate-600 transition-colors duration-300 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
-                >
-                  <Mail className="mr-3 h-6 w-6 text-cyan-600" />
-                  musmanzafar53@gmail.com
-                </a>
-                <a
-                  href="tel:+923055356766"
-                  className="flex items-center text-slate-600 transition-colors duration-300 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
-                >
-                  <Phone className="mr-3 h-6 w-6 text-cyan-600" />
-                  +92-305-5356766
-                </a>
-                <div className="flex items-center text-slate-600 dark:text-slate-300">
-                  <MapPin className="mr-3 h-6 w-6 text-cyan-600" />
-                  Lahore, Pakistan
-                </div>
+                {user.email && (
+                  <a
+                    href={`mailto:${user.email}`}
+                    className="flex items-center text-slate-600 transition-colors duration-300 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
+                  >
+                    <Mail className="mr-3 h-6 w-6 text-cyan-600" />
+                    {user.email}
+                  </a>
+                )}
+                {user.phone && (
+                  <a
+                    href={`tel:${user.phone.replace(/\s+/g, "")}`}
+                    className="flex items-center text-slate-600 transition-colors duration-300 hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
+                  >
+                    <Phone className="mr-3 h-6 w-6 text-cyan-600" />
+                    {user.phone}
+                  </a>
+                )}
+                {(fullName || user.role) && (
+                  <div className="flex items-center text-slate-600 dark:text-slate-300">
+                    <UserRound className="mr-3 h-6 w-6 text-cyan-600" />
+                    <div className="flex flex-col">
+                      {fullName && <span>{fullName}</span>}
+                      {user.role && <span className="text-sm text-slate-500 dark:text-slate-400">{user.role}</span>}
+                    </div>
+                  </div>
+                )}
+                {!user.email && !user.phone && !fullName && !user.role && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Add your profile details to show contact information here.
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>
@@ -174,7 +206,7 @@ export default function Contact() {
         </div>
       </div>
       <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
-        <Image src="/placeholder.svg?height=160&width=160" alt="Decorative background" width={160} height={160} />
+        <Image src="/placeholder.svg?height=160&width=160" alt="" width={160} height={160} />
       </div>
     </section>
   )

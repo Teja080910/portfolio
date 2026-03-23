@@ -48,6 +48,9 @@ const buildProfileFromAuthUser = (user: User) => {
     };
 };
 
+const mapAuthUserToStoreUser = (user: User): IUser =>
+    mapProfileToUser(buildProfileFromAuthUser(user));
+
 const getOrCreateProfile = async (user: User) => {
     const { data: existingProfile, error: existingProfileError } = await supabase
         .from("profiles")
@@ -71,6 +74,15 @@ const getOrCreateProfile = async (user: User) => {
         .single();
 
     return { profile: createdProfile, error: createProfileError };
+};
+
+const hydrateStoreUserFromSession = async (user: User) => {
+    const { profile } = await getOrCreateProfile(user);
+    const resolvedUser = profile ? mapProfileToUser(profile) : mapAuthUserToStoreUser(user);
+
+    useStore.getState().addUser(resolvedUser);
+
+    return resolvedUser;
 };
 
 export const authProvider: AuthProvider = {
@@ -133,16 +145,17 @@ export const authProvider: AuthProvider = {
         const { data } = await supabase.auth.getSession();
 
         if (data.session?.user) {
-            if (!useStore.getState().user?.id) {
-                const { data: profile } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("id", data.session.user.id)
-                    .maybeSingle();
+            const sessionUser = data.session.user;
+            const currentStoreUser = useStore.getState().user;
+            const sessionEmail = sessionUser.email ?? "";
 
-                if (profile) {
-                    useStore.getState().addUser(mapProfileToUser(profile));
-                }
+            if (
+                currentStoreUser?.id !== sessionUser.id ||
+                currentStoreUser?.email !== sessionEmail ||
+                !currentStoreUser?.firstname ||
+                !currentStoreUser?.username
+            ) {
+                await hydrateStoreUserFromSession(sessionUser);
             }
 
             return {
@@ -161,16 +174,23 @@ export const authProvider: AuthProvider = {
         const { data } = await supabase.auth.getUser();
 
         if (data.user) {
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", data.user.id)
-                .maybeSingle();
+            const currentStoreUser = useStore.getState().user;
+
+            if (
+                currentStoreUser?.id !== data.user.id ||
+                currentStoreUser?.email !== (data.user.email ?? "") ||
+                !currentStoreUser?.firstname ||
+                !currentStoreUser?.username
+            ) {
+                await hydrateStoreUserFromSession(data.user);
+            }
+
+            const resolvedUser = useStore.getState().user;
 
             return {
                 id: data.user.id,
-                name: profile?.username || profile?.firstname || data.user.email,
-                avatar: profile?.photo ?? null,
+                name: resolvedUser.username || resolvedUser.firstname || data.user.email,
+                avatar: resolvedUser.photo ?? null,
             };
         }
 

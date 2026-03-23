@@ -6,11 +6,14 @@ import { Refine } from "@refinedev/core";
 import { RefineKbarProvider } from "@refinedev/kbar";
 import { dataProvider as supabaseDataProvider } from "@refinedev/supabase";
 import "antd/dist/reset.css";
+import { AnimatePresence, motion } from "framer-motion";
 import type { AppProps } from "next/app";
+import { useRouter } from "next/router";
 import { supabase } from "./api/supabaseclinet";
 
 export default function App({ Component, pageProps }: AppProps) {
   const dataProvider = supabaseDataProvider(supabase);
+  const router = useRouter();
   return (
     <RefineKbarProvider>
       <Refine
@@ -27,7 +30,17 @@ export default function App({ Component, pageProps }: AppProps) {
           warnWhenUnsavedChanges: true,
         }}
       >
-        <Component {...pageProps} />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={router.asPath}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            <Component {...pageProps} />
+          </motion.div>
+        </AnimatePresence>
       </Refine>
     </RefineKbarProvider>
   );

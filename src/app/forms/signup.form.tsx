@@ -14,9 +14,11 @@ import {
   ChevronLeft,
   Eye,
   EyeOff,
+  Github,
   Loader2,
   LockKeyhole,
   Mail,
+  MailCheck,
   Phone,
   ShieldCheck,
   Sparkles,
@@ -100,6 +102,9 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
   const [step, setStep] = useState<SignupStep>(1)
   const [pending, setPending] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [requiresEmailVerification, setRequiresEmailVerification] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState("")
+  const [oauthPending, setOauthPending] = useState<"google" | "github" | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formData, setFormData] = useState<SignupFormValues>({
@@ -245,6 +250,25 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
     setStep(1)
   }
 
+  const handleSocialAuth = async (provider: "google" | "github") => {
+    if (typeof window === "undefined") return
+
+    setOauthPending(provider)
+    setErrors({})
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    })
+
+    if (error) {
+      setErrors({ form: error.message || "Social signup failed. Please try again." })
+      setOauthPending(null)
+    }
+  }
+
   const handleRegister = async () => {
     if (!validateStepTwo()) {
       return
@@ -261,8 +285,11 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
           .slice(0, 18) +
           Math.floor(Math.random() * 1000)
 
+      const submittedEmail = formData.email.trim().toLowerCase()
+      setRegisteredEmail(submittedEmail)
+
       const { data, error } = await supabase.auth.signUp({
-        email: formData.email.trim().toLowerCase(),
+        email: submittedEmail,
         password: formData.password,
         options: {
           data: {
@@ -285,6 +312,9 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
         return
       }
 
+      const needsEmailVerification = !data.session
+      setRequiresEmailVerification(needsEmailVerification)
+
       if (data.session) {
         await supabase.auth.signOut()
       }
@@ -292,7 +322,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
       setSuccess(true)
       window.setTimeout(() => {
         void router.push("/sign-in")
-      }, 1400)
+      }, needsEmailVerification ? 3000 : 1600)
     } catch (error) {
       console.error("Registration error:", error)
       setErrors({ form: "Something unexpected happened. Please try again." })
@@ -311,6 +341,17 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
 
     await handleRegister()
   }
+
+  const isBusy = pending || Boolean(oauthPending)
+
+  const GoogleIcon = () => (
+    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
+      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-1.9 3l3 2.3c1.8-1.6 2.8-4 2.8-6.8 0-.7-.1-1.4-.2-2H12z" />
+      <path fill="#34A853" d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3-2.3c-.8.6-2 .9-3.5.9-2.7 0-4.9-1.8-5.7-4.2l-3.1 2.4C5 19.7 8.2 22 12 22z" />
+      <path fill="#4A90E2" d="M6.3 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L3.2 7.6C2.4 9.1 2 10.5 2 12s.4 2.9 1.2 4.4L6.3 14z" />
+      <path fill="#FBBC05" d="M12 5.8c1.5 0 2.8.5 3.9 1.5l2.9-2.9C16.9 2.6 14.7 2 12 2 8.2 2 5 4.3 3.2 7.6L6.3 10c.8-2.4 3-4.2 5.7-4.2z" />
+    </svg>
+  )
 
   return (
     <motion.section
@@ -489,15 +530,19 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
                 className="rounded-[1.75rem] border border-emerald-200 bg-emerald-50/90 p-8 text-center shadow-sm dark:border-emerald-500/30 dark:bg-emerald-950/20"
               >
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                  <CheckCircle2 className="size-8" />
+                  {requiresEmailVerification ? <MailCheck className="size-8" /> : <CheckCircle2 className="size-8" />}
                 </div>
-                <h3 className="mt-5 text-2xl font-semibold text-slate-900 dark:text-slate-50">Account created</h3>
+                <h3 className="mt-5 text-2xl font-semibold text-slate-900 dark:text-slate-50">
+                  {requiresEmailVerification ? "Verify your email" : "Account created"}
+                </h3>
                 <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  Your signup is complete. We are sending you to the sign-in page now.
+                  {requiresEmailVerification
+                    ? `We sent a verification link to ${registeredEmail || "your email address"}. Confirm it to finish activation.`
+                    : "Your signup is complete. We are sending you to the sign-in page now."}
                 </p>
                 <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
                   <Loader2 className="size-4 animate-spin" />
-                  Redirecting...
+                  {requiresEmailVerification ? "Redirecting to sign in..." : "Redirecting..."}
                 </div>
               </motion.div>
             ) : (
@@ -522,6 +567,36 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
 
                 {step === 1 ? (
                   <div className="space-y-5">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isBusy}
+                        onClick={() => handleSocialAuth("google")}
+                        className="h-12 rounded-2xl border-slate-200 bg-white text-slate-700 transition-all duration-300 hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                      >
+                        {oauthPending === "google" ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
+                        Continue with Google
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isBusy}
+                        onClick={() => handleSocialAuth("github")}
+                        className="h-12 rounded-2xl border-slate-200 bg-white text-slate-700 transition-all duration-300 hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                      >
+                        {oauthPending === "github" ? <Loader2 className="size-4 animate-spin" /> : <Github className="size-4" />}
+                        Continue with GitHub
+                      </Button>
+                    </div>
+
+                    <div className="relative py-1">
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-slate-700" />
+                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:bg-slate-950/70 dark:text-slate-500">
+                        Or continue with details
+                      </span>
+                    </div>
+
                     <div className="grid gap-5 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="firstname" className="text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -827,7 +902,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
                       type="button"
                       variant="outline"
                       onClick={handleBack}
-                      disabled={pending}
+                      disabled={isBusy}
                       className="h-12 rounded-2xl border-slate-200 px-5 dark:border-slate-700"
                     >
                       <ChevronLeft className="mr-2 size-4" />
@@ -838,7 +913,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
                   <Button
                     type={step === 1 ? "button" : "submit"}
                     onClick={step === 1 ? handleContinue : undefined}
-                    disabled={pending}
+                    disabled={isBusy}
                     className="h-12 rounded-2xl bg-gradient-to-r from-cyan-600 to-teal-500 px-6 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:from-cyan-500 hover:to-teal-400"
                   >
                     {pending ? (
