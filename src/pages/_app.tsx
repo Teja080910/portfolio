@@ -1,3 +1,5 @@
+import AuthActions from "@/app/components/auth-actions";
+import { ThemeProvider } from "@/app/components/theme-provider";
 import "@/styles/globals.css";
 import { authProvider } from "@/utils/middleware/authMiddleware";
 import { notificationProvider } from "@refinedev/antd";
@@ -14,34 +16,43 @@ import { supabase } from "./api/supabaseclinet";
 export default function App({ Component, pageProps }: AppProps) {
   const dataProvider = supabaseDataProvider(supabase);
   const router = useRouter();
+  const isAuthRoute = ["/sign-in", "/sign-up", "/reset-password"].includes(router.pathname);
   return (
-    <RefineKbarProvider>
-      <Refine
-        dataProvider={dataProvider}
-        notificationProvider={notificationProvider}
-        authProvider={authProvider}
-        resources={[
-          { name: "posts", list: "/posts" },
-          { name: "user", list: "/user" },
-          { name: "signup", list: "/signup" }
-        ]}
-        options={{
-          syncWithLocation: true,
-          warnWhenUnsavedChanges: true,
-        }}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={router.asPath}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.28, ease: "easeOut" }}
-          >
-            <Component {...pageProps} />
-          </motion.div>
-        </AnimatePresence>
-      </Refine>
-    </RefineKbarProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <RefineKbarProvider>
+        <Refine
+          dataProvider={dataProvider}
+          notificationProvider={notificationProvider}
+          authProvider={authProvider}
+          resources={[
+            { name: "posts", list: "/posts" },
+            { name: "user", list: "/user" },
+            { name: "signup", list: "/signup" }
+          ]}
+          options={{
+            syncWithLocation: true,
+            warnWhenUnsavedChanges: true,
+          }}
+        >
+          {!isAuthRoute && (
+            <div className="fixed right-4 top-4 z-[60]">
+              <AuthActions />
+            </div>
+          )}
+
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={router.asPath}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
+            >
+              <Component {...pageProps} />
+            </motion.div>
+          </AnimatePresence>
+        </Refine>
+      </RefineKbarProvider>
+    </ThemeProvider>
   );
 }
