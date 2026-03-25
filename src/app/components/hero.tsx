@@ -55,7 +55,7 @@ export default function Hero() {
       <div className="surface-grid relative z-10 px-6 pb-16">
         <div className="grid items-center gap-12 rounded-[2rem] border border-slate-200/70 bg-white/70 p-8 shadow-xl backdrop-blur-lg dark:border-slate-700/70 dark:bg-slate-900/65 lg:grid-cols-2 lg:p-12">
           <motion.div
-            className="text-center lg:text-left"
+            className="min-w-0 text-center lg:text-left"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: "easeOut" }}
@@ -64,10 +64,10 @@ export default function Hero() {
             <h1 className="mt-5 bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-4xl font-bold text-transparent dark:from-cyan-300 dark:to-teal-300 md:text-5xl lg:text-6xl">
               {fullName}
             </h1>
-            <h2 className="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-300 md:text-2xl">
+            <h2 className="mt-4 break-words text-xl font-semibold text-slate-700 [overflow-wrap:anywhere] dark:text-slate-300 md:text-2xl">
               @{user.username || "complete-your-profile"}
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300 lg:mx-0 md:text-lg">
+            <p className="mx-auto mt-5 max-w-xl break-words text-base leading-7 text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300 lg:mx-0 md:text-lg">
               {description}
             </p>
 

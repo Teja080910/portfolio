@@ -186,7 +186,7 @@ export default function PortfolioContentForm() {
   return (
     <motion.section
       id="portfolio-content"
-      className="mt-8 rounded-[2rem] border border-slate-200/70 bg-white/75 p-6 shadow-2xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/75 md:p-8 lg:p-10"
+      className="scroll-mt-28 mt-8 rounded-[2rem] border border-slate-200/70 bg-white/75 p-6 shadow-2xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/75 md:p-8 lg:p-10"
       initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -195,9 +195,9 @@ export default function PortfolioContentForm() {
       <div className="flex flex-col gap-4 border-b border-slate-200/70 pb-6 dark:border-slate-700/70 md:flex-row md:items-end md:justify-between">
         <div>
           <span className="accent-chip">Edit Portfolio Content</span>
-          <h2 className="mt-3 text-3xl font-bold text-slate-900 dark:text-slate-100">Add, edit, delete, hide, or show your sections</h2>
+          <h2 className="mt-3 text-3xl font-bold text-slate-900 dark:text-slate-100">Manage what appears on your portfolio</h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            This removes starter data completely. Sections on the homepage now render only what you manage here.
+            Update section content, visibility, and order from one place. Your homepage will reflect only the data you configure here.
           </p>
         </div>
         <button

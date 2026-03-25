@@ -786,29 +786,29 @@ export default function ProfileForm() {
                         preview.initials
                       )}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Live Preview</p>
-                      <h2 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{preview.fullName}</h2>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{preview.username}</p>
+                      <h2 className="mt-1 break-words text-2xl font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100">{preview.fullName}</h2>
+                      <p className="mt-1 break-words text-sm text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{preview.username}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
+                  <div className="min-w-0 space-y-4">
+                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
                       <Briefcase className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span>{preview.role}</span>
+                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{preview.role}</span>
                     </div>
-                    <div className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
+                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
                       <UserRound className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span>{preview.description}</span>
+                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{preview.description}</span>
                     </div>
-                    <div className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
+                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
                       <Mail className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span>{accountEmail || "Your email will appear here"}</span>
+                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{accountEmail || "Your email will appear here"}</span>
                     </div>
-                    <div className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
+                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
                       <Phone className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span>{watchedValues.phone || "Add a phone number if you want it in the contact section"}</span>
+                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{watchedValues.phone || "Add a phone number if you want it in the contact section"}</span>
                     </div>
                   </div>
                 </div>

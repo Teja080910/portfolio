@@ -144,17 +144,19 @@ const mapCertificateContent = (value: unknown, userId: string): ICertificate[] =
 export default function Home() {
   const store = useStore()
   const router = useRouter()
-  const [isSessionReady, setIsSessionReady] = useState(false)
-  const showHero = isSessionReady && Boolean(store.user.show)
+  const [isSessionReady, setIsSessionReady] = useState(() => Boolean(useStore.getState().user.id))
+  const hasCachedUser = Boolean(store.user.id)
+  const canRenderFromStore = isSessionReady || hasCachedUser
+  const showHero = canRenderFromStore && Boolean(store.user.show)
   const hasAboutContent =
     Boolean(store.about?.type?.trim()) || Boolean(store.about?.list?.some((item) => item.trim()))
-  const showAbout = isSessionReady && hasAboutContent && Boolean(store.about.show)
-  const showExperience = isSessionReady && store.experience.some((item) => item.show)
-  const showSkills = isSessionReady && store.skills.some((item) => item.show)
-  const showProjects = isSessionReady && store.projects.some((item) => item.show)
-  const showCertificate = isSessionReady && store.certificate.some((item) => item.show)
-  const showEducation = isSessionReady && store.education.some((item) => item.show)
-  const showContact = isSessionReady && Boolean(store.user.id)
+  const showAbout = canRenderFromStore && hasAboutContent && Boolean(store.about.show)
+  const showExperience = canRenderFromStore && store.experience.some((item) => item.show)
+  const showSkills = canRenderFromStore && store.skills.some((item) => item.show)
+  const showProjects = canRenderFromStore && store.projects.some((item) => item.show)
+  const showCertificate = canRenderFromStore && store.certificate.some((item) => item.show)
+  const showEducation = canRenderFromStore && store.education.some((item) => item.show)
+  const showContact = canRenderFromStore && hasCachedUser
 
   useEffect(()=>{
     let isActive = true
@@ -245,7 +247,7 @@ export default function Home() {
     }
   },[router])
 
-  if (!isSessionReady || !store.user.id) {
+  if (!hasCachedUser) {
     return (
       <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
