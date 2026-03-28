@@ -3,8 +3,9 @@
 import { useStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
-import { Loader2, Mail, Phone, Send, UserRound } from "lucide-react"
+import { Loader2, Mail, PencilLine, Phone, Send, UserRound } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -19,11 +20,18 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-export default function Contact() {
+type ContactProps = {
+  isReadOnly?: boolean
+}
+
+export default function Contact({ isReadOnly = false }: ContactProps) {
   const user = useStore((state) => state.user)
+  const userId = user.id
+  const editProfileHref = `/u/${encodeURIComponent(user.username || "me")}/profile`
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const fullName = [user.firstname, user.lastname].filter(Boolean).join(" ").trim() || user.username || ""
+  const hasContactInfo = Boolean(user.email || user.phone || fullName || user.role)
 
   const {
     register,
@@ -49,6 +57,10 @@ export default function Contact() {
     })
   }, [fullName, reset, user.email])
 
+  if (isReadOnly && !hasContactInfo) {
+    return null
+  }
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
@@ -68,10 +80,21 @@ export default function Contact() {
   return (
     <section id="contact" className="section-shell">
       <div className="surface-grid relative z-10">
+        {!isReadOnly && userId && (
+          <div className="mb-4 flex justify-end">
+            <Link
+              href={editProfileHref}
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+            >
+              <PencilLine className="h-3.5 w-3.5" />
+              Edit Contact Details
+            </Link>
+          </div>
+        )}
         <AnimatedSectionHeader title="Get in Touch" />
         <div className="flex flex-col lg:flex-row gap-12">
           <motion.div
-            className="lg:w-1/3"
+            className={isReadOnly ? "lg:w-full" : "lg:w-1/3"}
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.4 }}
@@ -115,87 +138,89 @@ export default function Contact() {
               </div>
             </div>
           </motion.div>
-          <motion.div
-            className="lg:w-2/3"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.55 }}
-          >
-            <form onSubmit={handleSubmit(onSubmit)} className="glass-card p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Name
+          {!isReadOnly && (
+            <motion.div
+              className="lg:w-2/3"
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.55 }}
+            >
+              <form onSubmit={handleSubmit(onSubmit)} className="glass-card p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Name
+                    </label>
+                    <input
+                      {...register("name")}
+                      type="text"
+                      className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
+                        errors.name ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                      }`}
+                    />
+                    {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Email
+                    </label>
+                    <input
+                      {...register("email")}
+                      type="email"
+                      className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
+                        errors.email ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                      }`}
+                    />
+                    {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <label htmlFor="subject" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Subject
                   </label>
                   <input
-                    {...register("name")}
+                    {...register("subject")}
                     type="text"
                     className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
-                      errors.name ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                      errors.subject ? "border-red-500" : "border-slate-300 dark:border-slate-600"
                     }`}
                   />
-                  {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
+                  {errors.subject && <p className="mt-1 text-sm text-red-500">{errors.subject.message}</p>}
                 </div>
-                <div>
-                  <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Email
+                <div className="mt-6">
+                  <label htmlFor="message" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Message
                   </label>
-                  <input
-                    {...register("email")}
-                    type="email"
+                  <textarea
+                    {...register("message")}
+                    rows={4}
                     className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
-                      errors.email ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                      errors.message ? "border-red-500" : "border-slate-300 dark:border-slate-600"
                     }`}
-                  />
-                  {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+                  ></textarea>
+                  {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>}
                 </div>
-              </div>
-              <div className="mt-6">
-                <label htmlFor="subject" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Subject
-                </label>
-                <input
-                  {...register("subject")}
-                  type="text"
-                  className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
-                    errors.subject ? "border-red-500" : "border-slate-300 dark:border-slate-600"
-                  }`}
-                />
-                {errors.subject && <p className="mt-1 text-sm text-red-500">{errors.subject.message}</p>}
-              </div>
-              <div className="mt-6">
-                <label htmlFor="message" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Message
-                </label>
-                <textarea
-                  {...register("message")}
-                  rows={4}
-                  className={`w-full rounded-xl border bg-white/70 px-4 py-2.5 text-slate-800 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800/70 dark:text-slate-100 ${
-                    errors.message ? "border-red-500" : "border-slate-300 dark:border-slate-600"
-                  }`}
-                ></textarea>
-                {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>}
-              </div>
-              <div className="mt-6">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 px-4 py-2.5 text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 ${
-                    isSubmitting ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
-                  {isSubmitting ? "Sending..." : "Send Message"}
-                </button>
-              </div>
-              {submitSuccess && (
-                <div className="mt-4 rounded-xl bg-emerald-100 p-4 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                  Message sent successfully!
+                <div className="mt-6">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 px-4 py-2.5 text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 ${
+                      isSubmitting ? "opacity-75 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
+                    {isSubmitting ? "Sending..." : "Send Message"}
+                  </button>
                 </div>
-              )}
-            </form>
-          </motion.div>
+                {submitSuccess && (
+                  <div className="mt-4 rounded-xl bg-emerald-100 p-4 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                    Message sent successfully!
+                  </div>
+                )}
+              </form>
+            </motion.div>
+          )}
         </div>
       </div>
       <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">

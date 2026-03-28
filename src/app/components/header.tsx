@@ -1,28 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useTheme } from "next-themes"
+import { useEffect, useRef, useState } from "react"
 
 export default function Header() {
-  const [mounted, setMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
   const [activeSection, setActiveSection] = useState("home")
-  const { theme } = useTheme()
-
-  useEffect(() => setMounted(true), [])
+  const lastScrollYRef = useRef(0)
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-      setIsVisible(currentScrollY < lastScrollY || currentScrollY < 100)
-      setLastScrollY(currentScrollY)
+      setIsVisible(currentScrollY < lastScrollYRef.current || currentScrollY < 100)
+      lastScrollYRef.current = currentScrollY
     }
 
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          setActiveSection(entry.target.id)
+          setActiveSection((previous) => (previous === entry.target.id ? previous : entry.target.id))
         }
       })
     }
@@ -41,9 +36,7 @@ export default function Header() {
       window.removeEventListener("scroll", handleScroll)
       observer.disconnect()
     }
-  }, [lastScrollY])
-
-  if (!mounted) return null
+  }, [])
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
@@ -64,8 +57,7 @@ export default function Header() {
       className={`
         fixed w-full z-50 transition-all duration-300
         ${isVisible ? "top-0" : "-top-20"}
-        ${theme === "dark" ? "bg-gray-900/95" : "bg-white/95"}
-        backdrop-blur-sm shadow-md
+        bg-white/95 shadow-md backdrop-blur-sm dark:bg-gray-900/95
       `}
     >
       <nav className="container mx-auto px-6 py-4">
@@ -86,9 +78,7 @@ export default function Header() {
                   ${
                     activeSection === id
                       ? "text-blue-600 dark:text-blue-400"
-                      : theme === "dark"
-                        ? "text-gray-300 hover:text-white"
-                        : "text-gray-800 hover:text-blue-600"
+                      : "text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white"
                   }
                 `}
               >
@@ -101,4 +91,3 @@ export default function Header() {
     </header>
   )
 }
-

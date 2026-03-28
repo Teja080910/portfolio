@@ -15,28 +15,42 @@ const sections = [
   { id: "contact", label: "Contact" },
 ]
 
-export default function FloatingNav() {
+type FloatingNavProps = {
+  isReadOnly?: boolean
+}
+
+export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
   const [activeSection, setActiveSection] = useState("user")
-  const store = useStore((state) => state as StoreState)
+  const user = useStore((state: StoreState) => state.user)
+  const about = useStore((state: StoreState) => state.about)
+  const experience = useStore((state: StoreState) => state.experience)
+  const skills = useStore((state: StoreState) => state.skills)
+  const projects = useStore((state: StoreState) => state.projects)
+  const certificate = useStore((state: StoreState) => state.certificate)
+  const education = useStore((state: StoreState) => state.education)
 
   const isSectionVisible = (sectionId: string) => {
+    if (!isReadOnly) {
+      return true
+    }
+
     switch (sectionId) {
       case "user":
-        return store.user.show
+        return Boolean(user.show)
       case "about":
-        return Boolean(store.about.show) && (Boolean(store.about.type?.trim()) || store.about.list.some((item) => item.trim()))
+        return Boolean(about.show) && (Boolean(about.type?.trim()) || about.list.some((item) => item.trim()))
       case "experience":
-        return store.experience.some((item) => item.show)
+        return experience.some((item) => item.show)
       case "skills":
-        return store.skills.some((item) => item.show)
+        return skills.some((item) => item.show)
       case "projects":
-        return store.projects.some((item) => item.show)
+        return projects.some((item) => item.show)
       case "certificate":
-        return store.certificate.some((item) => item.show)
+        return certificate.some((item) => item.show)
       case "education":
-        return store.education.some((item) => item.show)
+        return education.some((item) => item.show)
       case "contact":
-        return Boolean(store.user.id)
+        return Boolean(user.email || user.phone || user.firstname || user.lastname || user.username || user.role)
       default:
         return false
     }

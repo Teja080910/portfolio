@@ -151,9 +151,7 @@ export const authProvider: AuthProvider = {
 
             if (
                 currentStoreUser?.id !== sessionUser.id ||
-                currentStoreUser?.email !== sessionEmail ||
-                !currentStoreUser?.firstname ||
-                !currentStoreUser?.username
+                currentStoreUser?.email !== sessionEmail
             ) {
                 await hydrateStoreUserFromSession(sessionUser);
             }
@@ -178,9 +176,7 @@ export const authProvider: AuthProvider = {
 
             if (
                 currentStoreUser?.id !== data.user.id ||
-                currentStoreUser?.email !== (data.user.email ?? "") ||
-                !currentStoreUser?.firstname ||
-                !currentStoreUser?.username
+                currentStoreUser?.email !== (data.user.email ?? "")
             ) {
                 await hydrateStoreUserFromSession(data.user);
             }

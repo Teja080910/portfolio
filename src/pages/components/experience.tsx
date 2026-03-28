@@ -2,25 +2,43 @@
 
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { Briefcase, Calendar, Globe, MapPin } from "lucide-react"
+import { Briefcase, Calendar, Globe, MapPin, PencilLine } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
-export default function Experience() {
-  const experiences = useStore((state) =>
-    state.experience.filter((item) => item.show && (item.type || item.role || item.decription)),
-  )
+type ExperienceProps = {
+  isReadOnly?: boolean
+}
 
-  if (experiences.length === 0) {
+export default function Experience({ isReadOnly = false }: ExperienceProps) {
+  const experienceStore = useStore((state) => state.experience)
+  const userId = useStore((state) => state.user.id)
+  const username = useStore((state) => state.user.username)
+  const editExperienceHref = `/u/${encodeURIComponent(username || "me")}/edit-experience`
+  const experiences = experienceStore.filter((item) => item.show && (item.type || item.role || item.decription))
+
+  if (isReadOnly && experiences.length === 0) {
     return null
   }
 
   return (
     <section id="experience" className="section-shell">
       <div className="surface-grid relative z-10">
+        {!isReadOnly && userId && (
+          <div className="mb-4 flex justify-end">
+            <Link
+              href={editExperienceHref}
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+            >
+              <PencilLine className="h-3.5 w-3.5" />
+              Edit Experience
+            </Link>
+          </div>
+        )}
         <AnimatedSectionHeader title="Professional Experience" />
         <div className="space-y-8">
-          {experiences.map((exp, index) => (
+          {experiences.length > 0 ? experiences.map((exp, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 50 }}
@@ -63,7 +81,11 @@ export default function Experience() {
                 </ul>
               </div>
             </motion.div>
-          ))}
+          )) : (
+            <div className="glass-card text-center text-slate-600 dark:text-slate-300">
+              No experience entries yet. Use Edit Experience to add your work history.
+            </div>
+          )}
         </div>
       </div>
       <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
@@ -72,4 +94,3 @@ export default function Experience() {
     </section>
   )
 }
-

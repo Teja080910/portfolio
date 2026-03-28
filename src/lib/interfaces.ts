@@ -65,6 +65,7 @@ export interface IProjects {
     gitlink: string;
     weblink: string;
     logo: string;
+    photos: string[];
     skills: string[];
     show: boolean;
 }

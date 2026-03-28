@@ -11,10 +11,26 @@ import "antd/dist/reset.css";
 import { AnimatePresence, motion } from "framer-motion";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
+import { useMemo } from "react";
 import { supabase } from "./api/supabaseclinet";
 
 export default function App({ Component, pageProps }: AppProps) {
-  const dataProvider = supabaseDataProvider(supabase);
+  const dataProvider = useMemo(() => supabaseDataProvider(supabase), []);
+  const resources = useMemo(
+    () => [
+      { name: "posts", list: "/posts" },
+      { name: "user", list: "/user" },
+      { name: "signup", list: "/signup" }
+    ],
+    [],
+  );
+  const refineOptions = useMemo(
+    () => ({
+      syncWithLocation: true,
+      warnWhenUnsavedChanges: true,
+    }),
+    [],
+  );
   const router = useRouter();
   const isAuthRoute = ["/sign-in", "/sign-up", "/reset-password"].includes(router.pathname);
   return (
@@ -24,15 +40,8 @@ export default function App({ Component, pageProps }: AppProps) {
           dataProvider={dataProvider}
           notificationProvider={notificationProvider}
           authProvider={authProvider}
-          resources={[
-            { name: "posts", list: "/posts" },
-            { name: "user", list: "/user" },
-            { name: "signup", list: "/signup" }
-          ]}
-          options={{
-            syncWithLocation: true,
-            warnWhenUnsavedChanges: true,
-          }}
+          resources={resources}
+          options={refineOptions}
         >
           {!isAuthRoute && (
             <div className="fixed right-4 top-4 z-[60]">

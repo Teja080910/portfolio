@@ -5,7 +5,7 @@ import { IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IU
 import { useStore } from "@/lib/store";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import About from "./components/about";
 import Certificate from "./components/certificate";
 import Contact from "./components/contact";
@@ -51,6 +51,23 @@ const toString = (value: unknown) => (typeof value === "string" ? value : "")
 const toStringArray = (value: unknown) =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean) : []
 
+const normalizeSkillsArray = (value: unknown) => {
+  const normalized: string[] = []
+
+  toStringArray(value)
+    .flatMap((item) => item.split(","))
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .forEach((item) => {
+      const exists = normalized.some((entry) => entry.toLowerCase() === item.toLowerCase())
+      if (!exists) {
+        normalized.push(item)
+      }
+    })
+
+  return normalized
+}
+
 const mapAboutContent = (value: unknown, userId: string): IAboutMe => {
   const raw = (value && typeof value === "object" ? value : {}) as Record<string, unknown>
   return {
@@ -70,7 +87,7 @@ const mapSkillsContent = (value: unknown, userId: string): ISkills[] =>
           id: toString(item.id) || `skill-${userId}-${index}`,
           person: userId,
           skilltype: toString(item.skilltype),
-          skills: toStringArray(item.skills),
+          skills: normalizeSkillsArray(item.skills),
           description: toString(item.description),
           show: typeof item.show === "boolean" ? item.show : true,
         }))
@@ -80,18 +97,24 @@ const mapProjectsContent = (value: unknown, userId: string): IProjects[] =>
   Array.isArray(value)
     ? value
         .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
-        .map((item, index) => ({
-          id: toString(item.id) || `project-${userId}-${index}`,
-          person: userId,
-          name: toString(item.name),
-          description: toString(item.description),
-          duration: toString(item.duration),
-          gitlink: toString(item.gitlink),
-          weblink: toString(item.weblink),
-          logo: toString(item.logo),
-          skills: toStringArray(item.skills),
-          show: typeof item.show === "boolean" ? item.show : true,
-        }))
+        .map((item, index) => {
+          const logo = toString(item.logo)
+          const photos = toStringArray(item.photos)
+
+          return {
+            id: toString(item.id) || `project-${userId}-${index}`,
+            person: userId,
+            name: toString(item.name),
+            description: toString(item.description),
+            duration: toString(item.duration),
+            gitlink: toString(item.gitlink),
+            weblink: toString(item.weblink),
+            logo,
+            photos: photos.length ? photos : (logo ? [logo] : []),
+            skills: toStringArray(item.skills),
+            show: typeof item.show === "boolean" ? item.show : true,
+          }
+        })
     : []
 
 const mapExperienceContent = (value: unknown, userId: string): IExperience[] =>
@@ -142,95 +165,200 @@ const mapCertificateContent = (value: unknown, userId: string): ICertificate[] =
     : []
 
 export default function Home() {
-  const store = useStore()
+  const user = useStore((state) => state.user)
+  const about = useStore((state) => state.about)
+  const experience = useStore((state) => state.experience)
+  const skills = useStore((state) => state.skills)
+  const projects = useStore((state) => state.projects)
+  const certificate = useStore((state) => state.certificate)
+  const education = useStore((state) => state.education)
   const router = useRouter()
+  const isUsernamePath = router.pathname === "/u/[username]"
+  const isReadModeRoute =
+    isUsernamePath ||
+    router.query.mode === "read" ||
+    router.query.view === "read" ||
+    router.query.read === "true"
+  const usernameFromRoute = typeof router.query.username === "string" ? router.query.username.trim() : ""
   const [isSessionReady, setIsSessionReady] = useState(() => Boolean(useStore.getState().user.id))
-  const hasCachedUser = Boolean(store.user.id)
+  const [viewerId, setViewerId] = useState("")
+  const isSyncingSession = useRef(false)
+  const hasCachedUser = Boolean(user.id)
   const canRenderFromStore = isSessionReady || hasCachedUser
-  const showHero = canRenderFromStore && Boolean(store.user.show)
-  const hasAboutContent =
-    Boolean(store.about?.type?.trim()) || Boolean(store.about?.list?.some((item) => item.trim()))
-  const showAbout = canRenderFromStore && hasAboutContent && Boolean(store.about.show)
-  const showExperience = canRenderFromStore && store.experience.some((item) => item.show)
-  const showSkills = canRenderFromStore && store.skills.some((item) => item.show)
-  const showProjects = canRenderFromStore && store.projects.some((item) => item.show)
-  const showCertificate = canRenderFromStore && store.certificate.some((item) => item.show)
-  const showEducation = canRenderFromStore && store.education.some((item) => item.show)
-  const showContact = canRenderFromStore && hasCachedUser
+  const isOwnerView = Boolean(viewerId) && viewerId === user.id && !isReadModeRoute
+  const isReadOnlyView = !isOwnerView
+  const hasExperienceContent = experience.some((item) => item.show && (item.type || item.role || item.decription))
+  const hasSkillsContent = skills.some((item) => item.show && (item.skilltype || item.skills.length || item.description))
+  const hasProjectsContent = projects.some((item) => item.show && (item.name || item.description || item.duration))
+  const hasCertificateContent = certificate.some((item) => item.show && (item.name || item.duration || item.link))
+  const hasEducationContent = education.some((item) => item.show && (item.name || item.course || item.branch || item.keyachivements))
+  const hasContactContent = Boolean(user.email || user.phone || user.firstname || user.lastname || user.username || user.role)
 
-  useEffect(()=>{
+  const showHero = canRenderFromStore && (isOwnerView ? true : Boolean(user.show))
+  const hasAboutContent =
+    Boolean(about?.type?.trim()) || Boolean(about?.list?.some((item) => item.trim()))
+  const showAbout = canRenderFromStore && (isOwnerView || (hasAboutContent && Boolean(about.show)))
+  const showExperience = canRenderFromStore && (isOwnerView || hasExperienceContent)
+  const showSkills = canRenderFromStore && (isOwnerView || hasSkillsContent)
+  const showProjects = canRenderFromStore && (isOwnerView || hasProjectsContent)
+  const showCertificate = canRenderFromStore && (isOwnerView || hasCertificateContent)
+  const showEducation = canRenderFromStore && (isOwnerView || hasEducationContent)
+  const showContact = canRenderFromStore && (isOwnerView || hasContactContent)
+
+  const loadPublicProfileByUsername = async (username: string) => {
+    const trimmedUsername = username.trim()
+    const storeApi = useStore.getState()
+
+    if (!trimmedUsername) {
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("username", trimmedUsername)
+      .eq("show", true)
+      .maybeSingle()
+
+    if (!profile) {
+      storeApi.removeUser()
+      storeApi.resetPortfolio()
+      return
+    }
+
+    storeApi.addUser(mapProfileToStoreUser(profile))
+
+    const { data: portfolioContent } = await supabase
+      .from("portfolio_contents")
+      .select("about, skills, projects, experience, education, certificates")
+      .eq("user_id", profile.id)
+      .maybeSingle()
+
+    if (portfolioContent) {
+      storeApi.setAbout(mapAboutContent(portfolioContent.about, profile.id))
+      storeApi.setSkills(mapSkillsContent(portfolioContent.skills, profile.id))
+      storeApi.setProjects(mapProjectsContent(portfolioContent.projects, profile.id))
+      storeApi.setExperience(mapExperienceContent(portfolioContent.experience, profile.id))
+      storeApi.setEducation(mapEducationContent(portfolioContent.education, profile.id))
+      storeApi.setCertificate(mapCertificateContent(portfolioContent.certificates, profile.id))
+    } else {
+      storeApi.resetPortfolio()
+    }
+  }
+
+  useEffect(() => {
+    if (!router.isReady) {
+      return
+    }
+
     let isActive = true
 
     const syncSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      const sessionUser = data.session?.user
-
-      if (!sessionUser) {
-        useStore.getState().removeUser()
-        useStore.getState().resetPortfolio()
-        if (isActive) {
-          setIsSessionReady(true)
-          void router.replace('/sign-in')
-        }
+      if (isSyncingSession.current) {
         return
       }
 
-      const currentStoreUser = useStore.getState().user
-      const shouldRefreshUser =
-        currentStoreUser.id !== sessionUser.id ||
-        currentStoreUser.email !== (sessionUser.email ?? "") ||
-        !currentStoreUser.firstname ||
-        !currentStoreUser.username
+      isSyncingSession.current = true
+      try {
+        const { data } = await supabase.auth.getSession()
+        const sessionUser = data.session?.user
 
-      if (shouldRefreshUser) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", sessionUser.id)
+        if (usernameFromRoute) {
+          setViewerId(sessionUser?.id ?? "")
+          await loadPublicProfileByUsername(usernameFromRoute)
+
+          if (isActive) {
+            setIsSessionReady(true)
+          }
+
+          return
+        }
+
+        if (!sessionUser) {
+          setViewerId("")
+
+          useStore.getState().removeUser()
+          useStore.getState().resetPortfolio()
+          if (isActive) {
+            setIsSessionReady(true)
+            if (!isReadModeRoute) {
+              void router.replace('/sign-in')
+            }
+          }
+          return
+        }
+
+        setViewerId(sessionUser.id)
+
+        const currentStoreUser = useStore.getState().user
+        const shouldRefreshUser =
+          currentStoreUser.id !== sessionUser.id ||
+          currentStoreUser.email !== (sessionUser.email ?? "")
+
+        if (shouldRefreshUser) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", sessionUser.id)
+            .maybeSingle()
+
+          if (profile) {
+            useStore.getState().addUser(mapProfileToStoreUser(profile))
+          } else {
+            useStore.getState().addUser(mapSessionUserToStoreUser(sessionUser))
+          }
+        }
+
+        const { data: portfolioContent } = await supabase
+          .from("portfolio_contents")
+          .select("about, skills, projects, experience, education, certificates")
+          .eq("user_id", sessionUser.id)
           .maybeSingle()
 
-        if (profile) {
-          useStore.getState().addUser(mapProfileToStoreUser(profile))
+        if (portfolioContent) {
+          const storeApi = useStore.getState()
+          storeApi.setAbout(mapAboutContent(portfolioContent.about, sessionUser.id))
+          storeApi.setSkills(mapSkillsContent(portfolioContent.skills, sessionUser.id))
+          storeApi.setProjects(mapProjectsContent(portfolioContent.projects, sessionUser.id))
+          storeApi.setExperience(mapExperienceContent(portfolioContent.experience, sessionUser.id))
+          storeApi.setEducation(mapEducationContent(portfolioContent.education, sessionUser.id))
+          storeApi.setCertificate(mapCertificateContent(portfolioContent.certificates, sessionUser.id))
         } else {
-          useStore.getState().addUser(mapSessionUserToStoreUser(sessionUser))
+          useStore.getState().resetPortfolio()
         }
-      }
 
-      const { data: portfolioContent } = await supabase
-        .from("portfolio_contents")
-        .select("about, skills, projects, experience, education, certificates")
-        .eq("user_id", sessionUser.id)
-        .maybeSingle()
-
-      if (portfolioContent) {
-        const storeApi = useStore.getState()
-        storeApi.setAbout(mapAboutContent(portfolioContent.about, sessionUser.id))
-        storeApi.setSkills(mapSkillsContent(portfolioContent.skills, sessionUser.id))
-        storeApi.setProjects(mapProjectsContent(portfolioContent.projects, sessionUser.id))
-        storeApi.setExperience(mapExperienceContent(portfolioContent.experience, sessionUser.id))
-        storeApi.setEducation(mapEducationContent(portfolioContent.education, sessionUser.id))
-        storeApi.setCertificate(mapCertificateContent(portfolioContent.certificates, sessionUser.id))
-      } else {
-        useStore.getState().resetPortfolio()
-      }
-
-      if (isActive) {
-        setIsSessionReady(true)
+        if (isActive) {
+          setIsSessionReady(true)
+        }
+      } finally {
+        isSyncingSession.current = false
       }
     }
 
     void syncSession()
 
     const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (usernameFromRoute) {
+        setViewerId(session?.user?.id ?? "")
+        void syncSession()
+        return
+      }
+
       if (!session?.user) {
+        setViewerId("")
+
         useStore.getState().removeUser()
         useStore.getState().resetPortfolio()
         if (isActive) {
           setIsSessionReady(true)
-          void router.replace('/sign-in')
+          if (!isReadModeRoute) {
+            void router.replace('/sign-in')
+          }
         }
         return
       }
+
+      setViewerId(session.user.id)
 
       const currentStoreUser = useStore.getState().user
       if (
@@ -245,7 +373,7 @@ export default function Home() {
       isActive = false
       authSubscription.subscription.unsubscribe()
     }
-  },[router])
+  }, [isReadModeRoute, router, router.isReady, usernameFromRoute])
 
   if (!hasCachedUser) {
     return (
@@ -263,15 +391,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen transition-colors duration-500">
-      <FloatingNav />
-      {showHero && <Hero />}
-      {showAbout && <About />}
-      {showExperience && <Experience />}
-      {showSkills && <Skills />}
-      {showProjects && <Projects />}
-      {showCertificate && <Certificate />}
-      {showEducation && <Education />}
-      {showContact && <Contact />}
+      <FloatingNav isReadOnly={isReadOnlyView} />
+      {showHero && <Hero isReadOnly={isReadOnlyView} />}
+      {showAbout && <About isReadOnly={isReadOnlyView} />}
+      {showExperience && <Experience isReadOnly={isReadOnlyView} />}
+      {showSkills && <Skills isReadOnly={isReadOnlyView} />}
+      {showProjects && <Projects isReadOnly={isReadOnlyView} />}
+      {showCertificate && <Certificate isReadOnly={isReadOnlyView} />}
+      {showEducation && <Education isReadOnly={isReadOnlyView} />}
+      {showContact && <Contact isReadOnly={isReadOnlyView} />}
     </main>
   )
 }
