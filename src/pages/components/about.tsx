@@ -38,6 +38,7 @@ export default function About({ isReadOnly = false }: AboutProps) {
           <div className="mb-4 flex justify-end">
             <Link
               href={editAboutHref}
+              scroll={false}
               className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
             >
               <PencilLine className="h-3.5 w-3.5" />

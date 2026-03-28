@@ -49,7 +49,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </div>
           )}
 
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
             <motion.div
               key={router.asPath}
               initial={{ opacity: 0, y: 10 }}

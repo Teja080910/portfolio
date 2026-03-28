@@ -468,6 +468,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         <div className="flex flex-wrap gap-3">
           <Link
             href="/"
+            scroll={false}
             className="inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition-transform duration-300 hover:-translate-y-0.5 dark:border-slate-600 dark:bg-slate-950/35 dark:text-slate-200"
           >
             <ArrowLeft className="h-4 w-4" />
