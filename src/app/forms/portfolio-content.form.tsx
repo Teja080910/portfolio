@@ -483,7 +483,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             }`}
           >
             <Save className="mr-2 h-4 w-4" />
-            {isSaving ? "Saving..." : "Save Portfolio Content"}
+            {isSaving ? "Saving..." : `Save ${focusSection ? focusSection.charAt(0).toUpperCase() + focusSection.slice(1) : "Portfolio Content"}`}
           </button>
         </div>
       </div>

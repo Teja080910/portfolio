@@ -181,11 +181,11 @@ export default function Home() {
     router.query.read === "true"
   const usernameFromRoute = typeof router.query.username === "string" ? router.query.username.trim() : ""
   const [isSessionReady, setIsSessionReady] = useState(() => Boolean(useStore.getState().user.id))
-  const [viewerId, setViewerId] = useState("")
+  // viewerId tracking removed: on the owner dashboard route (/), we immediately treat it as owner view to prevent double-blinking.
   const isSyncingSession = useRef(false)
   const hasCachedUser = Boolean(user.id)
   const canRenderFromStore = isSessionReady || hasCachedUser
-  const isOwnerView = Boolean(viewerId) && viewerId === user.id && !isReadModeRoute
+  const isOwnerView = !isReadModeRoute
   const isReadOnlyView = !isOwnerView
   const hasExperienceContent = experience.some((item) => item.show && (item.type || item.role || item.decription))
   const hasSkillsContent = skills.some((item) => item.show && (item.skilltype || item.skills.length || item.description))
@@ -264,7 +264,6 @@ export default function Home() {
         const sessionUser = data.session?.user
 
         if (usernameFromRoute) {
-          setViewerId(sessionUser?.id ?? "")
           await loadPublicProfileByUsername(usernameFromRoute)
 
           if (isActive) {
@@ -275,7 +274,6 @@ export default function Home() {
         }
 
         if (!sessionUser) {
-          setViewerId("")
 
           useStore.getState().removeUser()
           useStore.getState().resetPortfolio()
@@ -288,7 +286,6 @@ export default function Home() {
           return
         }
 
-        setViewerId(sessionUser.id)
 
         const currentStoreUser = useStore.getState().user
         const shouldRefreshUser =
@@ -339,13 +336,11 @@ export default function Home() {
 
     const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (usernameFromRoute) {
-        setViewerId(session?.user?.id ?? "")
         void syncSession()
         return
       }
 
       if (!session?.user) {
-        setViewerId("")
 
         useStore.getState().removeUser()
         useStore.getState().resetPortfolio()
@@ -358,7 +353,6 @@ export default function Home() {
         return
       }
 
-      setViewerId(session.user.id)
 
       const currentStoreUser = useStore.getState().user
       if (

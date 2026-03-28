@@ -4,7 +4,6 @@ import { useStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
 import { Loader2, Mail, PencilLine, Phone, Send, UserRound } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -223,9 +222,6 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
             </motion.div>
           )}
         </div>
-      </div>
-      <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
-        <Image src="/placeholder.svg?height=160&width=160" alt="" width={160} height={160} />
       </div>
     </section>
   )

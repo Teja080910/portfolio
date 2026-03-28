@@ -3,7 +3,6 @@
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { Briefcase, Calendar, Globe, MapPin, PencilLine } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
@@ -88,9 +87,6 @@ export default function Experience({ isReadOnly = false }: ExperienceProps) {
             </div>
           )}
         </div>
-      </div>
-      <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
-        <Image src="/placeholder.svg?height=160&width=160" alt="" width={160} height={160} />
       </div>
     </section>
   )

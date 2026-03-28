@@ -3,7 +3,6 @@
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { PencilLine, Sparkles } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
@@ -50,10 +49,10 @@ export default function About({ isReadOnly = false }: AboutProps) {
         <div className="grid items-center gap-10 lg:grid-cols-2">
           {(aboutPoints.length > 0 || !isReadOnly) && (
             <motion.div
-              className="glass-card"
+              className="glass-card h-full"
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
+              viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.55 }}
             >
               <span className="accent-chip">Who I Am</span>
@@ -73,10 +72,10 @@ export default function About({ isReadOnly = false }: AboutProps) {
             </motion.div>
           )}
           <motion.div
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 h-full"
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
+            viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.55 }}
           >
             {(skillHighlights.length > 0 ? skillHighlights : !isReadOnly ? [{ title: "No skills yet", description: "Create skills from Edit Portfolio Content." }] : []).map((skill, index) => (
@@ -88,9 +87,6 @@ export default function About({ isReadOnly = false }: AboutProps) {
             ))}
           </motion.div>
         </div>
-      </div>
-      <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 opacity-20">
-        <Image src="/placeholder.svg?height=160&width=160" alt="" width={160} height={160} />
       </div>
     </section>
   )
