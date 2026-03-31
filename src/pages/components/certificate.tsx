@@ -44,7 +44,7 @@ export default function Certificate({ isReadOnly = false }: CertificateProps) {
               className="glass-card h-full"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.35 }}
+              viewport={{ once: false, amount: 0.35 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div className="flex items-center mb-4">

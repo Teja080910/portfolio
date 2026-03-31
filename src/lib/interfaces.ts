@@ -16,12 +16,23 @@ export interface IUser {
     show?: boolean;
 }
 
+export type AboutHighlightIcon = "compass" | "rocket" | "users" | "sparkles";
+
+export interface IAboutHighlight {
+    id: string;
+    title: string;
+    description: string;
+    icon: AboutHighlightIcon;
+    show: boolean;
+}
+
 export interface IAboutMe {
     id: string;
     type: string;
     list: string[];
     person: string;
     show: boolean;
+    highlights?: IAboutHighlight[];
 }
 
 export interface ICertificate {

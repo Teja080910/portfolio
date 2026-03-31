@@ -121,6 +121,20 @@ body {
     @apply mx-auto max-w-6xl;
   }
 
+  .section-shell.scroll-ready .surface-grid {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+    transition:
+      opacity 0.55s ease,
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .section-shell.scroll-ready.in-view .surface-grid {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
   .glass-card {
     @apply rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-lg backdrop-blur-md transition-all duration-500;
   }
@@ -144,6 +158,15 @@ body {
 
   .dark .accent-chip {
     @apply border-cyan-500/40 bg-cyan-950/50 text-cyan-200;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-shell.scroll-ready .surface-grid,
+  .section-shell.scroll-ready.in-view .surface-grid {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 

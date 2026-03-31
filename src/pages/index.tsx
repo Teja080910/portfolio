@@ -1,7 +1,7 @@
 import FloatingNav from "@/app/components/floating-nav";
 import Hero from "@/app/components/hero";
 import { supabase } from "@/lib/db";
-import { IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "@/lib/interfaces";
+import { IAboutHighlight, IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "@/lib/interfaces";
 import { useStore } from "@/lib/store";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/router";
@@ -68,14 +68,37 @@ const normalizeSkillsArray = (value: unknown) => {
   return normalized
 }
 
+const toAboutIcon = (value: unknown): IAboutHighlight["icon"] => {
+  const normalized = toString(value).toLowerCase()
+
+  if (normalized === "rocket" || normalized === "users" || normalized === "sparkles") {
+    return normalized
+  }
+
+  return "compass"
+}
+
 const mapAboutContent = (value: unknown, userId: string): IAboutMe => {
   const raw = (value && typeof value === "object" ? value : {}) as Record<string, unknown>
+  const highlights = Array.isArray(raw.highlights)
+    ? raw.highlights
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `about-highlight-${userId}-${index}`,
+          title: toString(item.title),
+          description: toString(item.description),
+          icon: toAboutIcon(item.icon),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
   return {
     id: toString(raw.id) || `about-${userId}`,
     person: userId,
     type: toString(raw.type),
     list: toStringArray(raw.list),
     show: typeof raw.show === "boolean" ? raw.show : true,
+    highlights,
   }
 }
 
@@ -368,6 +391,54 @@ export default function Home() {
       authSubscription.subscription.unsubscribe()
     }
   }, [isReadModeRoute, router, router.isReady, usernameFromRoute])
+
+  useEffect(() => {
+    if (!canRenderFromStore) {
+      return
+    }
+
+    const sections = Array.from(document.querySelectorAll<HTMLElement>(".section-shell"))
+
+    if (sections.length === 0) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle("in-view", entry.isIntersecting)
+        })
+      },
+      {
+        threshold: 0.25,
+        rootMargin: "0px 0px -10% 0px",
+      },
+    )
+
+    sections.forEach((section) => {
+      section.classList.add("scroll-ready")
+      observer.observe(section)
+    })
+
+    return () => {
+      sections.forEach((section) => {
+        section.classList.remove("in-view")
+        section.classList.remove("scroll-ready")
+        observer.unobserve(section)
+      })
+      observer.disconnect()
+    }
+  }, [
+    canRenderFromStore,
+    showAbout,
+    showCertificate,
+    showContact,
+    showEducation,
+    showExperience,
+    showHero,
+    showProjects,
+    showSkills,
+  ])
 
   if (!hasCachedUser) {
     return (

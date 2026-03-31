@@ -1,12 +1,12 @@
 "use client"
 
 import { supabase } from "@/lib/db"
-import { ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
+import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react"
+import { ArrowDown, ArrowLeft, ArrowUp, Compass, Plus, Rocket, Save, Sparkles, Trash2, Users } from "lucide-react"
 import Link from "next/link"
-import { ChangeEvent, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 
 type Notice = { tone: "success" | "error"; message: string } | null
 type PortfolioEditSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | null
@@ -18,6 +18,98 @@ type PortfolioContentFormProps = {
 const PROJECT_PHOTOS_BUCKET = "profile-photos"
 const MAX_PROJECT_PHOTO_SIZE = 5 * 1024 * 1024
 const ALLOWED_PROJECT_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const ABOUT_HIGHLIGHT_ICONS: AboutHighlightIcon[] = ["compass", "rocket", "users", "sparkles"]
+const ABOUT_HIGHLIGHT_TEMPLATES: Array<Pick<IAboutHighlight, "title" | "description" | "icon">> = [
+  {
+    title: "Product Thinking",
+    description: "I focus on user outcomes and business impact, not just feature delivery.",
+    icon: "compass",
+  },
+  {
+    title: "Fast Delivery",
+    description: "I ship in short iterations with clear milestones and continuous feedback.",
+    icon: "rocket",
+  },
+  {
+    title: "Team Collaboration",
+    description: "I work closely with designers, founders, and engineers to keep momentum high.",
+    icon: "users",
+  },
+  {
+    title: "Modern Stack",
+    description: "Building with current web patterns, automation, and scalable architecture.",
+    icon: "sparkles",
+  },
+  {
+    title: "Performance First",
+    description: "I optimize for speed, accessibility, and clean user interactions.",
+    icon: "rocket",
+  },
+  {
+    title: "Continuous Learning",
+    description: "I adapt quickly and keep upgrading my toolkit as tech evolves.",
+    icon: "sparkles",
+  },
+]
+
+const ABOUT_HIGHLIGHT_PACKS: Array<{
+  id: string
+  label: string
+  templates: Array<Pick<IAboutHighlight, "title" | "description" | "icon">>
+}> = [
+  {
+    id: "frontend",
+    label: "Frontend Developer",
+    templates: [
+      { title: "UI Craft", description: "I build polished, responsive interfaces with clear visual hierarchy.", icon: "sparkles" },
+      { title: "Performance First", description: "I optimize loading, interactions, and accessibility from day one.", icon: "rocket" },
+      { title: "Product Thinking", description: "I prioritize user outcomes and conversion-focused experiences.", icon: "compass" },
+    ],
+  },
+  {
+    id: "backend",
+    label: "Backend Developer",
+    templates: [
+      { title: "Scalable Systems", description: "I design APIs and services that stay reliable as usage grows.", icon: "rocket" },
+      { title: "Clean Architecture", description: "I focus on maintainable structure, observability, and consistency.", icon: "compass" },
+      { title: "Team Collaboration", description: "I work closely with frontend and product teams for end-to-end delivery.", icon: "users" },
+    ],
+  },
+  {
+    id: "freelancer",
+    label: "Freelancer",
+    templates: [
+      { title: "Client Focused", description: "I align technical decisions with each client\'s business goals.", icon: "users" },
+      { title: "Fast Delivery", description: "I ship quickly with transparent updates and clear milestones.", icon: "rocket" },
+      { title: "Modern Stack", description: "I use practical, modern tools to keep projects future-ready.", icon: "sparkles" },
+    ],
+  },
+  {
+    id: "student",
+    label: "Student",
+    templates: [
+      { title: "Learning by Building", description: "I turn concepts into real projects to deepen practical skills.", icon: "sparkles" },
+      { title: "Growth Mindset", description: "I continuously learn new technologies and improve my problem solving.", icon: "compass" },
+      { title: "Project Execution", description: "I complete projects with focus on quality, deadlines, and iteration.", icon: "rocket" },
+    ],
+  },
+  {
+    id: "founder",
+    label: "Startup Founder",
+    templates: [
+      { title: "Vision to Product", description: "I turn ideas into working products with measurable user value.", icon: "compass" },
+      { title: "Ship and Learn", description: "I launch fast, collect feedback, and improve through rapid cycles.", icon: "rocket" },
+      { title: "Cross-Functional Leadership", description: "I collaborate across design, engineering, and growth to move fast.", icon: "users" },
+    ],
+  },
+]
+
+const aboutPreviewIcons: Record<AboutHighlightIcon, typeof Compass> = {
+  compass: Compass,
+  rocket: Rocket,
+  users: Users,
+  sparkles: Sparkles,
+}
 
 const inputClassName =
   "w-full rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3 text-sm text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/15 break-words [overflow-wrap:anywhere] dark:border-slate-700/80 dark:bg-slate-950/45 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -91,6 +183,153 @@ const isProjectConfigured = (project: IProjects) =>
         normalizeProjectPhotos(project).length,
   )
 
+const asObject = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {}
+
+const asString = (value: unknown) => (typeof value === "string" ? value : "")
+
+const asBoolean = (value: unknown, fallback = true) => (typeof value === "boolean" ? value : fallback)
+
+const asStringArray = (value: unknown) =>
+  Array.isArray(value)
+    ? value
+        .map((item) => asString(item).trim())
+        .filter(Boolean)
+    : []
+
+const mapAboutContent = (value: unknown, person: string) => {
+  const raw = asObject(value)
+  const highlights = Array.isArray(raw.highlights)
+    ? raw.highlights
+        .map((item, index) => {
+          const highlight = asObject(item)
+          const iconValue = asString(highlight.icon).toLowerCase()
+          const icon: AboutHighlightIcon = ABOUT_HIGHLIGHT_ICONS.includes(iconValue as AboutHighlightIcon)
+            ? (iconValue as AboutHighlightIcon)
+            : "compass"
+
+          return {
+            id: asString(highlight.id) || `about-highlight-${person}-${index}`,
+            title: asString(highlight.title),
+            description: asString(highlight.description),
+            icon,
+            show: asBoolean(highlight.show, true),
+          }
+        })
+    : []
+
+  return {
+    id: asString(raw.id) || `about-${person}`,
+    person: asString(raw.person) || person,
+    type: asString(raw.type),
+    list: asStringArray(raw.list),
+    show: asBoolean(raw.show, true),
+    highlights,
+  }
+}
+
+const mapSkillsContent = (value: unknown, person: string): ISkills[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `skill-${person}-${index}`,
+      person: asString(raw.person) || person,
+      skilltype: asString(raw.skilltype),
+      skills: normalizeSkillValues(asStringArray(raw.skills)),
+      description: asString(raw.description),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+const mapProjectsContent = (value: unknown, person: string): IProjects[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    const photos = asStringArray(raw.photos)
+
+    return {
+      id: asString(raw.id) || `project-${person}-${index}`,
+      person: asString(raw.person) || person,
+      name: asString(raw.name),
+      description: asString(raw.description),
+      duration: asString(raw.duration),
+      gitlink: asString(raw.gitlink),
+      weblink: asString(raw.weblink),
+      logo: asString(raw.logo),
+      photos,
+      skills: asStringArray(raw.skills),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+const mapExperienceContent = (value: unknown, person: string): IExperience[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `experience-${person}-${index}`,
+      person: asString(raw.person) || person,
+      type: asString(raw.type),
+      location: asString(raw.location),
+      duration: asString(raw.duration),
+      role: asString(raw.role),
+      decription: asString(raw.decription),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+const mapEducationContent = (value: unknown, person: string): IEducation[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `education-${person}-${index}`,
+      person: asString(raw.person) || person,
+      name: asString(raw.name),
+      duration: asString(raw.duration),
+      course: asString(raw.course),
+      branch: asString(raw.branch),
+      keyachivements: asString(raw.keyachivements),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+const mapCertificatesContent = (value: unknown, person: string): ICertificate[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `certificate-${person}-${index}`,
+      person: asString(raw.person) || person,
+      name: asString(raw.name),
+      duration: asString(raw.duration),
+      link: asString(raw.link),
+      photo: asString(raw.photo),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
 export default function PortfolioContentForm({ focusSection = null }: PortfolioContentFormProps) {
   const user = useStore((state) => state.user)
   const about = useStore((state) => state.about)
@@ -106,10 +345,22 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const setExperience = useStore((state) => state.setExperience)
   const setEducation = useStore((state) => state.setEducation)
   const setCertificate = useStore((state) => state.setCertificate)
+  const setUser = useStore((state) => state.setUser)
+  const hasHydratedRef = useRef(false)
 
   const [aboutHeading, setAboutHeading] = useState(about.type || "")
   const [aboutBody, setAboutBody] = useState((about.list || []).join("\n"))
   const [aboutVisible, setAboutVisible] = useState(Boolean(about.show))
+  const [selectedAboutPackId, setSelectedAboutPackId] = useState(ABOUT_HIGHLIGHT_PACKS[0]?.id || "")
+  const [aboutHighlights, setAboutHighlights] = useState<IAboutHighlight[]>(
+    about.highlights?.length
+      ? about.highlights
+      : [
+          { id: createId(), title: "", description: "", icon: "compass", show: true },
+          { id: createId(), title: "", description: "", icon: "rocket", show: true },
+          { id: createId(), title: "", description: "", icon: "users", show: true },
+        ],
+  )
 
   const [skills, setSkillsDraft] = useState<ISkills[]>(() =>
     skillsStore.map((item) => ({
@@ -146,6 +397,10 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     () => Array.from(new Set(skills.map((item) => item.description.trim()).filter(Boolean))),
     [skills],
   )
+  const selectedAboutPack = useMemo(
+    () => ABOUT_HIGHLIGHT_PACKS.find((pack) => pack.id === selectedAboutPackId) || ABOUT_HIGHLIGHT_PACKS[0],
+    [selectedAboutPackId],
+  )
 
   const applySkillValueSuggestion = (rowIndex: number, rowKey: string, suggestedValue: string) => {
     const normalizedSuggestion = suggestedValue.trim()
@@ -179,10 +434,187 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     setSkillValueInputDrafts((prev) => ({ ...prev, [rowKey]: toCsv(dedupedSkills) }))
   }
 
+  const applyAboutHighlightTemplate = (template: Pick<IAboutHighlight, "title" | "description" | "icon">) => {
+    setAboutHighlights((prev) => {
+      const existingIndex = prev.findIndex((item) => item.title.trim().toLowerCase() === template.title.toLowerCase())
+
+      if (existingIndex !== -1) {
+        return prev.map((item, index) =>
+          index === existingIndex
+            ? {
+                ...item,
+                title: template.title,
+                description: template.description,
+                icon: template.icon,
+                show: true,
+              }
+            : item,
+        )
+      }
+
+      return [
+        ...prev,
+        {
+          id: createId(),
+          title: template.title,
+          description: template.description,
+          icon: template.icon,
+          show: true,
+        },
+      ]
+    })
+  }
+
+  const applyAboutHighlightPack = (packTemplates: Array<Pick<IAboutHighlight, "title" | "description" | "icon">>) => {
+    setAboutHighlights(
+      packTemplates.map((template) => ({
+        id: createId(),
+        title: template.title,
+        description: template.description,
+        icon: template.icon,
+        show: true,
+      })),
+    )
+  }
+
+  const mergeAboutHighlightPack = (packTemplates: Array<Pick<IAboutHighlight, "title" | "description" | "icon">>) => {
+    setAboutHighlights((prev) => {
+      const merged = [...prev]
+
+      packTemplates.forEach((template) => {
+        const existingIndex = merged.findIndex((item) => item.title.trim().toLowerCase() === template.title.toLowerCase())
+
+        if (existingIndex === -1) {
+          merged.push({
+            id: createId(),
+            title: template.title,
+            description: template.description,
+            icon: template.icon,
+            show: true,
+          })
+          return
+        }
+
+        merged[existingIndex] = {
+          ...merged[existingIndex],
+          title: template.title,
+          description: template.description,
+          icon: template.icon,
+          show: true,
+        }
+      })
+
+      return merged
+    })
+  }
+
+  const moveAboutCard = (index: number, direction: "up" | "down") => {
+    setAboutHighlights((prev) => {
+      const targetIndex = direction === "up" ? index - 1 : index + 1
+      if (targetIndex < 0 || targetIndex >= prev.length) {
+        return prev
+      }
+
+      const next = [...prev]
+      const [item] = next.splice(index, 1)
+      next.splice(targetIndex, 0, item)
+      return next
+    })
+  }
+
+  useEffect(() => {
+    if (hasHydratedRef.current) {
+      return
+    }
+
+    let isMounted = true
+
+    const hydratePortfolioContent = async () => {
+      const { data } = await supabase.auth.getSession()
+      const sessionUser = data.session?.user
+
+      if (!sessionUser) {
+        return
+      }
+
+      hasHydratedRef.current = true
+
+      if (isMounted) {
+        const fallbackUsername = sessionUser.email?.split("@")[0] || user.username || ""
+        setUser({
+          ...user,
+          id: sessionUser.id,
+          email: sessionUser.email || user.email,
+          username: user.username || fallbackUsername,
+          password: user.password || "",
+          show: user.show ?? true,
+        })
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, username, email, firstname, lastname, role, photo, description, gitlink, likedlin, resumelink, phone, show")
+        .eq("id", sessionUser.id)
+        .maybeSingle()
+
+      if (profile && isMounted) {
+        setUser({
+          ...user,
+          id: sessionUser.id,
+          email: asString(profile.email) || sessionUser.email || user.email,
+          username: asString(profile.username),
+          firstname: asString(profile.firstname),
+          lastname: asString(profile.lastname),
+          role: asString(profile.role),
+          photo: asString(profile.photo),
+          description: asString(profile.description),
+          gitlink: asString(profile.gitlink),
+          likedlin: asString(profile.likedlin),
+          resumelink: asString(profile.resumelink),
+          phone: asString(profile.phone),
+          show: asBoolean(profile.show, true),
+          password: user.password || "",
+        })
+      }
+
+      const { data: portfolioContent } = await supabase
+        .from("portfolio_contents")
+        .select("about, skills, projects, experience, education, certificates")
+        .eq("user_id", sessionUser.id)
+        .maybeSingle()
+
+      if (!portfolioContent || !isMounted) {
+        return
+      }
+
+      setAbout(mapAboutContent(portfolioContent.about, sessionUser.id))
+      setSkills(mapSkillsContent(portfolioContent.skills, sessionUser.id))
+      setProjects(mapProjectsContent(portfolioContent.projects, sessionUser.id))
+      setExperience(mapExperienceContent(portfolioContent.experience, sessionUser.id))
+      setEducation(mapEducationContent(portfolioContent.education, sessionUser.id))
+      setCertificate(mapCertificatesContent(portfolioContent.certificates, sessionUser.id))
+    }
+
+    void hydratePortfolioContent()
+
+    return () => {
+      isMounted = false
+    }
+  }, [setAbout, setCertificate, setEducation, setExperience, setProjects, setSkills, setUser, user])
+
   useEffect(() => {
     setAboutHeading(about.type || "")
     setAboutBody((about.list || []).join("\n"))
     setAboutVisible(Boolean(about.show))
+    setAboutHighlights(
+      about.highlights?.length
+        ? about.highlights
+        : [
+            { id: createId(), title: "", description: "", icon: "compass", show: true },
+            { id: createId(), title: "", description: "", icon: "rocket", show: true },
+            { id: createId(), title: "", description: "", icon: "users", show: true },
+          ],
+    )
   }, [about])
 
   useEffect(() => {
@@ -349,6 +781,20 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         .map((line) => line.trim())
         .filter(Boolean),
       show: aboutVisible,
+      highlights: aboutHighlights
+        .map((item, index) => {
+          const icon: AboutHighlightIcon = ABOUT_HIGHLIGHT_ICONS.includes(item.icon) ? item.icon : "compass"
+
+          return {
+            id: item.id || createId(),
+            title: item.title.trim(),
+            description: item.description.trim(),
+            icon,
+            show: Boolean(item.show),
+            sortOrder: index,
+          }
+        })
+        .filter((item) => item.title || item.description),
     }
 
     const skillsPayload = skills.map((item) => ({
@@ -501,7 +947,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       )}
 
       <div className="mt-8 space-y-8">
-        {showAboutEditor && <div id="edit-about" className="glass-card scroll-mt-28 p-6">
+        {showAboutEditor && <div id="edit-about" className="glass-card scroll-mt-28 p-6 min-h-[340px]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">About Section</h3>
             <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
@@ -509,7 +955,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
               Show
             </label>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid items-start gap-4 md:grid-cols-2">
             <input
               value={aboutHeading}
               onChange={(event) => setAboutHeading(event.target.value)}
@@ -519,10 +965,216 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             <textarea
               value={aboutBody}
               onChange={(event) => setAboutBody(event.target.value)}
-              rows={5}
-              className={inputClassName}
+              rows={8}
+              className={`${inputClassName} min-h-[220px]`}
               placeholder="Write one point per line"
             />
+          </div>
+
+          <div className="mt-6 border-t border-slate-200/70 pt-6 dark:border-slate-700/70">
+            <div className="mb-4 flex items-center justify-between">
+              <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">About Right Cards</h4>
+              <button
+                type="button"
+                onClick={() =>
+                  setAboutHighlights((prev) => [
+                    ...prev,
+                    { id: createId(), title: "", description: "", icon: "compass", show: true },
+                  ])
+                }
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+              >
+                <Plus className="h-4 w-4" />
+                Add Card
+              </button>
+            </div>
+
+            <div className="mb-5 rounded-2xl border border-cyan-200/70 bg-cyan-50/60 p-4 dark:border-cyan-500/30 dark:bg-cyan-500/10">
+              <p className="mb-2 text-sm font-semibold text-cyan-900 dark:text-cyan-100">Template Packs</p>
+              <p className="mb-3 text-xs text-cyan-800 dark:text-cyan-200">Choose a profile style to replace cards, or merge cards into your existing set.</p>
+              <div className="mb-3 flex flex-wrap gap-2">
+                {ABOUT_HIGHLIGHT_PACKS.map((pack) => (
+                  <button
+                    key={pack.id}
+                    type="button"
+                    onClick={() => setSelectedAboutPackId(pack.id)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      selectedAboutPack?.id === pack.id
+                        ? "border-cyan-500 bg-cyan-100 text-cyan-800 dark:border-cyan-300 dark:bg-cyan-500/25 dark:text-cyan-100"
+                        : "border-cyan-300/80 bg-white text-cyan-700 hover:border-cyan-500 hover:bg-cyan-100 dark:border-cyan-500/40 dark:bg-slate-900/40 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+                    }`}
+                  >
+                    {pack.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mb-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => selectedAboutPack && applyAboutHighlightPack(selectedAboutPack.templates)}
+                  className="rounded-full border border-cyan-300/80 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:border-cyan-500 hover:bg-cyan-100 dark:border-cyan-500/40 dark:bg-slate-900/40 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+                >
+                  Apply Selected Pack
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectedAboutPack && mergeAboutHighlightPack(selectedAboutPack.templates)}
+                  className="rounded-full border border-teal-300/80 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 transition-colors hover:border-teal-500 hover:bg-teal-100 dark:border-teal-500/40 dark:bg-slate-900/40 dark:text-teal-200 dark:hover:bg-teal-500/20"
+                >
+                  Merge Selected Pack
+                </button>
+              </div>
+
+              <p className="mb-3 text-sm font-medium text-cyan-800 dark:text-cyan-200">Quick Templates: select a card and it will be added to this section.</p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {ABOUT_HIGHLIGHT_TEMPLATES.map((template) => (
+                  <button
+                    key={template.title}
+                    type="button"
+                    onClick={() => applyAboutHighlightTemplate(template)}
+                    className="rounded-xl border border-cyan-200/80 bg-white/90 px-3 py-2 text-left transition-colors hover:border-cyan-400 hover:bg-cyan-50 dark:border-cyan-500/30 dark:bg-slate-900/40 dark:hover:border-cyan-400/70"
+                  >
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{template.title}</p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{template.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {aboutHighlights.map((card, index) => (
+                <div key={card.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Card #{index + 1}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => moveAboutCard(index, "up")}
+                          disabled={index === 0}
+                          className="inline-flex items-center rounded-full border border-slate-300/80 bg-white p-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                          aria-label="Move card up"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveAboutCard(index, "down")}
+                          disabled={index === aboutHighlights.length - 1}
+                          className="inline-flex items-center rounded-full border border-slate-300/80 bg-white p-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                          aria-label="Move card down"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={card.show}
+                          onChange={(event) =>
+                            setAboutHighlights((prev) =>
+                              prev.map((item, itemIndex) =>
+                                itemIndex === index ? { ...item, show: event.target.checked } : item,
+                              ),
+                            )
+                          }
+                        />
+                        Show
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setAboutHighlights((prev) => prev.filter((_, itemIndex) => itemIndex !== index))}
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <input
+                      value={card.title}
+                      onChange={(event) =>
+                        setAboutHighlights((prev) =>
+                          prev.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, title: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      className={inputClassName}
+                      placeholder="Card title"
+                    />
+
+                    <select
+                      value={card.icon}
+                      onChange={(event) =>
+                        setAboutHighlights((prev) =>
+                          prev.map((item, itemIndex) => {
+                            if (itemIndex !== index) {
+                              return item
+                            }
+
+                            const iconValue = event.target.value as AboutHighlightIcon
+                            return {
+                              ...item,
+                              icon: ABOUT_HIGHLIGHT_ICONS.includes(iconValue) ? iconValue : "compass",
+                            }
+                          }),
+                        )
+                      }
+                      className={inputClassName}
+                    >
+                      {ABOUT_HIGHLIGHT_ICONS.map((icon) => (
+                        <option key={icon} value={icon}>
+                          {icon.charAt(0).toUpperCase() + icon.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+
+                    <textarea
+                      value={card.description}
+                      onChange={(event) =>
+                        setAboutHighlights((prev) =>
+                          prev.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, description: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      rows={3}
+                      className={inputClassName}
+                      placeholder="Card description"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white/60 p-4 dark:border-slate-700/80 dark:bg-slate-900/35">
+              <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Live Preview</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {aboutHighlights.filter((item) => item.show && (item.title.trim() || item.description.trim())).length > 0 ? (
+                  aboutHighlights
+                    .filter((item) => item.show && (item.title.trim() || item.description.trim()))
+                    .map((card, index) => {
+                      const Icon = aboutPreviewIcons[card.icon] || Compass
+
+                      return (
+                        <div key={`${card.id || index}-preview`} className="rounded-xl border border-slate-200/70 bg-white/90 p-4 dark:border-slate-700/70 dark:bg-slate-900/60">
+                          <Icon className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                          <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{card.title || "Untitled card"}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{card.description || "Add a description for this card."}</p>
+                        </div>
+                      )
+                    })
+                ) : (
+                  <div className="sm:col-span-2 rounded-xl border border-dashed border-slate-300/80 p-4 text-center text-sm text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                    No visible cards yet. Add or enable cards to preview how they will appear.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>}
 

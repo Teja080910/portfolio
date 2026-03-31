@@ -21,6 +21,7 @@ export const TAboutMe = {
     list: [],
     person: "",
     show: true,
+    highlights: [],
 };
 
 export const TCertificate = []

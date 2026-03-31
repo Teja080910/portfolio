@@ -97,7 +97,7 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
             className={isReadOnly ? "lg:w-full" : "lg:w-1/3"}
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
+            viewport={{ once: false, amount: 0.4 }}
             transition={{ duration: 0.55 }}
           >
             <div className="glass-card p-8">
@@ -143,7 +143,7 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
               className="lg:w-2/3"
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
+              viewport={{ once: false, amount: 0.4 }}
               transition={{ duration: 0.55 }}
             >
               <form onSubmit={handleSubmit(onSubmit)} className="glass-card p-8">

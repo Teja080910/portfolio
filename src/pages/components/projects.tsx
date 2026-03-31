@@ -47,7 +47,7 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                 className="glass-card h-full"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.35 }}
+                viewport={{ once: false, amount: 0.35 }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
               >
               <h3 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{project.name}</h3>
