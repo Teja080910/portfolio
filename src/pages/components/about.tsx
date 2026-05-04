@@ -68,7 +68,6 @@ export default function About({ isReadOnly = false }: AboutProps) {
   const primaryEducationLabel = primaryEducation?.course?.trim() || primaryEducation?.name?.trim()
   const customHighlights = (about.highlights ?? [])
     .filter((item) => item.show && (item.title?.trim() || item.description?.trim()))
-    .slice(0, 4)
     .map((item) => {
       const iconName = item.icon?.toLowerCase() as keyof typeof highlightIcons
       return {
@@ -123,6 +122,21 @@ export default function About({ isReadOnly = false }: AboutProps) {
   const hasHighlightContent = Boolean(user.role?.trim()) || visibleProjects > 0 || visibleExperience > 0 || visibleEducation > 0
   const aboutChipLabel = aboutHeading || roleLabel || "Who I Am Now"
 
+  const highlightsCount = renderedHighlights.length
+  const isCompact = highlightsCount > 4
+  const rightGridClass =
+    highlightsCount > 6
+      ? "grid h-full grid-cols-2 xl:grid-cols-3 gap-3"
+      : highlightsCount > 4
+        ? "grid h-full grid-cols-2 gap-3"
+        : "grid h-full grid-cols-1 gap-4 sm:grid-cols-2"
+
+  const cardPaddingClass = isCompact ? "!p-4" : ""
+  const iconSizeClass = isCompact ? "h-5 w-5" : "h-7 w-7"
+  const titleClass = isCompact ? "mb-1 mt-2 text-base" : "mb-2 mt-4 text-lg"
+  const descClass = isCompact ? "text-xs" : "text-sm"
+  const numberClass = isCompact ? "right-3 top-3 text-[10px]" : "right-4 top-4 text-xs"
+
   if (isReadOnly && aboutPoints.length === 0 && !hasHighlightContent) {
     return null
   }
@@ -146,11 +160,11 @@ export default function About({ isReadOnly = false }: AboutProps) {
         <div className="grid items-center gap-10 lg:grid-cols-2">
           {(aboutPoints.length > 0 || !isReadOnly) && (
             <motion.div
-              className="glass-card relative h-full min-h-[280px] overflow-hidden"
-              initial={{ opacity: 0, x: -80, scale: 0.96 }}
-              whileInView={{ opacity: 1, x: 0, scale: 1 }}
-              viewport={{ once: true, amount: 0.25, margin: "-40px" }}
-              transition={{ duration: 0.7, ease: "easeOut", delay: 0.25 }}
+              className="glass-card relative overflow-hidden"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.1 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl dark:bg-cyan-300/20" />
               <span className="accent-chip">{aboutChipLabel}</span>
@@ -180,31 +194,25 @@ export default function About({ isReadOnly = false }: AboutProps) {
               </div>
             </motion.div>
           )}
-          <motion.div
-            className="grid h-full grid-cols-1 gap-4 sm:grid-cols-2"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: false, margin: "-50px" }}
-            transition={{ duration: 0.55 }}
-          >
+          <div className={rightGridClass}>
             {renderedHighlights.map((item, index) => (
               <motion.div
                 key={item.id || index}
-                className="glass-card group relative"
-                initial={{ opacity: 0, y: 28 }}
+                className={`glass-card group relative ${cardPaddingClass}`}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4, delay: 0.08 * index }}
+                viewport={{ once: false, amount: 0.1 }}
+                transition={{ duration: 0.7, delay: index * 0.15, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="pointer-events-none absolute right-4 top-4 text-xs font-semibold tracking-[0.12em] text-cyan-600/70 dark:text-cyan-300/70">
+                <div className={`pointer-events-none absolute font-semibold tracking-[0.12em] text-cyan-600/70 dark:text-cyan-300/70 ${numberClass}`}>
                   0{index + 1}
                 </div>
-                <item.icon className="h-7 w-7 text-cyan-600 transition-transform duration-300 group-hover:scale-110 dark:text-cyan-300" />
-                <h3 className="mb-2 mt-4 break-words text-lg font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100">{item.title}</h3>
-                <p className="break-words text-sm leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">{item.description}</p>
+                <item.icon className={`text-cyan-600 transition-transform duration-300 group-hover:scale-110 dark:text-cyan-300 ${iconSizeClass}`} />
+                <h3 className={`break-words font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100 ${titleClass}`}>{item.title}</h3>
+                <p className={`break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300 ${descClass}`}>{item.description}</p>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

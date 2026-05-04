@@ -374,6 +374,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [certificates, setCertificatesDraft] = useState<ICertificate[]>(certificateStore)
   const [notice, setNotice] = useState<Notice>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isExtracting, setIsExtracting] = useState(false)
   const [isUploadingProjectPhotos, setIsUploadingProjectPhotos] = useState(false)
   const [activeSkillTypeRow, setActiveSkillTypeRow] = useState<number | null>(null)
   const [activeSkillValueRow, setActiveSkillValueRow] = useState<number | null>(null)
@@ -630,6 +631,75 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   useEffect(() => {
     setProjectsDraft(projectsStore)
   }, [projectsStore])
+
+  const handleResumeUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsExtracting(true)
+    setNotice({ tone: "success", message: "Extracting resume data using AI... This may take up to 30 seconds." })
+
+    const readFileAsBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64data = (reader.result as string).split(",")[1]
+          resolve(base64data)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    }
+
+    try {
+      const base64data = await readFileAsBase64(file)
+
+      const response = await fetch("/api/parse-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileBase64: base64data }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Failed to extract resume. Make sure your GEMINI_API_KEY is configured correctly.")
+      }
+
+      const data = await response.json()
+      const person = user.id || "temp-id"
+
+      if (data.about) {
+        setAboutHeading(data.about.type || "")
+        setAboutBody(Array.isArray(data.about.list) ? data.about.list.join("\\n") : "")
+        setAboutVisible(data.about.show ?? true)
+      }
+      if (Array.isArray(data.skills)) {
+        setSkillsDraft(data.skills.map((s: any) => ({ ...s, id: createId(), show: true, person, skills: Array.isArray(s.skills) ? s.skills : [] })))
+      }
+      if (Array.isArray(data.experience)) {
+        setExperienceDraft(data.experience.map((e: any) => ({ ...e, id: createId(), show: true, person })))
+      }
+      if (Array.isArray(data.education)) {
+        setEducationDraft(data.education.map((e: any) => ({ ...e, id: createId(), show: true, person })))
+      }
+      if (Array.isArray(data.projects)) {
+        setProjectsDraft(data.projects.map((p: any) => ({ ...p, id: createId(), show: true, person, photos: [], logo: "", skills: Array.isArray(p.skills) ? p.skills : [] })))
+      }
+      if (Array.isArray(data.certificates)) {
+        setCertificatesDraft(data.certificates.map((c: any) => ({ ...c, id: createId(), show: true, person })))
+      }
+
+      setNotice({
+        tone: "success",
+        message: "Successfully auto-filled from resume! Please review the form before saving.",
+      })
+    } catch (error: any) {
+      setNotice({ tone: "error", message: error.message || "Failed to extract data." })
+    } finally {
+      setIsExtracting(false)
+      event.target.value = ""
+    }
+  }
 
   const handleProjectPhotoUpload = async (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
@@ -920,6 +990,19 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             <ArrowLeft className="h-4 w-4" />
             Back To Portfolio
           </Link>
+          <label
+            className={`cursor-pointer inline-flex items-center gap-2 rounded-full border border-cyan-300/80 bg-cyan-50/80 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition-transform duration-300 hover:-translate-y-0.5 dark:border-cyan-600/50 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
+          >
+            <Sparkles className="h-4 w-4" />
+            {isExtracting ? "Extracting..." : "Auto-fill from Resume"}
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handleResumeUpload}
+              disabled={isExtracting || isSaving}
+            />
+          </label>
           <button
             type="button"
             onClick={saveContent}
