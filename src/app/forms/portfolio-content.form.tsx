@@ -385,17 +385,17 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [skillValueInputDrafts, setSkillValueInputDrafts] = useState<Record<string, string>>({})
 
   const distinctSkillTypes = useMemo(
-    () => Array.from(new Set(skills.map((item) => item.skilltype.trim()).filter(Boolean))),
+    () => Array.from(new Set(skills.map((item) => (item.skilltype || "").trim()).filter(Boolean))),
     [skills],
   )
 
   const distinctSkillValues = useMemo(
-    () => normalizeSkillValues(skills.flatMap((item) => item.skills)),
+    () => normalizeSkillValues(skills.flatMap((item) => item.skills || [])),
     [skills],
   )
 
   const distinctSkillDescriptions = useMemo(
-    () => Array.from(new Set(skills.map((item) => item.description.trim()).filter(Boolean))),
+    () => Array.from(new Set(skills.map((item) => (item.description || "").trim()).filter(Boolean))),
     [skills],
   )
   const selectedAboutPack = useMemo(
@@ -668,30 +668,61 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       const data = await response.json()
       const person = user.id || "temp-id"
 
-      if (data.about) {
-        setAboutHeading(data.about.type || "")
-        setAboutBody(Array.isArray(data.about.list) ? data.about.list.join("\\n") : "")
-        setAboutVisible(data.about.show ?? true)
+      const parsedAbout = data.about || {}
+      const aboutPayload = {
+        id: about.id || createId(),
+        person,
+        type: (parsedAbout.type || "").trim(),
+        list: Array.isArray(parsedAbout.list) ? parsedAbout.list : [],
+        show: parsedAbout.show ?? true,
+        highlights: aboutHighlights, // Retain existing highlights
       }
-      if (Array.isArray(data.skills)) {
-        setSkillsDraft(data.skills.map((s: any) => ({ ...s, id: createId(), show: true, person, skills: Array.isArray(s.skills) ? s.skills : [] })))
+
+      const skillsPayload = mapSkillsContent(data.skills, person)
+      const experiencePayload = mapExperienceContent(data.experience, person)
+      const educationPayload = mapEducationContent(data.education, person)
+      const projectsPayload = mapProjectsContent(data.projects, person)
+      const certificatesPayload = mapCertificatesContent(data.certificates, person)
+
+      // Instantly save to the database
+      const { error } = await supabase.from("portfolio_contents").upsert(
+        {
+          user_id: person,
+          about: aboutPayload,
+          skills: skillsPayload,
+          projects: projectsPayload,
+          experience: experiencePayload,
+          education: educationPayload,
+          certificates: certificatesPayload,
+        },
+        { onConflict: "user_id" },
+      )
+
+      if (error) {
+        throw new Error("Extracted successfully, but failed to save to database: " + error.message)
       }
-      if (Array.isArray(data.experience)) {
-        setExperienceDraft(data.experience.map((e: any) => ({ ...e, id: createId(), show: true, person })))
-      }
-      if (Array.isArray(data.education)) {
-        setEducationDraft(data.education.map((e: any) => ({ ...e, id: createId(), show: true, person })))
-      }
-      if (Array.isArray(data.projects)) {
-        setProjectsDraft(data.projects.map((p: any) => ({ ...p, id: createId(), show: true, person, photos: [], logo: "", skills: Array.isArray(p.skills) ? p.skills : [] })))
-      }
-      if (Array.isArray(data.certificates)) {
-        setCertificatesDraft(data.certificates.map((c: any) => ({ ...c, id: createId(), show: true, person })))
-      }
+
+      // Update global stores so the UI reflects the saved data immediately
+      setAbout(aboutPayload)
+      setSkills(skillsPayload)
+      setExperience(experiencePayload)
+      setEducation(educationPayload)
+      setProjects(projectsPayload)
+      setCertificate(certificatesPayload)
+
+      // Update local drafts
+      setAboutHeading(aboutPayload.type)
+      setAboutBody(aboutPayload.list.join("\n"))
+      setAboutVisible(aboutPayload.show)
+      setSkillsDraft(skillsPayload)
+      setExperienceDraft(experiencePayload)
+      setEducationDraft(educationPayload)
+      setProjectsDraft(projectsPayload)
+      setCertificatesDraft(certificatesPayload)
 
       setNotice({
         tone: "success",
-        message: "Successfully auto-filled from resume! Please review the form before saving.",
+        message: "Successfully extracted and seeded your portfolio data!",
       })
     } catch (error: any) {
       setNotice({ tone: "error", message: error.message || "Failed to extract data." })
