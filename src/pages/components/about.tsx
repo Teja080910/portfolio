@@ -4,7 +4,6 @@ import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { Compass, PencilLine, Rocket, Sparkles, Users } from "lucide-react"
 import Link from "next/link"
-import { useRef } from "react"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 type AboutProps = {
@@ -47,7 +46,6 @@ export default function About({ isReadOnly = false }: AboutProps) {
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
   const editAboutHref = `/u/${encodeURIComponent(username || "me")}/edit-about`
-  const sectionRef = useRef<HTMLElement | null>(null)
 
   const aboutPoints = (about.list ?? []).map((item) => item.trim()).filter(Boolean)
   const hasReadableAbout = aboutPoints.some((point) => !looksLikeNoise(point))
@@ -142,7 +140,7 @@ export default function About({ isReadOnly = false }: AboutProps) {
   }
 
   return (
-    <section id="about" className="section-shell" ref={sectionRef}>
+    <section id="about" className="section-shell">
       <div className="surface-grid relative z-10">
         {!isReadOnly && userId && (
           <div className="mb-4 flex justify-end">
@@ -160,37 +158,38 @@ export default function About({ isReadOnly = false }: AboutProps) {
         <div className="grid items-center gap-10 lg:grid-cols-2">
           {(aboutPoints.length > 0 || !isReadOnly) && (
             <motion.div
-              className="glass-card relative overflow-hidden"
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 26 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.1 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: false, amount: 0.35 }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl dark:bg-cyan-300/20" />
-              <span className="accent-chip">{aboutChipLabel}</span>
-              {displayAboutPoints.length > 0 ? (
-                <div className="mt-5 space-y-4">
-                  {displayAboutPoints.map((point, index) => (
-                    <p key={`${point}-${index}`} className="break-words text-base leading-relaxed text-slate-700 [overflow-wrap:anywhere] md:text-lg dark:text-slate-300">
-                      {point}
-                    </p>
+              <div className="glass-card relative overflow-hidden">
+                <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl dark:bg-cyan-300/20" />
+                <span className="accent-chip">{aboutChipLabel}</span>
+                {displayAboutPoints.length > 0 ? (
+                  <div className="mt-5 space-y-4">
+                    {displayAboutPoints.map((point, index) => (
+                      <p key={`${point}-${index}`} className="break-words text-base leading-relaxed text-slate-700 [overflow-wrap:anywhere] md:text-lg dark:text-slate-300">
+                        {point}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mb-2 mt-4 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+                    Add your about details from <strong>Edit Portfolio Content</strong> to replace this empty state.
+                  </p>
+                )}
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {trendSignals.map((signal) => (
+                    <span
+                      key={signal}
+                      className="rounded-full border border-cyan-300/60 bg-cyan-50/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700 dark:border-cyan-500/40 dark:bg-cyan-500/15 dark:text-cyan-200"
+                    >
+                      {signal}
+                    </span>
                   ))}
                 </div>
-              ) : (
-                <p className="mb-2 mt-4 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-                  Add your about details from <strong>Edit Portfolio Content</strong> to replace this empty state.
-                </p>
-              )}
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {trendSignals.map((signal) => (
-                  <span
-                    key={signal}
-                    className="rounded-full border border-cyan-300/60 bg-cyan-50/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700 dark:border-cyan-500/40 dark:bg-cyan-500/15 dark:text-cyan-200"
-                  >
-                    {signal}
-                  </span>
-                ))}
               </div>
             </motion.div>
           )}
@@ -198,18 +197,19 @@ export default function About({ isReadOnly = false }: AboutProps) {
             {renderedHighlights.map((item, index) => (
               <motion.div
                 key={item.id || index}
-                className={`glass-card group relative ${cardPaddingClass}`}
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y: 26 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.1 }}
-                transition={{ duration: 0.7, delay: index * 0.15, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: false, amount: 0.35 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className={`pointer-events-none absolute font-semibold tracking-[0.12em] text-cyan-600/70 dark:text-cyan-300/70 ${numberClass}`}>
-                  0{index + 1}
+                <div className={`glass-card group relative h-full ${cardPaddingClass}`}>
+                  <div className={`pointer-events-none absolute font-semibold tracking-[0.12em] text-cyan-600/70 dark:text-cyan-300/70 ${numberClass}`}>
+                    0{index + 1}
+                  </div>
+                  <item.icon className={`text-cyan-600 transition-transform duration-300 group-hover:scale-110 dark:text-cyan-300 ${iconSizeClass}`} />
+                  <h3 className={`break-words font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100 ${titleClass}`}>{item.title}</h3>
+                  <p className={`break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300 ${descClass}`}>{item.description}</p>
                 </div>
-                <item.icon className={`text-cyan-600 transition-transform duration-300 group-hover:scale-110 dark:text-cyan-300 ${iconSizeClass}`} />
-                <h3 className={`break-words font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100 ${titleClass}`}>{item.title}</h3>
-                <p className={`break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300 ${descClass}`}>{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -218,4 +218,3 @@ export default function About({ isReadOnly = false }: AboutProps) {
     </section>
   )
 }
-

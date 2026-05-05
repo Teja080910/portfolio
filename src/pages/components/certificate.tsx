@@ -41,33 +41,34 @@ export default function Certificate({ isReadOnly = false }: CertificateProps) {
           {certificates.length > 0 ? certificates.map((certificate, index) => (
             <motion.div
               key={index}
-              className="glass-card h-full"
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 26 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.35 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <div className="flex items-center mb-4">
-                <Award className="h-10 w-10 text-cyan-500" />
-                <h3 className="ml-4 text-xl font-semibold text-slate-900 dark:text-slate-100">{certificate.name}</h3>
+              <div className="glass-card h-full">
+                <div className="mb-4 flex items-center">
+                  <Award className="h-10 w-10 text-cyan-500" />
+                  <h3 className="ml-4 text-xl font-semibold text-slate-900 dark:text-slate-100">{certificate.name}</h3>
+                </div>
+                {certificate.duration && (
+                  <p className="mb-2 flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <Calendar className="h-4 w-4" />
+                    {certificate.duration}
+                  </p>
+                )}
+                {certificate.link && (
+                  <a
+                    href={certificate.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-cyan-600 transition-colors hover:text-cyan-500 dark:text-cyan-300"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    View Credential
+                  </a>
+                )}
               </div>
-              {certificate.duration && (
-                <p className="mb-2 flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <Calendar className="h-4 w-4" />
-                  {certificate.duration}
-                </p>
-              )}
-              {certificate.link && (
-                <a
-                  href={certificate.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-cyan-600 transition-colors hover:text-cyan-500 dark:text-cyan-300"
-                >
-                  <LinkIcon className="h-4 w-4" />
-                  View Credential
-                </a>
-              )}
             </motion.div>
           )) : (
             <div className="glass-card md:col-span-2 text-center text-slate-600 dark:text-slate-300">
