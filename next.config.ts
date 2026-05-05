@@ -5,6 +5,14 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
     protocol: "https",
     hostname: "hebbkx1anhila5yf.public.blob.vercel-storage.com",
   },
+  {
+    protocol: "https",
+    hostname: "lh3.googleusercontent.com",
+  },
+  {
+    protocol: "https",
+    hostname: "avatars.githubusercontent.com",
+  },
 ]
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

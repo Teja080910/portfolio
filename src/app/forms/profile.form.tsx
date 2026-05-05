@@ -74,11 +74,28 @@ type StatusState =
     }
   | null
 
+const enhancePhotoUrl = (url?: string | null) => {
+  if (!url) return "";
+  let enhancedUrl = url;
+  if (enhancedUrl.includes("googleusercontent.com")) {
+      if (enhancedUrl.match(/=s\d+-c/)) {
+          enhancedUrl = enhancedUrl.replace(/=s\d+-c/g, "=s800-c");
+      } else if (!enhancedUrl.includes("=")) {
+          enhancedUrl += "=s800-c";
+      }
+  } else if (enhancedUrl.includes("avatars.githubusercontent.com")) {
+      if (!enhancedUrl.includes("s=")) {
+          enhancedUrl = enhancedUrl.includes("?") ? `${enhancedUrl}&s=800` : `${enhancedUrl}?s=800`;
+      }
+  }
+  return enhancedUrl;
+};
+
 const mapProfileToUser = (profile: Partial<IUser>, fallbackEmail = ""): IUser => ({
   id: profile.id,
   username: profile.username ?? "",
   email: profile.email ?? fallbackEmail,
-  photo: profile.photo ?? "",
+  photo: enhancePhotoUrl(profile.photo),
   firstname: profile.firstname ?? "",
   lastname: profile.lastname ?? "",
   role: profile.role ?? "",
@@ -106,6 +123,10 @@ const buildDefaults = (user: Partial<IUser>): ProfileFormValues => ({
 
 const buildFallbackUser = (authUser: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>, currentUser: IUser) => {
   const metadata = authUser.user_metadata ?? {}
+  const oauthFullName = (metadata.full_name as string | undefined) || (metadata.name as string | undefined) || ""
+  const oauthFirstName = oauthFullName ? oauthFullName.split(" ")[0] : "New"
+  const oauthLastName = oauthFullName ? oauthFullName.split(" ").slice(1).join(" ") : "User"
+  const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined) || ""
 
   return mapProfileToUser(
     {
@@ -114,18 +135,19 @@ const buildFallbackUser = (authUser: NonNullable<Awaited<ReturnType<typeof supab
       username:
         currentUser.username ||
         (typeof metadata.username === "string" ? metadata.username.trim() : "") ||
+        oauthFullName.replace(/\s+/g, "").toLowerCase().slice(0, 15) ||
         authUser.email?.split("@")[0] ||
         "",
-      firstname: currentUser.firstname || (typeof metadata.firstname === "string" ? metadata.firstname.trim() : ""),
-      lastname: currentUser.lastname || (typeof metadata.lastname === "string" ? metadata.lastname.trim() : ""),
-      role: currentUser.role || (typeof metadata.role === "string" ? metadata.role.trim() : ""),
+      firstname: currentUser.firstname || (typeof metadata.firstname === "string" ? metadata.firstname.trim() : "") || oauthFirstName,
+      lastname: currentUser.lastname || (typeof metadata.lastname === "string" ? metadata.lastname.trim() : "") || oauthLastName,
+      role: currentUser.role || (typeof metadata.role === "string" ? metadata.role.trim() : "") || "Developer",
       phone: currentUser.phone || (typeof metadata.phone === "string" ? metadata.phone.trim() : ""),
       description: currentUser.description ?? "",
-      photo: currentUser.photo ?? "",
+      photo: currentUser.photo || enhancePhotoUrl(oauthPhoto),
       gitlink: currentUser.gitlink ?? "",
       likedlin: currentUser.likedlin ?? "",
       resumelink: currentUser.resumelink ?? "",
-      password: currentUser.password ?? "",
+      password: currentUser.password || "oauth-provider",
       show: currentUser.show ?? true,
     },
     authUser.email ?? currentUser.email,
@@ -251,9 +273,28 @@ export default function ProfileForm() {
         .eq("id", authUser.id)
         .maybeSingle()
 
-      const resolvedUser = profile
-        ? mapProfileToUser(profile, authUser.email ?? "")
-        : buildFallbackUser(authUser, useStore.getState().user)
+      let resolvedUser: IUser;
+      
+      if (profile) {
+        // Sync photo from OAuth if it's missing in the profile
+        const metadata = authUser.user_metadata ?? {};
+        const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined);
+        
+        if (oauthPhoto && !profile.photo) {
+          const { data: updatedProfile } = await supabase
+            .from("profiles")
+            .update({ photo: oauthPhoto })
+            .eq("id", authUser.id)
+            .select("*")
+            .single();
+            
+          resolvedUser = mapProfileToUser(updatedProfile || profile, authUser.email ?? "");
+        } else {
+          resolvedUser = mapProfileToUser(profile, authUser.email ?? "");
+        }
+      } else {
+        resolvedUser = buildFallbackUser(authUser, useStore.getState().user);
+      }
 
       addUser(resolvedUser)
 

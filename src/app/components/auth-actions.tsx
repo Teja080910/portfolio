@@ -67,8 +67,12 @@ export default function AuthActions() {
     <>
       <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
         <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white">
-            {avatarText}
+          <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
+            {user?.photo ? (
+              <img src={user.photo} alt={displayName} className="h-full w-full object-cover" />
+            ) : (
+              avatarText
+            )}
           </div>
           <span className="max-w-[120px] truncate font-medium">{displayName}</span>
         </div>
