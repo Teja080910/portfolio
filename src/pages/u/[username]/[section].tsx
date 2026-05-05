@@ -1,6 +1,7 @@
 import PortfolioContentForm from "@/app/forms/portfolio-content.form"
 import ProfileForm from "@/app/forms/profile.form"
 import { supabase } from "@/lib/db"
+import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
@@ -47,6 +48,7 @@ export default function UserEditorBySectionPage() {
   const section = typeof rawParams.section === "string" ? rawParams.section : "profile"
   
   const [isAuthorizing, setIsAuthorizing] = useState(true)
+  const [routeError, setRouteError] = useState<"not_found" | "wrong_type" | null>(null)
 
   const editorConfig = sectionToEditor[section] ?? sectionToEditor.profile
 
@@ -58,6 +60,30 @@ export default function UserEditorBySectionPage() {
     let isActive = true
 
     const verifyEditorAccess = async () => {
+      // First, validate that the profile at this username is allowed on /u/ route
+      if (username) {
+        const { data: urlProfile } = await supabase
+          .from("profiles")
+          .select("type")
+          .eq("username", username)
+          .maybeSingle()
+
+        if (!urlProfile) {
+          if (isActive) {
+            setRouteError("not_found")
+          }
+          return
+        }
+
+        // /u/ route is only for individual users, not team or business
+        if (urlProfile.type === "team" || urlProfile.type === "business") {
+          if (isActive) {
+            setRouteError("wrong_type")
+          }
+          return
+        }
+      }
+
       const { data } = await supabase.auth.getSession()
       const sessionUser = data.session?.user
 
@@ -95,6 +121,47 @@ export default function UserEditorBySectionPage() {
     }
   }, [router, router.isReady, section, username])
 
+  // Show "not found" if the profile doesn't exist or is the wrong type for /u/ route
+  if (routeError === "not_found") {
+    return (
+      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%)]" />
+        <div className="relative w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center text-slate-900 shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-100">
+          <h2 className="text-2xl font-bold tracking-tight">Portfolio Not Found</h2>
+          <p className="mt-3 text-slate-600 dark:text-slate-300">
+            The portfolio for <span className="font-semibold text-cyan-600 dark:text-cyan-400">@{username}</span> doesn{"'"}t exist or has been set to private.
+          </p>
+          <Link
+            href="/"
+            className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-cyan-500 hover:to-teal-400"
+          >
+            Go to Homepage
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  if (routeError === "wrong_type") {
+    return (
+      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%)]" />
+        <div className="relative w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center text-slate-900 shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-100">
+          <h2 className="text-2xl font-bold tracking-tight">Incorrect Route</h2>
+          <p className="mt-3 text-slate-600 dark:text-slate-300">
+            This profile is registered as a <span className="font-semibold text-cyan-600 dark:text-cyan-400">team</span> account and cannot be accessed through the user route.
+          </p>
+          <Link
+            href={`/t/${encodeURIComponent(username)}`}
+            className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-cyan-500 hover:to-teal-400"
+          >
+            Open as Team Profile
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
   if (isAuthorizing) {
     return (
       <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
@@ -109,10 +176,10 @@ export default function UserEditorBySectionPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-10 md:px-6 md:py-14">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.16),transparent_24%),linear-gradient(160deg,rgba(15,23,42,0.92),rgba(17,24,39,0.98))]" />
-      <div className="pointer-events-none absolute left-10 top-10 h-56 w-56 rounded-full bg-cyan-400/15 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-10 right-10 h-56 w-56 rounded-full bg-teal-400/15 blur-3xl" />
+    <main className="relative min-h-screen overflow-hidden px-4 py-10 transition-colors duration-300 md:px-6 md:py-14">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.16),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(160deg,rgba(15,23,42,0.92),rgba(17,24,39,0.98))]" />
+      <div className="pointer-events-none absolute left-10 top-10 h-56 w-56 rounded-full bg-cyan-400/15 blur-3xl dark:bg-cyan-400/20" />
+      <div className="pointer-events-none absolute bottom-10 right-10 h-56 w-56 rounded-full bg-teal-400/15 blur-3xl dark:bg-teal-400/20" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
         {editorConfig.view === "profile" ? <ProfileForm /> : <PortfolioContentForm focusSection={editorConfig.focus} />}

@@ -67,7 +67,9 @@ export default function AuthCallbackPage() {
       const destination = username
         ? profileType === "business"
           ? `/b/${encodeURIComponent(username)}`
-          : `/u/${encodeURIComponent(username)}`
+          : profileType === "team"
+            ? `/t/${encodeURIComponent(username)}`
+            : `/u/${encodeURIComponent(username)}`
         : "/"
 
       if (isActive) {

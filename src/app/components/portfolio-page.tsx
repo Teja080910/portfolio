@@ -264,17 +264,23 @@ export default function PortfolioPage() {
   const showEducation = canRenderFromStore && (isOwnerView || hasEducationContent)
   const showContact = canRenderFromStore && (isOwnerView || hasContactContent)
 
-  const isBusinessRoute = router.query.slug !== undefined
-  const isUserRoute = router.query.username !== undefined
+  // Detect route type from pathname since both /b/ and /t/ use [slug] param
+  const isBusinessRoute = router.pathname === "/b/[slug]"
+  const isTeamRoute = router.pathname === "/t/[slug]"
+  const isUserRoute = router.pathname === "/u/[username]"
 
   const validateRouteType = (profileType: string | undefined): boolean => {
     if (isBusinessRoute) {
       // Visiting /b/[slug] — only "business" type is allowed
       return profileType === "business"
     }
+    if (isTeamRoute) {
+      // Visiting /t/[slug] — only "team" type is allowed
+      return profileType === "team"
+    }
     if (isUserRoute) {
-      // Visiting /u/[username] — "business" type is NOT allowed here
-      return profileType !== "business"
+      // Visiting /u/[username] — "business" and "team" types are NOT allowed here
+      return profileType !== "business" && profileType !== "team"
     }
     return true
   }

@@ -31,9 +31,9 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
 
     const getPortfolioRoute = (username?: string, profileType?: string) => {
         if (!username?.trim()) return "/"
-        return profileType === "business"
-            ? `/b/${encodeURIComponent(username.trim())}`
-            : `/u/${encodeURIComponent(username.trim())}`
+        if (profileType === "business") return `/b/${encodeURIComponent(username.trim())}`
+        if (profileType === "team") return `/t/${encodeURIComponent(username.trim())}`
+        return `/u/${encodeURIComponent(username.trim())}`
     }
 
     useEffect(() => {

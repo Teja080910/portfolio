@@ -337,7 +337,9 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
         const destUsername = generatedUsername || formData.username.trim()
         const portfolioPath = selectedType === "business"
           ? `/b/${encodeURIComponent(destUsername)}`
-          : `/u/${encodeURIComponent(destUsername)}`
+          : selectedType === "team"
+            ? `/t/${encodeURIComponent(destUsername)}`
+            : `/u/${encodeURIComponent(destUsername)}`
         window.setTimeout(() => {
           void router.push(portfolioPath)
         }, 1600)
@@ -583,7 +585,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
                   <div>
                     <p className="text-base font-semibold text-slate-900 dark:text-slate-50">Team</p>
                     <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                      Showcase your team's collective work, members, and collaborative projects.
+                      Showcase your team{"'"}s collective work, members, and collaborative projects.
                     </p>
                   </div>
                 </button>

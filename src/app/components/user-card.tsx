@@ -43,7 +43,7 @@ export default function UserCard({ user }: UserCardProps) {
         </CardContent>
         <CardFooter className="p-6 pt-0">
           <Link
-            href={user.type === "business" ? `/b/${user.username}` : `/u/${user.username}`}
+            href={user.type === "business" ? `/b/${user.username}` : user.type === "team" ? `/t/${user.username}` : `/u/${user.username}`}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-800 hover:shadow-lg dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             View Portfolio

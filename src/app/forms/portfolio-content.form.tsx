@@ -750,7 +750,14 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/"
+            href={(() => {
+              const t = user.type;
+              const u = user.username;
+              if (!u) return "/";
+              if (t === "business") return `/b/${u}`;
+              if (t === "team") return `/t/${u}`;
+              return `/u/${u}`;
+            })()}
             scroll={false}
             className="inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition-transform duration-300 hover:-translate-y-0.5 dark:border-slate-600 dark:bg-slate-950/35 dark:text-slate-200"
           >
