@@ -7,6 +7,20 @@ import { motion } from "framer-motion"
 import { ArrowDown, ArrowLeft, ArrowUp, Compass, Plus, Rocket, Save, Sparkles, Trash2, Users } from "lucide-react"
 import Link from "next/link"
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
+import {
+  ABOUT_HIGHLIGHT_ICONS,
+  asBoolean,
+  asString,
+  createId,
+  mapAboutContent,
+  mapCertificatesContent,
+  mapEducationContent,
+  mapExperienceContent,
+  mapProjectsContent,
+  mapSkillsContent,
+  normalizeProjectPhotos,
+  normalizeSkillValues,
+} from "@/lib/content-mappers"
 
 type Notice = { tone: "success" | "error"; message: string } | null
 type PortfolioEditSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | null
@@ -18,7 +32,6 @@ type PortfolioContentFormProps = {
 const PROJECT_PHOTOS_BUCKET = "profile-photos"
 const MAX_PROJECT_PHOTO_SIZE = 5 * 1024 * 1024
 const ALLOWED_PROJECT_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"]
-const ABOUT_HIGHLIGHT_ICONS: AboutHighlightIcon[] = ["compass", "rocket", "users", "sparkles"]
 const ABOUT_HIGHLIGHT_TEMPLATES: Array<Pick<IAboutHighlight, "title" | "description" | "icon">> = [
   {
     title: "Product Thinking",
@@ -114,28 +127,7 @@ const aboutPreviewIcons: Record<AboutHighlightIcon, typeof Compass> = {
 const inputClassName =
   "w-full rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3 text-sm text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/15 break-words [overflow-wrap:anywhere] dark:border-slate-700/80 dark:bg-slate-950/45 dark:text-slate-100 dark:placeholder:text-slate-500"
 
-const createId = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-
 const toCsv = (items: string[]) => items.join(", ")
-const normalizeSkillValues = (values: string[]) => {
-  const normalized: string[] = []
-
-  values
-    .flatMap((value) => value.split(","))
-    .map((value) => value.trim())
-    .filter(Boolean)
-    .forEach((value) => {
-      const exists = normalized.some((item) => item.toLowerCase() === value.toLowerCase())
-      if (!exists) {
-        normalized.push(value)
-      }
-    })
-
-  return normalized
-}
 
 const fromCsv = (value: string) => normalizeSkillValues([value])
 
@@ -144,16 +136,6 @@ const sanitizeFileName = (fileName: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9.]+/g, "-")
     .replace(/^-+|-+$/g, "")
-
-const normalizeProjectPhotos = (project: IProjects) => {
-  const photos = Array.isArray(project.photos) ? project.photos.filter(Boolean) : []
-
-  if (photos.length > 0) {
-    return photos
-  }
-
-  return project.logo ? [project.logo] : []
-}
 
 const getStorageObjectPath = (photoUrl: string) => {
   try {
@@ -183,152 +165,7 @@ const isProjectConfigured = (project: IProjects) =>
         normalizeProjectPhotos(project).length,
   )
 
-const asObject = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" ? (value as Record<string, unknown>) : {}
 
-const asString = (value: unknown) => (typeof value === "string" ? value : "")
-
-const asBoolean = (value: unknown, fallback = true) => (typeof value === "boolean" ? value : fallback)
-
-const asStringArray = (value: unknown) =>
-  Array.isArray(value)
-    ? value
-        .map((item) => asString(item).trim())
-        .filter(Boolean)
-    : []
-
-const mapAboutContent = (value: unknown, person: string) => {
-  const raw = asObject(value)
-  const highlights = Array.isArray(raw.highlights)
-    ? raw.highlights
-        .map((item, index) => {
-          const highlight = asObject(item)
-          const iconValue = asString(highlight.icon).toLowerCase()
-          const icon: AboutHighlightIcon = ABOUT_HIGHLIGHT_ICONS.includes(iconValue as AboutHighlightIcon)
-            ? (iconValue as AboutHighlightIcon)
-            : "compass"
-
-          return {
-            id: asString(highlight.id) || `about-highlight-${person}-${index}`,
-            title: asString(highlight.title),
-            description: asString(highlight.description),
-            icon,
-            show: asBoolean(highlight.show, true),
-          }
-        })
-    : []
-
-  return {
-    id: asString(raw.id) || `about-${person}`,
-    person: asString(raw.person) || person,
-    type: asString(raw.type),
-    list: asStringArray(raw.list),
-    show: asBoolean(raw.show, true),
-    highlights,
-  }
-}
-
-const mapSkillsContent = (value: unknown, person: string): ISkills[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.map((item, index) => {
-    const raw = asObject(item)
-    return {
-      id: asString(raw.id) || `skill-${person}-${index}`,
-      person: asString(raw.person) || person,
-      skilltype: asString(raw.skilltype),
-      skills: normalizeSkillValues(asStringArray(raw.skills)),
-      description: asString(raw.description),
-      show: asBoolean(raw.show, true),
-    }
-  })
-}
-
-const mapProjectsContent = (value: unknown, person: string): IProjects[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.map((item, index) => {
-    const raw = asObject(item)
-    const photos = asStringArray(raw.photos)
-
-    return {
-      id: asString(raw.id) || `project-${person}-${index}`,
-      person: asString(raw.person) || person,
-      name: asString(raw.name),
-      description: asString(raw.description),
-      duration: asString(raw.duration),
-      gitlink: asString(raw.gitlink),
-      weblink: asString(raw.weblink),
-      logo: asString(raw.logo),
-      photos,
-      skills: asStringArray(raw.skills),
-      show: asBoolean(raw.show, true),
-    }
-  })
-}
-
-const mapExperienceContent = (value: unknown, person: string): IExperience[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.map((item, index) => {
-    const raw = asObject(item)
-    return {
-      id: asString(raw.id) || `experience-${person}-${index}`,
-      person: asString(raw.person) || person,
-      type: asString(raw.type),
-      location: asString(raw.location),
-      duration: asString(raw.duration),
-      role: asString(raw.role),
-      decription: asString(raw.decription),
-      show: asBoolean(raw.show, true),
-    }
-  })
-}
-
-const mapEducationContent = (value: unknown, person: string): IEducation[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.map((item, index) => {
-    const raw = asObject(item)
-    return {
-      id: asString(raw.id) || `education-${person}-${index}`,
-      person: asString(raw.person) || person,
-      name: asString(raw.name),
-      duration: asString(raw.duration),
-      course: asString(raw.course),
-      branch: asString(raw.branch),
-      keyachivements: asString(raw.keyachivements),
-      show: asBoolean(raw.show, true),
-    }
-  })
-}
-
-const mapCertificatesContent = (value: unknown, person: string): ICertificate[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.map((item, index) => {
-    const raw = asObject(item)
-    return {
-      id: asString(raw.id) || `certificate-${person}-${index}`,
-      person: asString(raw.person) || person,
-      name: asString(raw.name),
-      duration: asString(raw.duration),
-      link: asString(raw.link),
-      photo: asString(raw.photo),
-      show: asBoolean(raw.show, true),
-    }
-  })
-}
 
 export default function PortfolioContentForm({ focusSection = null }: PortfolioContentFormProps) {
   const user = useStore((state) => state.user)
@@ -632,106 +469,6 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     setProjectsDraft(projectsStore)
   }, [projectsStore])
 
-  const handleResumeUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setIsExtracting(true)
-    setNotice({ tone: "success", message: "Extracting resume data using AI... This may take up to 30 seconds." })
-
-    const readFileAsBase64 = (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const base64data = (reader.result as string).split(",")[1]
-          resolve(base64data)
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-    }
-
-    try {
-      const base64data = await readFileAsBase64(file)
-
-      const response = await fetch("/api/parse-resume", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileBase64: base64data }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || "Failed to extract resume. Make sure your GEMINI_API_KEY is configured correctly.")
-      }
-
-      const data = await response.json()
-      const person = user.id || "temp-id"
-
-      const parsedAbout = data.about || {}
-      const aboutPayload = {
-        id: about.id || createId(),
-        person,
-        type: (parsedAbout.type || "").trim(),
-        list: Array.isArray(parsedAbout.list) ? parsedAbout.list : [],
-        show: parsedAbout.show ?? true,
-        highlights: aboutHighlights, // Retain existing highlights
-      }
-
-      const skillsPayload = mapSkillsContent(data.skills, person)
-      const experiencePayload = mapExperienceContent(data.experience, person)
-      const educationPayload = mapEducationContent(data.education, person)
-      const projectsPayload = mapProjectsContent(data.projects, person)
-      const certificatesPayload = mapCertificatesContent(data.certificates, person)
-
-      // Instantly save to the database
-      const { error } = await supabase.from("portfolio_contents").upsert(
-        {
-          user_id: person,
-          about: aboutPayload,
-          skills: skillsPayload,
-          projects: projectsPayload,
-          experience: experiencePayload,
-          education: educationPayload,
-          certificates: certificatesPayload,
-        },
-        { onConflict: "user_id" },
-      )
-
-      if (error) {
-        throw new Error("Extracted successfully, but failed to save to database: " + error.message)
-      }
-
-      // Update global stores so the UI reflects the saved data immediately
-      setAbout(aboutPayload)
-      setSkills(skillsPayload)
-      setExperience(experiencePayload)
-      setEducation(educationPayload)
-      setProjects(projectsPayload)
-      setCertificate(certificatesPayload)
-
-      // Update local drafts
-      setAboutHeading(aboutPayload.type)
-      setAboutBody(aboutPayload.list.join("\n"))
-      setAboutVisible(aboutPayload.show)
-      setSkillsDraft(skillsPayload)
-      setExperienceDraft(experiencePayload)
-      setEducationDraft(educationPayload)
-      setProjectsDraft(projectsPayload)
-      setCertificatesDraft(certificatesPayload)
-
-      setNotice({
-        tone: "success",
-        message: "Successfully extracted and seeded your portfolio data!",
-      })
-    } catch (error: any) {
-      setNotice({ tone: "error", message: error.message || "Failed to extract data." })
-    } finally {
-      setIsExtracting(false)
-      event.target.value = ""
-    }
-  }
-
   const handleProjectPhotoUpload = async (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     const person = user.id || ""
@@ -1021,19 +758,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             <ArrowLeft className="h-4 w-4" />
             Back To Portfolio
           </Link>
-          <label
-            className={`cursor-pointer inline-flex items-center gap-2 rounded-full border border-cyan-300/80 bg-cyan-50/80 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition-transform duration-300 hover:-translate-y-0.5 dark:border-cyan-600/50 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
-          >
-            <Sparkles className="h-4 w-4" />
-            {isExtracting ? "Extracting..." : "Auto-fill from Resume"}
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              onChange={handleResumeUpload}
-              disabled={isExtracting || isSaving}
-            />
-          </label>
+
           <button
             type="button"
             onClick={saveContent}
