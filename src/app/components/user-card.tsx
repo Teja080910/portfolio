@@ -3,7 +3,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { IUser } from "@/lib/interfaces"
 import { motion } from "framer-motion"
-import { ExternalLink, User } from "lucide-react"
+import { ExternalLink } from "lucide-react"
 import Link from "next/link"
 
 interface UserCardProps {

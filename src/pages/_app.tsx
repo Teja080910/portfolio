@@ -1,5 +1,6 @@
 import AuthActions from "@/app/components/auth-actions";
 import { ThemeProvider } from "@/app/components/theme-provider";
+import { supabase } from "@/lib/db";
 import "@/styles/globals.css";
 import { authProvider } from "@/utils/middleware/authMiddleware";
 import { notificationProvider } from "@refinedev/antd";
@@ -8,11 +9,9 @@ import { Refine } from "@refinedev/core";
 import { RefineKbarProvider } from "@refinedev/kbar";
 import { dataProvider as supabaseDataProvider } from "@refinedev/supabase";
 import "antd/dist/reset.css";
-import { AnimatePresence, motion } from "framer-motion";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
-import { useMemo, useState, useEffect } from "react";
-import { supabase } from "@/lib/db";
+import { useEffect, useMemo, useState } from "react";
 
 export default function App({ Component, pageProps }: AppProps) {
   const dataProvider = useMemo(() => supabaseDataProvider(supabase), []);
@@ -55,17 +54,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </div>
           )}
 
-          <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
-            <motion.div
-              key={router?.asPath || "initial"}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28, ease: "easeOut" }}
-            >
-              <Component {...pageProps} />
-            </motion.div>
-          </AnimatePresence>
+          <Component {...pageProps} />
         </Refine>
       </RefineKbarProvider>
     </ThemeProvider>

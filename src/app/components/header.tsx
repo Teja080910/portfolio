@@ -72,6 +72,7 @@ export default function Header() {
           ].map(([id, label]) => (
             <li key={id}>
               <button
+                type="button"
                 onClick={() => scrollToSection(id)}
                 className={`
                   transition-colors duration-300

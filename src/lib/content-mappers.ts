@@ -1,4 +1,4 @@
-import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "./interfaces"
+import { AboutHighlightIcon, ICertificate, IEducation, IExperience, IProjects, ISkills } from "./interfaces"
 
 export const ABOUT_HIGHLIGHT_ICONS: AboutHighlightIcon[] = ["compass", "rocket", "users", "sparkles"]
 
@@ -38,7 +38,7 @@ export const normalizeSkillValues = (values: string[]) => {
   return normalized
 }
 
-export const normalizeProjectPhotos = (project: Partial<IProjects> | any): string[] => {
+export const normalizeProjectPhotos = (project: Partial<IProjects>): string[] => {
   const photos = Array.isArray(project.photos) ? project.photos.filter(Boolean) : []
 
   if (photos.length > 0) {

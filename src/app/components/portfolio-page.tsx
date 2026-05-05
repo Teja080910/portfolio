@@ -1,13 +1,11 @@
 "use client"
 
+
 import FloatingNav from "@/app/components/floating-nav"
 import Hero from "@/app/components/hero"
 import { supabase } from "@/lib/db"
 import { IAboutHighlight, IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
-import { User } from "@supabase/supabase-js"
-import { useRouter } from "next/router"
-import { useEffect, useRef, useState } from "react"
 import About from "@/pages/components/about"
 import Certificate from "@/pages/components/certificate"
 import Contact from "@/pages/components/contact"
@@ -15,6 +13,9 @@ import Education from "@/pages/components/education"
 import Experience from "@/pages/components/experience"
 import Projects from "@/pages/components/projects"
 import Skills from "@/pages/components/skills"
+import { User } from "@supabase/supabase-js"
+import { useRouter } from "next/router"
+import { useEffect, useRef, useState } from "react"
 
 const mapProfileToStoreUser = (profile: Partial<IUser>): IUser => ({
   id: profile.id,
@@ -201,13 +202,37 @@ export default function PortfolioPage() {
   const usernameFromRoute = router.isReady && typeof router.query.username === "string" ? router.query.username.trim() : ""
   const normalizedRouteUsername = usernameFromRoute.toLowerCase()
 
-  const [isSessionReady, setIsSessionReady] = useState(false)
+
   const [isNotFound, setIsNotFound] = useState(false)
   const [viewerUsername, setViewerUsername] = useState("")
+  const [hydrated, setHydrated] = useState(false)
+  const [isDataReady, setIsDataReady] = useState(false)
   const isSyncingSession = useRef(false)
+  const initialSyncDone = useRef(false)
+
+  // Track Zustand persist hydration status — prevents rendering before localStorage is loaded
+  useEffect(() => {
+    if (useStore.persist.hasHydrated()) {
+      setHydrated(true)
+    } else {
+      const unsub = useStore.persist.onFinishHydration(() => setHydrated(true))
+      return () => unsub()
+    }
+  }, [])
 
   const hasCachedUser = Boolean(user.id)
-  const canRenderFromStore = isSessionReady && hasCachedUser
+
+  // Check if the store already has meaningful data (e.g., from a previous mount in Strict Mode)
+  // This prevents double-loading when React Strict Mode unmounts and remounts the component
+  const storeHasData = Boolean(user.id) && Boolean(
+    useStore.getState().about?.type?.trim() ||
+    useStore.getState().skills?.length ||
+    useStore.getState().projects?.length
+  )
+
+  // Only consider store ready when BOTH user data AND portfolio content are fully loaded
+  // This prevents the intermediate state where user.id is set but content hasn't arrived yet
+  const canRenderFromStore = hasCachedUser && (isDataReady || storeHasData)
   const isOwnerView = Boolean(
     normalizedRouteUsername &&
     viewerUsername &&
@@ -234,8 +259,6 @@ export default function PortfolioPage() {
 
   const loadPortfolioByUserId = async (userId: string, sessionUser?: User) => {
     const storeApi = useStore.getState()
-    storeApi.removeUser()
-    storeApi.resetPortfolio()
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -246,6 +269,8 @@ export default function PortfolioPage() {
     const resolvedUser = profile ? mapProfileToStoreUser(profile) : (sessionUser ? mapSessionUserToStoreUser(sessionUser) : null)
 
     if (!resolvedUser) {
+      storeApi.removeUser()
+      storeApi.resetPortfolio()
       setIsNotFound(true)
       return ""
     }
@@ -280,9 +305,6 @@ export default function PortfolioPage() {
     if (!trimmedUsername) {
       return
     }
-
-    storeApi.removeUser()
-    storeApi.resetPortfolio()
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -338,8 +360,14 @@ export default function PortfolioPage() {
         const sessionUser = data.session?.user
         let sessionUsername = ""
 
+        // First determine the session user's username without loading their full portfolio
         if (sessionUser) {
-          sessionUsername = await loadPortfolioByUserId(sessionUser.id, sessionUser)
+          const { data: sessionProfile } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", sessionUser.id)
+            .maybeSingle()
+          sessionUsername = sessionProfile?.username?.trim() || ""
         }
 
         if (!isActive) {
@@ -349,15 +377,18 @@ export default function PortfolioPage() {
         setViewerUsername(sessionUsername)
 
         if (sessionUsername && sessionUsername.toLowerCase() === normalizedRouteUsername) {
-          setIsSessionReady(true)
-          return
+          // Session user is viewing their own portfolio — load full data
+          await loadPortfolioByUserId(sessionUser!.id, sessionUser!)
+        } else {
+          // Viewing someone else's portfolio — load public profile directly
+          await loadPublicProfileByUsername(usernameFromRoute)
         }
-
-        await loadPublicProfileByUsername(usernameFromRoute)
 
         if (isActive) {
           setViewerUsername(sessionUsername)
-          setIsSessionReady(true)
+          // Mark data as ready only after ALL data (user + portfolio content) is loaded
+          // This prevents the intermediate state where user.id is set but content hasn't arrived
+          setIsDataReady(true)
         }
       } finally {
         isSyncingSession.current = false
@@ -366,14 +397,17 @@ export default function PortfolioPage() {
 
     void syncSession()
 
-    const { data: authSubscription } = supabase.auth.onAuthStateChange(() => {
-      void syncSession()
+    const sub = supabase.auth.onAuthStateChange(() => {
+      if (initialSyncDone.current) {
+        void syncSession()
+      }
     })
+    initialSyncDone.current = true
 
     return () => {
       isActive = false
       isSyncingSession.current = false
-      authSubscription.subscription.unsubscribe()
+      sub.data.subscription.unsubscribe()
     }
   }, [normalizedRouteUsername, router.isReady, usernameFromRoute])
 
@@ -427,14 +461,15 @@ export default function PortfolioPage() {
 
   if (isNotFound) {
     return (
-      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
-        <div className="relative w-full max-w-md rounded-3xl border border-white/20 bg-white/10 p-8 text-center text-slate-100 shadow-xl backdrop-blur-xl">
+      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%)]" />
+        <div className="relative w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center text-slate-900 shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-100">
           <h2 className="text-2xl font-bold tracking-tight">Portfolio Not Found</h2>
-          <p className="mt-3 text-slate-300">
-            The portfolio for <span className="font-semibold text-cyan-400">@{usernameFromRoute}</span> doesn&apos;t exist or has been set to private.
+          <p className="mt-3 text-slate-600 dark:text-slate-300">
+            The portfolio for <span className="font-semibold text-cyan-600 dark:text-cyan-400">@{usernameFromRoute}</span> doesn&apos;t exist or has been set to private.
           </p>
           <button
+            type="button"
             onClick={() => void router.push("/")}
             className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-cyan-500 hover:to-teal-400"
           >
@@ -445,15 +480,19 @@ export default function PortfolioPage() {
     )
   }
 
-  if (!canRenderFromStore) {
+  // Show loading when:
+  // 1. Store hasn't hydrated from localStorage yet, OR
+  // 2. Data isn't ready yet (user + portfolio content not fully loaded)
+  // This prevents any intermediate state flickering
+  if (!hydrated || !canRenderFromStore) {
     return (
-      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
-        <div className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="relative w-full max-w-md rounded-3xl border border-white/20 bg-white/10 p-8 text-center text-slate-100 shadow-xl backdrop-blur-xl">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" />
+      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%)]" />
+        <div className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl dark:bg-cyan-400/20" />
+        <div className="relative w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center text-slate-900 shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-100">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent dark:border-cyan-300" />
           <h2 className="text-xl font-semibold">Preparing portfolio</h2>
-          <p className="mt-2 text-sm text-slate-300">Checking your session and loading the correct portfolio view...</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Checking your session and loading the correct portfolio view...</p>
         </div>
       </main>
     )

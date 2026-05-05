@@ -1,5 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 export const config = {
   api: {
@@ -41,8 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         pdfData = await parseFunc(pdfBuffer);
       }
-    } catch (e: any) {
-      throw new Error('PDF parsing error: ' + e.message);
+    } catch (e: unknown) {
+      throw new Error('PDF parsing error: ' + (e instanceof Error ? e.message : String(e)));
     }
 
     const resumeText = pdfData.text;
@@ -82,8 +82,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parsedData = JSON.parse(jsonString);
 
     res.status(200).json(parsedData);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error parsing resume:', error);
-    res.status(500).json({ error: error.message || 'Internal Server Error' });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Internal Server Error' });
   }
 }

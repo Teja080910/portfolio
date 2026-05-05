@@ -1,12 +1,5 @@
 "use client"
 
-import { supabase } from "@/lib/db"
-import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
-import { useStore } from "@/lib/store"
-import { motion } from "framer-motion"
-import { ArrowDown, ArrowLeft, ArrowUp, Compass, Plus, Rocket, Save, Sparkles, Trash2, Users } from "lucide-react"
-import Link from "next/link"
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 import {
   ABOUT_HIGHLIGHT_ICONS,
   asBoolean,
@@ -21,6 +14,13 @@ import {
   normalizeProjectPhotos,
   normalizeSkillValues,
 } from "@/lib/content-mappers"
+import { supabase } from "@/lib/db"
+import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
+import { useStore } from "@/lib/store"
+import { motion } from "framer-motion"
+import { ArrowDown, ArrowLeft, ArrowUp, Compass, Plus, Rocket, Save, Sparkles, Trash2, Users } from "lucide-react"
+import Link from "next/link"
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 
 type Notice = { tone: "success" | "error"; message: string } | null
 type PortfolioEditSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | null
@@ -211,7 +211,6 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [certificates, setCertificatesDraft] = useState<ICertificate[]>(certificateStore)
   const [notice, setNotice] = useState<Notice>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [isExtracting, setIsExtracting] = useState(false)
   const [isUploadingProjectPhotos, setIsUploadingProjectPhotos] = useState(false)
   const [activeSkillTypeRow, setActiveSkillTypeRow] = useState<number | null>(null)
   const [activeSkillValueRow, setActiveSkillValueRow] = useState<number | null>(null)

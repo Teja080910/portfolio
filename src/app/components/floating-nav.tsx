@@ -90,6 +90,7 @@ export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
         {showSections?.map(({ id, label }) => (
           <button
             key={id}
+            type="button"
             onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
             className="group relative flex items-center"
             aria-label={`Scroll to ${label}`}
