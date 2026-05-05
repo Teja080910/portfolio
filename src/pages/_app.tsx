@@ -11,8 +11,8 @@ import "antd/dist/reset.css";
 import { AnimatePresence, motion } from "framer-motion";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
-import { useMemo } from "react";
-import { supabase } from "./api/supabaseclinet";
+import { useMemo, useState, useEffect } from "react";
+import { supabase } from "@/lib/db";
 
 export default function App({ Component, pageProps }: AppProps) {
   const dataProvider = useMemo(() => supabaseDataProvider(supabase), []);
@@ -32,7 +32,13 @@ export default function App({ Component, pageProps }: AppProps) {
     [],
   );
   const router = useRouter();
-  const isAuthRoute = ["/sign-in", "/sign-up", "/reset-password"].includes(router.pathname);
+  const [isAuthRoute, setIsAuthRoute] = useState(false);
+
+  useEffect(() => {
+    if (router?.isReady) {
+      setIsAuthRoute(["/sign-in", "/sign-up", "/reset-password"].includes(router.pathname || ""));
+    }
+  }, [router?.isReady, router?.pathname]);
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <RefineKbarProvider>
@@ -51,7 +57,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
           <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
             <motion.div
-              key={router.asPath}
+              key={router?.asPath || "initial"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}

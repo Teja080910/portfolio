@@ -189,7 +189,7 @@ export const authProvider: AuthProvider = {
 
         return {
             success: true,
-            redirectTo: "/",
+            redirectTo: profile.username?.trim() ? `/u/${encodeURIComponent(profile.username.trim())}` : "/",
         };
     },
     logout: async () => {

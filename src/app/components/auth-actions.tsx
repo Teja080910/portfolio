@@ -4,7 +4,6 @@ import { ModeToggle } from "@/app/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import {
   createId,
-  mapAboutContent,
   mapCertificatesContent,
   mapEducationContent,
   mapExperienceContent,
@@ -13,14 +12,14 @@ import {
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
 import { useStore } from "@/lib/store"
-import { Loader2, LogOut, Sparkles, X } from "lucide-react"
+import { Compass, Loader2, LogOut, Sparkles, X } from "lucide-react"
+import Link from "next/link"
 import { useRouter } from "next/router"
 import { ChangeEvent, useEffect, useState } from "react"
 
 export default function AuthActions() {
   const router = useRouter()
   const user = useStore((state) => state.user)
-  const userId = user?.id
   const removeUser = useStore((state) => state.removeUser)
   const about = useStore((state) => state.about)
   const setAbout = useStore((state) => state.setAbout)
@@ -33,6 +32,32 @@ export default function AuthActions() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const syncSessionState = async () => {
+      const { data } = await supabase.auth.getSession()
+
+      if (isMounted) {
+        setIsAuthenticated(Boolean(data.session?.user))
+      }
+    }
+
+    void syncSessionState()
+
+    const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setIsAuthenticated(Boolean(session?.user))
+      }
+    })
+
+    return () => {
+      isMounted = false
+      authSubscription.subscription.unsubscribe()
+    }
+  }, [])
 
   useEffect(() => {
     if (!showLogoutConfirm) return
@@ -66,11 +91,15 @@ export default function AuthActions() {
     if (isLoggingOut) return
 
     setIsLoggingOut(true)
-    await supabase.auth.signOut()
-    removeUser()
-    setShowLogoutConfirm(false)
-    void router.push("/sign-in")
-    setIsLoggingOut(false)
+    try {
+      await supabase.auth.signOut()
+      removeUser()
+      setShowLogoutConfirm(false)
+      setIsAuthenticated(false)
+      await router.replace("/sign-in")
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   const handleResumeUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -152,20 +181,40 @@ export default function AuthActions() {
       setCertificate(certificatesPayload)
 
       showToast("Successfully extracted and seeded your portfolio data!")
-    } catch (error: any) {
-      showToast(error.message || "Failed to extract data.")
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to extract data."
+      showToast(message)
     } finally {
       setIsExtracting(false)
       event.target.value = ""
     }
   }
 
-  if (!userId) {
+  if (!isAuthenticated) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
+        <Link href="/">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300"
+          >
+            <Compass className="h-3.5 w-3.5" />
+            Explore
+          </Button>
+        </Link>
         <ModeToggle />
+        <Link href="/sign-in">
+          <Button
+            variant="default"
+            size="sm"
+            className="h-8 rounded-full bg-gradient-to-r from-cyan-600 to-teal-500 px-4 text-xs font-semibold text-white hover:from-cyan-500 hover:to-teal-400"
+          >
+            Sign In
+          </Button>
+        </Link>
       </div>
-    )
+      )
   }
 
   return (
@@ -196,6 +245,17 @@ export default function AuthActions() {
           </div>
           <span className="max-w-[120px] truncate font-medium">{displayName}</span>
         </div>
+
+        <Link href="/">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300"
+          >
+            <Compass className="h-4 w-4" />
+            <span className="hidden sm:inline">Explore</span>
+          </Button>
+        </Link>
 
         <ModeToggle />
         <Button

@@ -23,24 +23,24 @@ export default function UserEditorBySectionPage() {
 
   // Freeze the query params so we don't lose them during the AnimatePresence exit animation
   const [frozenQuery, setFrozenQuery] = useState({
-    username: router.query.username,
-    section: router.query.section
+    username: router?.query?.username,
+    section: router?.query?.section
   })
 
   useEffect(() => {
     // Only update our frozen state if the query actually contains section parameters
-    if (router.isReady && router.query.section) {
+    if (router?.isReady && router?.query?.section) {
       setFrozenQuery({
-        username: router.query.username,
-        section: router.query.section
+        username: router.query?.username,
+        section: router.query?.section
       })
     }
-  }, [router.isReady, router.query.username, router.query.section])
+  }, [router?.isReady, router?.query?.username, router?.query?.section])
 
   // Use current valid query if available, otherwise fall back to our frozen state during exit animation
   const rawParams = {
-    username: router.isReady && router.query.section ? router.query.username : frozenQuery.username,
-    section: router.isReady && router.query.section ? router.query.section : frozenQuery.section
+    username: router?.isReady && router?.query?.section ? router.query?.username : frozenQuery.username,
+    section: router?.isReady && router?.query?.section ? router.query?.section : frozenQuery.section
   }
 
   const username = typeof rawParams.username === "string" ? rawParams.username : ""
@@ -51,7 +51,7 @@ export default function UserEditorBySectionPage() {
   const editorConfig = sectionToEditor[section] ?? sectionToEditor.profile
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router?.isReady) {
       return
     }
 

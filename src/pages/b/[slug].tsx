@@ -2,7 +2,7 @@ import { useRouter } from "next/router"
 
 export default function BusinessProfilePlaceholderPage() {
   const router = useRouter()
-  const slug = typeof router.query.slug === "string" ? router.query.slug : ""
+  const slug = typeof router?.query?.slug === "string" ? router.query.slug : ""
 
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-6">

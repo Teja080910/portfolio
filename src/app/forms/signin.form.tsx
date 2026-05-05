@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/db"
 import { IUser } from "@/lib/interfaces"
-import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useLogin } from "@refinedev/core"
 import { AnimatePresence, motion } from "framer-motion"
@@ -27,14 +26,50 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
     })
     const [oauthPending, setOauthPending] = useState<"google" | "github" | null>(null)
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
     const router = useRouter()
-    const user = useStore((state) => state.user)
+
+    const getPortfolioRoute = (username?: string) =>
+        username?.trim() ? `/u/${encodeURIComponent(username.trim())}` : "/"
 
     useEffect(() => {
-        if (user?.id) {
-            void router.push("/")
+        let isMounted = true
+
+        const syncAuthState = async () => {
+            const { data } = await supabase.auth.getSession()
+            const sessionUser = data.session?.user
+
+            if (!isMounted) return
+
+            setIsAuthenticated(Boolean(sessionUser))
+
+            if (!sessionUser) {
+                return
+            }
+
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("username")
+                .eq("id", sessionUser.id)
+                .maybeSingle()
+
+            if (isMounted) {
+                void router.replace(getPortfolioRoute(profile?.username))
+            }
         }
-    }, [router, user?.id])
+
+        void syncAuthState()
+
+        const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
+            const sessionUser = session?.user
+            setIsAuthenticated(Boolean(sessionUser))
+        })
+
+        return () => {
+            isMounted = false
+            authSubscription.subscription.unsubscribe()
+        }
+    }, [router])
 
     const setValidationErrors = (nextErrors: Record<string, string>) => {
         setErrors(nextErrors)
@@ -205,7 +240,7 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: {
-                redirectTo: `${window.location.origin}/`,
+                redirectTo: `${window.location.origin}/auth/callback`,
             },
         })
 
@@ -216,6 +251,10 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
     }
 
     const isBusy = pending || Boolean(oauthPending) || resetPending
+
+    if (isAuthenticated) {
+        return null
+    }
 
     const GoogleIcon = () => (
         <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
