@@ -32,6 +32,7 @@ const mapProfileToStoreUser = (profile: Partial<IUser>): IUser => ({
   phone: profile.phone ?? "",
   password: profile.password ?? "",
   show: profile.show ?? true,
+  type: profile.type ?? "user",
 })
 
 const mapSessionUserToStoreUser = (user: User): IUser => {
@@ -199,7 +200,13 @@ export default function PortfolioPage() {
   const certificate = useStore((state) => state.certificate)
   const education = useStore((state) => state.education)
   const router = useRouter()
-  const usernameFromRoute = router.isReady && typeof router.query.username === "string" ? router.query.username.trim() : ""
+  const usernameFromRoute = router.isReady
+    ? (typeof router.query.username === "string"
+        ? router.query.username.trim()
+        : typeof router.query.slug === "string"
+          ? router.query.slug.trim()
+          : "")
+    : ""
   const normalizedRouteUsername = usernameFromRoute.toLowerCase()
 
 
@@ -257,6 +264,21 @@ export default function PortfolioPage() {
   const showEducation = canRenderFromStore && (isOwnerView || hasEducationContent)
   const showContact = canRenderFromStore && (isOwnerView || hasContactContent)
 
+  const isBusinessRoute = router.query.slug !== undefined
+  const isUserRoute = router.query.username !== undefined
+
+  const validateRouteType = (profileType: string | undefined): boolean => {
+    if (isBusinessRoute) {
+      // Visiting /b/[slug] — only "business" type is allowed
+      return profileType === "business"
+    }
+    if (isUserRoute) {
+      // Visiting /u/[username] — "business" type is NOT allowed here
+      return profileType !== "business"
+    }
+    return true
+  }
+
   const loadPortfolioByUserId = async (userId: string, sessionUser?: User) => {
     const storeApi = useStore.getState()
 
@@ -269,6 +291,15 @@ export default function PortfolioPage() {
     const resolvedUser = profile ? mapProfileToStoreUser(profile) : (sessionUser ? mapSessionUserToStoreUser(sessionUser) : null)
 
     if (!resolvedUser) {
+      storeApi.removeUser()
+      storeApi.resetPortfolio()
+      setIsNotFound(true)
+      return ""
+    }
+
+    // Validate that the route matches the profile type
+    // e.g. /b/username only for business, /u/username only for user/team
+    if (!validateRouteType(resolvedUser.type)) {
       storeApi.removeUser()
       storeApi.resetPortfolio()
       setIsNotFound(true)
@@ -314,6 +345,15 @@ export default function PortfolioPage() {
       .maybeSingle()
 
     if (!profile) {
+      storeApi.removeUser()
+      storeApi.resetPortfolio()
+      setIsNotFound(true)
+      return
+    }
+
+    // Validate that the route matches the profile type
+    // e.g. /b/username only for business, /u/username only for user/team
+    if (!validateRouteType(profile.type)) {
       storeApi.removeUser()
       storeApi.resetPortfolio()
       setIsNotFound(true)

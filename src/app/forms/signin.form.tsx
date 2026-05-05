@@ -29,8 +29,12 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const router = useRouter()
 
-    const getPortfolioRoute = (username?: string) =>
-        username?.trim() ? `/u/${encodeURIComponent(username.trim())}` : "/"
+    const getPortfolioRoute = (username?: string, profileType?: string) => {
+        if (!username?.trim()) return "/"
+        return profileType === "business"
+            ? `/b/${encodeURIComponent(username.trim())}`
+            : `/u/${encodeURIComponent(username.trim())}`
+    }
 
     useEffect(() => {
         let isMounted = true
@@ -49,12 +53,12 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
 
             const { data: profile } = await supabase
                 .from("profiles")
-                .select("username")
+                .select("username, type")
                 .eq("id", sessionUser.id)
                 .maybeSingle()
 
             if (isMounted) {
-                void router.replace(getPortfolioRoute(profile?.username))
+                void router.replace(getPortfolioRoute(profile?.username, profile?.type))
             }
         }
 

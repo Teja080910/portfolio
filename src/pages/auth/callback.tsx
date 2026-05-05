@@ -27,6 +27,23 @@ export default function AuthCallbackPage() {
         .maybeSingle()
 
       if (profile) {
+        // For OAuth signups, restore the type from sessionStorage if the profile
+        // still has the default 'user' type but the user selected a different type
+        if (typeof window !== "undefined") {
+          const storedType = sessionStorage.getItem("signup_profile_type")
+          if (storedType && (profile.type === "user" || !profile.type)) {
+            await supabase
+              .from("profiles")
+              .update({ type: storedType })
+              .eq("id", sessionUser.id)
+            profile.type = storedType
+            sessionStorage.removeItem("signup_profile_type")
+          } else if (storedType) {
+            // Type already set, just clean up
+            sessionStorage.removeItem("signup_profile_type")
+          }
+        }
+
         useStore.getState().addUser({
           id: profile.id,
           username: profile.username ?? "",
@@ -45,7 +62,13 @@ export default function AuthCallbackPage() {
         })
       }
 
-      const destination = profile?.username?.trim() ? `/u/${encodeURIComponent(profile.username.trim())}` : "/"
+      const username = profile?.username?.trim()
+      const profileType = profile?.type
+      const destination = username
+        ? profileType === "business"
+          ? `/b/${encodeURIComponent(username)}`
+          : `/u/${encodeURIComponent(username)}`
+        : "/"
 
       if (isActive) {
         void router.replace(destination)

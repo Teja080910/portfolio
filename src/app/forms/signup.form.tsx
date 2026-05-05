@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import {
   ArrowRight,
   BriefcaseBusiness,
+  Building2,
   CheckCircle2,
   ChevronLeft,
   Eye,
@@ -23,6 +24,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -104,6 +106,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
   const [success, setSuccess] = useState(false)
   const [requiresEmailVerification, setRequiresEmailVerification] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState("")
+  const [profileType, setProfileType] = useState<"user" | "team" | "business" | null>(null)
   const [oauthPending, setOauthPending] = useState<"google" | "github" | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -253,13 +256,18 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
   const handleSocialAuth = async (provider: "google" | "github") => {
     if (typeof window === "undefined") return
 
+    // Store selected type so the callback can apply it after OAuth
+    if (profileType) {
+      sessionStorage.setItem("signup_profile_type", profileType)
+    }
+
     setOauthPending(provider)
     setErrors({})
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
 
@@ -298,6 +306,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
             username: generatedUsername,
             phone: formData.phone.trim(),
             role: formData.role,
+            type: profileType ?? "user",
           },
         },
       })
@@ -315,14 +324,24 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
       const needsEmailVerification = !data.session
       setRequiresEmailVerification(needsEmailVerification)
 
-      if (data.session) {
-        await supabase.auth.signOut()
-      }
-
       setSuccess(true)
-      window.setTimeout(() => {
-        void router.push("/sign-in")
-      }, needsEmailVerification ? 3000 : 1600)
+
+      if (needsEmailVerification) {
+        // User must verify email first — redirect to sign-in
+        window.setTimeout(() => {
+          void router.push("/sign-in")
+        }, 3000)
+      } else {
+        // Auto-logged in — redirect to portfolio page
+        const selectedType = profileType ?? "user"
+        const destUsername = generatedUsername || formData.username.trim()
+        const portfolioPath = selectedType === "business"
+          ? `/b/${encodeURIComponent(destUsername)}`
+          : `/u/${encodeURIComponent(destUsername)}`
+        window.setTimeout(() => {
+          void router.push(portfolioPath)
+        }, 1600)
+      }
     } catch (error) {
       console.error("Registration error:", error)
       setErrors({ form: "Something unexpected happened. Please try again." })
@@ -519,6 +538,74 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
             })}
           </div>
 
+          {profileType === null ? (
+            <motion.div
+              key="type-selector"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div className="text-center">
+                <h3 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+                  Choose your account type
+                </h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Select how you want to use your portfolio — you can change this later.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setProfileType("user")}
+                  className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white/80 p-5 text-left transition-all duration-300 hover:border-cyan-300 hover:bg-cyan-50/50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-cyan-500/50 dark:hover:bg-cyan-950/30"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-sm">
+                    <UserRound className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-slate-900 dark:text-slate-50">Individual User</p>
+                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                      Create a personal portfolio to showcase your work, skills, and experience.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setProfileType("team")}
+                  className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white/80 p-5 text-left transition-all duration-300 hover:border-teal-300 hover:bg-teal-50/50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/50 dark:hover:bg-teal-950/30"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-sm">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-slate-900 dark:text-slate-50">Team</p>
+                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                      Showcase your team's collective work, members, and collaborative projects.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setProfileType("business")}
+                  className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white/80 p-5 text-left transition-all duration-300 hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-purple-500/50 dark:hover:bg-purple-950/30"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-violet-500 text-white shadow-sm">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-slate-900 dark:text-slate-50">Business</p>
+                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                      Create a business profile to highlight your company, services, and offerings.
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          ) : (
           <AnimatePresence mode="wait" initial={false}>
             {success ? (
               <motion.div
@@ -934,6 +1021,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
               </motion.form>
             )}
           </AnimatePresence>
+          )}
         </div>
       </div>
     </motion.section>

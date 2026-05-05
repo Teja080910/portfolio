@@ -1,3 +1,5 @@
+export type ProfileType = "user" | "team" | "business"
+
 export interface IUser {
     id?: string;
     username: string;
@@ -14,6 +16,7 @@ export interface IUser {
     password: string;
     confirmpassword?: string;
     show?: boolean;
+    type?: ProfileType;
 }
 
 export type AboutHighlightIcon = "compass" | "rocket" | "users" | "sparkles";

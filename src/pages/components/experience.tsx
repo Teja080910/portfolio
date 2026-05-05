@@ -37,7 +37,7 @@ export default function Experience({ isReadOnly = false }: ExperienceProps) {
           </div>
         )}
         <AnimatedSectionHeader title="Professional Experience" />
-        <div className="space-y-8">
+        <div className="columns-1 gap-6 md:columns-2">
           {experiences.length > 0 ? experiences.map((exp, index) => (
             <motion.div
               key={index}
@@ -45,6 +45,7 @@ export default function Experience({ isReadOnly = false }: ExperienceProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.35 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="mb-6 break-inside-avoid"
             >
               <div className="glass-card group relative overflow-hidden">
                 <div

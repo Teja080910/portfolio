@@ -6,19 +6,20 @@ import { useStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
 import {
-    ArrowLeft,
-    Briefcase,
-    FileText,
-    Github,
-    ImageIcon,
-    Linkedin,
-    Loader2,
-    Mail,
-    PencilLine,
-    Phone,
-    Save,
-    ShieldCheck,
-    UserRound,
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  FileText,
+  Github,
+  ImageIcon,
+  Linkedin,
+  Loader2,
+  Mail,
+  PencilLine,
+  Phone,
+  Save,
+  ShieldCheck,
+  UserRound
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -63,6 +64,7 @@ const profileSchema = z.object({
   gitlink: optionalUrlSchema,
   likedlin: optionalUrlSchema,
   resumelink: optionalUrlSchema,
+  type: z.enum(["user", "team", "business"]).default("user"),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
@@ -107,6 +109,7 @@ const mapProfileToUser = (profile: Partial<IUser>, fallbackEmail = ""): IUser =>
   password: profile.password ?? "",
   confirmpassword: "",
   show: profile.show ?? true,
+  type: profile.type ?? "user",
 })
 
 const buildDefaults = (user: Partial<IUser>): ProfileFormValues => ({
@@ -119,6 +122,7 @@ const buildDefaults = (user: Partial<IUser>): ProfileFormValues => ({
   gitlink: user.gitlink ?? "",
   likedlin: user.likedlin ?? "",
   resumelink: user.resumelink ?? "",
+  type: user.type ?? "user",
 })
 
 const buildFallbackUser = (authUser: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>, currentUser: IUser) => {
@@ -437,6 +441,7 @@ export default function ProfileForm() {
       lastname: values.lastname.trim(),
       username: values.username.trim(),
       role: values.role.trim(),
+      type: values.type,
       phone: values.phone.trim(),
       description: values.description.trim(),
       gitlink: values.gitlink.trim(),
@@ -470,6 +475,7 @@ export default function ProfileForm() {
           id: authUser.id,
           email: authUser.email ?? accountEmail,
           ...trimmedValues,
+          type: values.type,
           photo: nextPhotoUrl,
           show: currentUser.show ?? true,
         },
@@ -613,21 +619,34 @@ export default function ProfileForm() {
               </div>
 
               <div>
-                <label htmlFor="email" className={labelClassName}>
-                  Account Email
+                <label htmlFor="type" className={labelClassName}>
+                  Profile Type
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="email"
-                    value={accountEmail}
-                    readOnly
-                    className={`${textInputClassName} pl-11 text-slate-500 dark:text-slate-400`}
-                  />
+                  <Building2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <select
+                    id="type"
+                    {...register("type")}
+                    className={`${textInputClassName} appearance-none pl-11`}
+                  >
+                    <option value="user">Individual User</option>
+                    <option value="team">Team</option>
+                    <option value="business">Business</option>
+                  </select>
+                  <svg
+                    className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </div>
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  Email is read-only here to avoid Supabase confirmation flow conflicts.
-                </p>
+                {errors.type && <p className="mt-2 text-sm text-rose-500">{errors.type.message}</p>}
               </div>
 
               <div>
@@ -645,6 +664,24 @@ export default function ProfileForm() {
                 </div>
                 {errors.phone && <p className="mt-2 text-sm text-rose-500">{errors.phone.message}</p>}
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="email" className={labelClassName}>
+                Account Email
+              </label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="email"
+                  value={accountEmail}
+                  readOnly
+                  className={`${textInputClassName} pl-11 text-slate-500 dark:text-slate-400`}
+                />
+              </div>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Email is read-only here to avoid Supabase confirmation flow conflicts.
+              </p>
             </div>
 
             <div>

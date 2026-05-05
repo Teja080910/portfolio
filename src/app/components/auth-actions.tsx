@@ -33,15 +33,30 @@ export default function AuthActions() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
     const syncSessionState = async () => {
       const { data } = await supabase.auth.getSession()
+      const sessionUser = data.session?.user
 
-      if (isMounted) {
-        setIsAuthenticated(Boolean(data.session?.user))
+      if (!isMounted) return
+
+      setIsAuthenticated(Boolean(sessionUser))
+
+      // Fetch the latest profile photo directly from Supabase
+      if (sessionUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("photo")
+          .eq("id", sessionUser.id)
+          .maybeSingle()
+
+        if (isMounted && profile?.photo) {
+          setProfilePhoto(profile.photo)
+        }
       }
     }
 
@@ -50,6 +65,19 @@ export default function AuthActions() {
     const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted) {
         setIsAuthenticated(Boolean(session?.user))
+        // Re-fetch photo on auth change
+        if (session?.user) {
+          supabase
+            .from("profiles")
+            .select("photo")
+            .eq("id", session.user.id)
+            .maybeSingle()
+            .then(({ data: profile }) => {
+              if (isMounted && profile?.photo) {
+                setProfilePhoto(profile.photo)
+              }
+            })
+        }
       }
     })
 
@@ -58,6 +86,13 @@ export default function AuthActions() {
       authSubscription.subscription.unsubscribe()
     }
   }, [])
+
+  // Also sync from Zustand store when it updates
+  useEffect(() => {
+    if (user?.photo && !profilePhoto) {
+      setProfilePhoto(user.photo)
+    }
+  }, [user?.photo, profilePhoto])
 
   useEffect(() => {
     if (!showLogoutConfirm) return
@@ -237,8 +272,8 @@ export default function AuthActions() {
         
         <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
           <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
-            {user?.photo ? (
-              <img src={user.photo} alt={displayName} className="h-full w-full object-cover" />
+            {profilePhoto ? (
+              <img src={profilePhoto} alt={displayName} className="h-full w-full object-cover" />
             ) : (
               avatarText
             )}
