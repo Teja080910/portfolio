@@ -2,7 +2,7 @@
 
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { Award, Calendar, Link as LinkIcon, PencilLine } from "lucide-react"
+import { Award, Calendar, ExternalLink, PencilLine } from "lucide-react"
 import Link from "next/link"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
@@ -21,57 +21,89 @@ export default function Certificate({ isReadOnly = false }: CertificateProps) {
     return null
   }
 
+  const borderColors = [
+    "border-primary/30",
+    "border-purple-500/30",
+    "border-pink-500/30",
+    "border-cyan-500/30",
+    "border-amber-500/30",
+    "border-emerald-500/30",
+  ]
+
   return (
     <section id="certificate" className="section-shell">
+      {/* Background */}
+      <div className="orb right-[-10%] top-[-5%] h-[30%] w-[30%] bg-pink-500/5 dark:bg-pink-500/10" />
+      <div className="orb left-[-5%] bottom-[-5%] h-[25%] w-[25%] bg-primary/5 dark:bg-primary/10" />
+
       <div className="surface-grid relative z-10">
         {!isReadOnly && userId && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-6 flex justify-end">
             <Link
               href={editCertificateHref}
               scroll={false}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+              className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-card/50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
             >
               <PencilLine className="h-3.5 w-3.5" />
               Edit Certificates
             </Link>
           </div>
         )}
-        <AnimatedSectionHeader title="Certificates" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {certificates.length > 0 ? certificates.map((certificate, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 26 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.35 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <div className="glass-card h-full">
-                <div className="mb-4 flex items-center">
-                  <Award className="h-10 w-10 text-cyan-500" />
-                  <h3 className="ml-4 text-xl font-semibold text-slate-900 dark:text-slate-100">{certificate.name}</h3>
-                </div>
-                {certificate.duration && (
-                  <p className="mb-2 flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                    <Calendar className="h-4 w-4" />
-                    {certificate.duration}
-                  </p>
-                )}
-                {certificate.link && (
-                  <a
-                    href={certificate.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-cyan-600 transition-colors hover:text-cyan-500 dark:text-cyan-300"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    View Credential
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          )) : (
-            <div className="glass-card md:col-span-2 text-center text-slate-600 dark:text-slate-300">
+
+        <AnimatedSectionHeader title="Certificates" subtitle="Professional certifications and credentials." />
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {certificates.length > 0 ? (
+            certificates.map((cert, index) => {
+              const borderColor = borderColors[index % borderColors.length]
+
+              return (
+                <motion.div
+                  key={cert.id || index}
+                  initial={{ opacity: 0, y: 26 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.35 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <div className={`glass-card group relative h-full overflow-hidden border ${borderColor}`}>
+                    {/* Icon */}
+                    <div className="mb-4 inline-flex rounded-xl border border-border/50 bg-background/50 p-2.5">
+                      <Award className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+
+                    {/* Name */}
+                    <h3 className="break-words text-base font-bold text-foreground [overflow-wrap:anywhere]">
+                      {cert.name}
+                    </h3>
+
+                    {/* Duration */}
+                    {cert.duration && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        {cert.duration}
+                      </p>
+                    )}
+
+                    {/* Link */}
+                    {cert.link && (
+                      <div className="mt-4">
+                        <a
+                          href={cert.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-secondary/50 px-3 py-1.5 text-xs font-medium text-primary transition-all duration-200 hover:border-primary/30 hover:bg-primary/5"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          View Credential
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })
+          ) : (
+            <div className="glass-card md:col-span-2 lg:col-span-3 text-center text-muted-foreground">
               No certificates added yet. Use Edit Certificates to publish your credentials.
             </div>
           )}

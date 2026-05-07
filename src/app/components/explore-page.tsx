@@ -6,7 +6,7 @@ import { supabase } from "@/lib/db"
 import { IUser, ProfileType } from "@/lib/interfaces"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
-import { Building2, ChevronLeft, ChevronRight, ExternalLink, Search, UserRound, Users } from "lucide-react"
+import { Building2, ChevronLeft, ChevronRight, Compass, Search, UserRound, Users } from "lucide-react"
 import Head from "next/head"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -20,7 +20,7 @@ type Tab = {
 }
 
 const tabs: Tab[] = [
-  { id: "all", label: "All", icon: Users },
+  { id: "all", label: "All", icon: Compass },
   { id: "user", label: "Users", icon: UserRound },
   { id: "team", label: "Teams", icon: Users },
   { id: "business", label: "Business", icon: Building2 },
@@ -40,7 +40,6 @@ export default function ExplorePage() {
       setLoading(true)
       setErrorMessage("")
 
-      // Fetch logged-in user's profile
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser()
@@ -57,7 +56,6 @@ export default function ExplorePage() {
         }
       }
 
-      // Fetch all visible public profiles (keep full list for accurate counts)
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -106,7 +104,6 @@ export default function ExplorePage() {
     business: profiles.filter((p) => p.type === "business").length,
   }), [profiles])
 
-  // Reset to page 1 when tab or search changes
   useEffect(() => {
     setCurrentPage(1)
   }, [activeTab, searchQuery])
@@ -139,10 +136,11 @@ export default function ExplorePage() {
         <meta name="description" content="Discover amazing portfolios from professionals around the world." />
       </Head>
 
-      <main className="relative min-h-screen overflow-hidden bg-slate-50 px-6 py-24 transition-colors duration-300 dark:bg-slate-950 md:py-32">
-        {/* Light-mode subtle gradient background */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.06),transparent_25%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.15),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_25%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-full -translate-x-1/2 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.06),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.1),transparent_70%)]" />
+      <main className="relative min-h-screen overflow-hidden bg-background px-6 py-24 transition-colors duration-300 md:py-32">
+        {/* Background gradient */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-purple-500/5 dark:from-primary/10 dark:via-transparent dark:to-purple-500/10" />
+        <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-full -translate-x-1/2 bg-gradient-radial from-primary/5 to-transparent dark:from-primary/10" />
+        <div className="pointer-events-none absolute inset-0 grid-pattern opacity-30" />
 
         <div className="relative z-10 mx-auto max-w-7xl">
           <header className="mb-10 text-center">
@@ -151,13 +149,14 @@ export default function ExplorePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400">
-                <Users className="h-6 w-6" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                <Compass className="h-6 w-6 text-primary" />
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
-                Explore <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent dark:from-cyan-400 dark:to-teal-400">Portfolios</span>
+              <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+                Explore{" "}
+                <span className="gradient-text">Portfolios</span>
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-500 dark:text-slate-400">
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
                 Discover talent, get inspired, and connect with professionals across various industries.
               </p>
             </motion.div>
@@ -169,11 +168,11 @@ export default function ExplorePage() {
               transition={{ delay: 0.2, duration: 0.4 }}
             >
               <div className="group relative">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-cyan-500 dark:text-slate-500 dark:group-focus-within:text-cyan-400" />
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                 <Input
                   type="text"
                   placeholder="Search by name, role, or username..."
-                  className="h-14 rounded-2xl border-slate-200 bg-white pl-12 pr-4 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500/50 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500"
+                  className="h-14 rounded-2xl border-border bg-card/50 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:ring-primary/20"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
@@ -190,12 +189,12 @@ export default function ExplorePage() {
               transition={{ delay: 0.25, duration: 0.4 }}
             >
               <div className="mx-auto max-w-xl">
-                <div className="relative overflow-hidden rounded-3xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50 to-teal-50 p-5 shadow-md shadow-cyan-500/10 backdrop-blur dark:border-cyan-500/30 dark:from-cyan-950/40 dark:to-teal-950/40 dark:shadow-cyan-500/5">
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-400/15 blur-3xl dark:bg-cyan-500/10" />
-                  <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-teal-400/15 blur-3xl dark:bg-teal-500/10" />
+                <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5 p-5 shadow-md backdrop-blur">
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
+                  <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-purple-500/10 blur-3xl" />
 
                   <div className="relative flex items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-600 to-teal-500 text-xl font-bold text-white shadow-lg">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-pink-500 text-xl font-bold text-white shadow-lg">
                       {loggedInProfile.photo ? (
                         <img
                           src={loggedInProfile.photo}
@@ -207,23 +206,23 @@ export default function ExplorePage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                         Your Portfolio
                       </p>
-                      <h2 className="mt-1 truncate text-lg font-bold text-slate-900 dark:text-white">
+                      <h2 className="mt-1 truncate text-lg font-bold text-foreground">
                         {`${loggedInProfile.firstname || ""} ${loggedInProfile.lastname || ""}`.trim() ||
                           loggedInProfile.username}
                       </h2>
-                      <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                      <p className="truncate text-sm text-muted-foreground">
                         {loggedInProfile.role || "Professional"}
                       </p>
                     </div>
                     <Link
                       href={loggedInProfile.type === "business" ? `/b/${loggedInProfile.username}` : loggedInProfile.type === "team" ? `/t/${loggedInProfile.username}` : `/u/${loggedInProfile.username}`}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
                     >
                       View Portfolio
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      <Compass className="h-3.5 w-3.5" />
                     </Link>
                   </div>
                 </div>
@@ -248,20 +247,20 @@ export default function ExplorePage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300",
+                    "inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200",
                     isActive
-                      ? "bg-gradient-to-r from-cyan-600 to-teal-500 text-white shadow-lg shadow-cyan-500/20"
-                      : "border border-slate-200 bg-white/70 text-slate-600 hover:border-cyan-300/50 hover:text-cyan-700 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-400 dark:hover:border-cyan-500/50 dark:hover:text-cyan-300",
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "border border-border/50 bg-card/50 text-muted-foreground hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary",
                   )}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                   <span
                     className={cn(
-                      "ml-1 rounded-full px-2 py-0.5 text-xs tabular-nums",
+                      "ml-1 rounded-lg px-2 py-0.5 text-xs tabular-nums",
                       isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-200/70 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+                        ? "bg-white/20 text-primary-foreground"
+                        : "bg-secondary/70 text-muted-foreground",
                     )}
                   >
                     {count}
@@ -273,16 +272,16 @@ export default function ExplorePage() {
 
           {loading ? (
             <div className="flex min-h-[400px] flex-col items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent dark:border-cyan-400" />
-              <p className="mt-4 text-slate-500 dark:text-slate-400">Loading amazing people...</p>
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="mt-4 text-muted-foreground">Loading amazing people...</p>
             </div>
           ) : errorMessage ? (
-            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-rose-400/20 bg-rose-500/5 p-12 text-center">
-              <div className="mb-4 rounded-full bg-rose-500/10 p-4 text-rose-500 dark:text-rose-300">
+            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-destructive/20 bg-destructive/5 p-12 text-center">
+              <div className="mb-4 rounded-full bg-destructive/10 p-4 text-destructive">
                 <Search className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Unable to load portfolios</h3>
-              <p className="mt-2 max-w-xl text-slate-600 dark:text-slate-300">
+              <h3 className="text-xl font-semibold text-foreground">Unable to load portfolios</h3>
+              <p className="mt-2 max-w-xl text-muted-foreground">
                 Supabase returned an error while fetching public profiles: {errorMessage}
               </p>
             </div>
@@ -306,7 +305,7 @@ export default function ExplorePage() {
                 ))}
               </motion.div>
 
-              {/* Pagination Controls */}
+              {/* Pagination */}
               {totalPages > 1 && (
                 <motion.div
                   className="mt-12 flex items-center justify-center gap-2"
@@ -318,10 +317,10 @@ export default function ExplorePage() {
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300",
+                      "inline-flex items-center gap-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200",
                       currentPage === 1
-                        ? "cursor-not-allowed text-slate-300 dark:text-slate-600"
-                        : "border border-slate-200 bg-white/70 text-slate-700 hover:border-cyan-300/50 hover:text-cyan-700 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-cyan-500/50 dark:hover:text-cyan-300",
+                        ? "cursor-not-allowed text-muted-foreground/30"
+                        : "border border-border/50 bg-card/50 text-muted-foreground hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary",
                     )}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -333,7 +332,7 @@ export default function ExplorePage() {
                       page === "..." ? (
                         <span
                           key={`ellipsis-${index}`}
-                          className="flex h-9 w-9 items-center justify-center text-sm text-slate-400 dark:text-slate-500"
+                          className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground/50"
                         >
                           ...
                         </span>
@@ -342,10 +341,10 @@ export default function ExplorePage() {
                           key={page}
                           onClick={() => goToPage(page)}
                           className={cn(
-                            "flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300",
+                            "flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200",
                             page === currentPage
-                              ? "bg-gradient-to-r from-cyan-600 to-teal-500 text-white shadow-md shadow-cyan-500/20"
-                              : "text-slate-600 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800/70",
+                              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                              : "text-muted-foreground hover:bg-secondary/70",
                           )}
                         >
                           {page}
@@ -358,10 +357,10 @@ export default function ExplorePage() {
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300",
+                      "inline-flex items-center gap-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200",
                       currentPage === totalPages
-                        ? "cursor-not-allowed text-slate-300 dark:text-slate-600"
-                        : "border border-slate-200 bg-white/70 text-slate-700 hover:border-cyan-300/50 hover:text-cyan-700 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-cyan-500/50 dark:hover:text-cyan-300",
+                        ? "cursor-not-allowed text-muted-foreground/30"
+                        : "border border-border/50 bg-card/50 text-muted-foreground hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary",
                     )}
                   >
                     Next
@@ -371,12 +370,12 @@ export default function ExplorePage() {
               )}
             </>
           ) : (
-            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-slate-200 bg-slate-100/50 p-12 text-center dark:border-white/5 dark:bg-white/[0.02]">
-              <div className="mb-4 rounded-full bg-slate-200 p-4 text-slate-400 dark:bg-slate-800/50 dark:text-slate-500">
+            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-border/50 bg-card/30 p-12 text-center backdrop-blur">
+              <div className="mb-4 rounded-full bg-secondary/70 p-4 text-muted-foreground">
                 <Search className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">No portfolios found</h3>
-              <p className="mt-2 text-slate-500 dark:text-slate-400">Try adjusting your search or check back later for new profiles.</p>
+              <h3 className="text-xl font-semibold text-foreground">No portfolios found</h3>
+              <p className="mt-2 text-muted-foreground">Try adjusting your search or check back later for new profiles.</p>
             </div>
           )}
         </div>

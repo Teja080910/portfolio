@@ -10,7 +10,7 @@ const sections = [
   { id: "experience", label: "Experience" },
   { id: "skills", label: "Skills" },
   { id: "projects", label: "Projects" },
-  { id: "certificate", label: "Certiticates" },
+  { id: "certificate", label: "Certificates" },
   { id: "education", label: "Education" },
   { id: "contact", label: "Contact" },
 ]
@@ -21,6 +21,7 @@ type FloatingNavProps = {
 
 export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
   const [activeSection, setActiveSection] = useState("user")
+  const [scrolled, setScrolled] = useState(false)
   const user = useStore((state: StoreState) => state.user)
   const about = useStore((state: StoreState) => state.about)
   const experience = useStore((state: StoreState) => state.experience)
@@ -59,6 +60,14 @@ export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
   const showSections = sections.filter((section) => isSectionVisible(section.id))
 
   useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 100)
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -67,7 +76,7 @@ export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
           }
         })
       },
-      { threshold: 0.5 },
+      { threshold: 0.4 },
     )
 
     sections.forEach(({ id }) => {
@@ -79,36 +88,50 @@ export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
   }, [])
 
   return (
-    <motion.div
-      className="fixed right-4 top-1/2 z-50 -translate-y-1/2"
+    <motion.nav
+      className="fixed right-4 top-1/2 z-50 hidden -translate-y-1/2 lg:block"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.8, duration: 0.45 }}
     >
-      <div className="rounded-full border border-slate-200/70 bg-white/80 p-3 shadow-xl backdrop-blur-md dark:border-slate-700/70 dark:bg-slate-900/75">
-        <div className="flex flex-col gap-3">
-        {showSections?.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
-            className="group relative flex items-center"
-            aria-label={`Scroll to ${label}`}
-          >
-            <span className="pointer-events-none absolute right-9 rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-slate-100 opacity-0 shadow-md transition-opacity duration-300 group-hover:opacity-100 dark:bg-slate-100 dark:text-slate-900">
-              {label}
-            </span>
-            <div
-              className={`h-3 w-3 rounded-full transition-all duration-300 ${
-                activeSection === id
-                  ? "scale-125 bg-cyan-500 shadow-[0_0_16px_rgba(6,182,212,0.65)]"
-                  : "bg-slate-400 hover:scale-110 dark:bg-slate-500"
+      <div
+        className={`rounded-2xl border border-border/50 p-2.5 shadow-lg backdrop-blur-xl transition-all duration-300 ${
+          scrolled
+            ? "bg-background/80 shadow-primary/5"
+            : "bg-background/40"
+        }`}
+      >
+        <div className="flex flex-col gap-2">
+          {showSections?.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() =>
+                document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="group relative flex items-center"
+              aria-label={`Scroll to ${label}`}
+            >
+              {/* Tooltip */}
+              <span
+                className="pointer-events-none absolute right-10 rounded-lg bg-foreground px-2.5 py-1.5 text-xs font-medium text-background opacity-0 shadow-md transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0"
+                style={{ transform: "translateX(4px)" }}
+              >
+                {label}
+              </span>
+
+              {/* Dot indicator */}
+              <div
+                className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
+                  activeSection === id
+                    ? "scale-125 bg-primary shadow-lg shadow-primary/40"
+                    : "bg-muted-foreground/30 hover:scale-110 hover:bg-muted-foreground/50"
                 }`}
-            />
-          </button>
-        ))}
+              />
+            </button>
+          ))}
         </div>
       </div>
-    </motion.div>
+    </motion.nav>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { Calendar, ExternalLink, Github, Layers, PencilLine } from "lucide-react"
+import { ExternalLink, GitBranch, PencilLine } from "lucide-react"
 import Link from "next/link"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
@@ -21,105 +21,145 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
     return null
   }
 
+  const projectColors = [
+    "from-primary/10 via-purple-500/5 to-transparent",
+    "from-purple-500/10 via-pink-500/5 to-transparent",
+    "from-pink-500/10 via-rose-500/5 to-transparent",
+    "from-cyan-500/10 via-primary/5 to-transparent",
+    "from-amber-500/10 via-orange-500/5 to-transparent",
+    "from-emerald-500/10 via-teal-500/5 to-transparent",
+  ]
+
   return (
     <section id="projects" className="section-shell">
+      {/* Background */}
+      <div className="orb left-[-8%] top-[-5%] h-[30%] w-[30%] bg-primary/5 dark:bg-primary/10" />
+      <div className="orb right-[-8%] bottom-[-5%] h-[25%] w-[25%] bg-pink-500/5 dark:bg-pink-500/10" />
+
       <div className="surface-grid relative z-10">
         {!isReadOnly && userId && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-6 flex justify-end">
             <Link
               href={editProjectsHref}
               scroll={false}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+              className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-card/50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
             >
               <PencilLine className="h-3.5 w-3.5" />
               Edit Projects
             </Link>
           </div>
         )}
-        <AnimatedSectionHeader title="Projects" />
+
+        <AnimatedSectionHeader title="Projects" subtitle="Things I've built and contributed to." />
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {projects.length > 0 ? projects.map((project, index) => {
-            const projectPhotos = (project.photos?.length ? project.photos : (project.logo ? [project.logo] : [])).filter(Boolean)
+          {projects.length > 0 ? (
+            projects.map((project, index) => {
+              const projectPhotos = (project.photos?.length ? project.photos : (project.logo ? [project.logo] : [])).filter(Boolean)
+              const gradientClass = projectColors[index % projectColors.length]
 
-            return (
-              <motion.div
-                key={project.id || index}
-                initial={{ opacity: 0, y: 26 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.35 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <article className="glass-card h-full">
-                  <h3 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{project.name}</h3>
-                  {project.duration && (
-                    <p className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <Calendar className="h-4 w-4" />
-                      {project.duration}
-                    </p>
-                  )}
+              return (
+                <motion.div
+                  key={project.id || index}
+                  initial={{ opacity: 0, y: 26 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.35 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <article className="glass-card group relative h-full overflow-hidden">
+                    {/* Gradient accent */}
+                    <div className={`pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-gradient-to-br ${gradientClass} blur-3xl`} />
 
-                  {project.description && (
-                    <p className="mt-4 text-slate-700 dark:text-slate-300">{project.description}</p>
-                  )}
+                    <div className="relative z-10">
+                      {/* Project number */}
+                      <span className="absolute right-2 top-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground/20">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
 
-                  {projectPhotos.length > 0 && (
-                    <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {projectPhotos.map((photo, photoIndex) => (
-                        <div key={`${project.id}-${photoIndex}`} className="overflow-hidden rounded-xl border border-slate-200/70 bg-slate-100 dark:border-slate-700/70 dark:bg-slate-800/60">
-                          <img
-                            src={photo}
-                            alt={`${project.name || "Project"} screenshot ${photoIndex + 1}`}
-                            className="h-24 w-full object-cover"
-                            loading="lazy"
-                          />
+                      {/* Project name */}
+                      <h3 className="break-words text-xl font-bold text-foreground [overflow-wrap:anywhere] transition-colors duration-300 group-hover:text-primary">
+                        {project.name}
+                      </h3>
+
+                      {/* Duration */}
+                      {project.duration && (
+                        <p className="mt-2 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                          {project.duration}
+                        </p>
+                      )}
+
+                      {/* Description */}
+                      {project.description && (
+                        <p className="mt-4 break-words text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                          {project.description}
+                        </p>
+                      )}
+
+                      {/* Photos */}
+                      {projectPhotos.length > 0 && (
+                        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          {projectPhotos.slice(0, 3).map((photo, photoIndex) => (
+                            <div
+                              key={`${project.id}-${photoIndex}`}
+                              className="overflow-hidden rounded-xl border border-border/50 bg-secondary/30"
+                            >
+                              <img
+                                src={photo}
+                                alt={`${project.name || "Project"} screenshot ${photoIndex + 1}`}
+                                className="h-20 w-full object-cover transition-transform duration-500 hover:scale-110"
+                                loading="lazy"
+                              />
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      )}
 
-                  {project.skills.length > 0 && (
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {project.skills.map((skill, skillIndex) => (
-                        <span
-                          key={`${project.id}-${skill}-${skillIndex}`}
-                          className="inline-flex items-center gap-1 rounded-full border border-cyan-200/80 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200"
-                        >
-                          <Layers className="h-3.5 w-3.5" />
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                      {/* Skills */}
+                      {project.skills.length > 0 && (
+                        <div className="mt-5 flex flex-wrap gap-1.5">
+                          {project.skills.map((skill, skillIndex) => (
+                            <span
+                              key={`${project.id}-${skill}-${skillIndex}`}
+                              className="skill-badge"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    {project.gitlink && (
-                      <a
-                        href={project.gitlink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-600 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200"
-                      >
-                        <Github className="h-4 w-4" />
-                        Source
-                      </a>
-                    )}
-                    {project.weblink && (
-                      <a
-                        href={project.weblink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-teal-600 px-4 py-2 text-sm font-medium text-white"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Live Demo
-                      </a>
-                    )}
-                  </div>
-                </article>
-              </motion.div>
-            )
-          }) : (
-            <div className="glass-card lg:col-span-2 text-center text-slate-600 dark:text-slate-300">
+                      {/* Links */}
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        {project.gitlink && (
+                          <a
+                            href={project.gitlink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-card/50 px-4 py-2 text-sm font-medium text-foreground/70 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
+                          >
+                            <GitBranch className="h-4 w-4" />
+                            Source
+                          </a>
+                        )}
+                        {project.weblink && (
+                          <a
+                            href={project.weblink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Live Demo
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                </motion.div>
+              )
+            })
+          ) : (
+            <div className="glass-card lg:col-span-2 text-center text-muted-foreground">
               No projects yet. Use Edit Projects to add your work.
             </div>
           )}

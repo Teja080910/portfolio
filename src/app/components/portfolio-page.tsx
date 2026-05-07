@@ -508,16 +508,17 @@ export default function PortfolioPage() {
   if (isNotFound) {
     return (
       <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%)]" />
-        <div className="relative w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center text-slate-900 shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-100">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-purple-500/10 dark:from-primary/15 dark:via-transparent dark:to-purple-500/15" />
+        <div className="pointer-events-none absolute left-[-10%] top-[-10%] h-[40%] w-[40%] rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative w-full max-w-md rounded-3xl border border-border/50 bg-card/60 p-8 text-center text-foreground shadow-xl backdrop-blur-xl">
           <h2 className="text-2xl font-bold tracking-tight">Portfolio Not Found</h2>
-          <p className="mt-3 text-slate-600 dark:text-slate-300">
-            The portfolio for <span className="font-semibold text-cyan-600 dark:text-cyan-400">@{usernameFromRoute}</span> doesn&apos;t exist or has been set to private.
+          <p className="mt-3 text-muted-foreground">
+            The portfolio for <span className="font-semibold text-primary">@{usernameFromRoute}</span> doesn't exist or has been set to private.
           </p>
           <button
             type="button"
             onClick={() => void router.push("/")}
-            className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-cyan-500 hover:to-teal-400"
+            className="mt-8 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
           >
             Go to Homepage
           </button>
@@ -533,12 +534,12 @@ export default function PortfolioPage() {
   if (!hydrated || !canRenderFromStore) {
     return (
       <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 transition-colors duration-300">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%)]" />
-        <div className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl dark:bg-cyan-400/20" />
-        <div className="relative w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center text-slate-900 shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-100">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent dark:border-cyan-300" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-purple-500/10 dark:from-primary/15 dark:via-transparent dark:to-purple-500/15" />
+        <div className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl dark:bg-primary/20" />
+        <div className="relative w-full max-w-md rounded-3xl border border-border/50 bg-card/60 p-8 text-center text-foreground shadow-xl backdrop-blur-xl">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <h2 className="text-xl font-semibold">Preparing portfolio</h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Checking your session and loading the correct portfolio view...</p>
+          <p className="mt-2 text-sm text-muted-foreground">Checking your session and loading the correct portfolio view...</p>
         </div>
       </main>
     )

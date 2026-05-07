@@ -26,7 +26,6 @@ const looksLikeNoise = (text: string) => {
   const vowelRatio = vowels / normalized.length
   const longTokens = text.split(/\s+/).filter((token) => token.length > 18).length
 
-  // Very long random-looking tokens and unusually low vowel ratio are good gibberish indicators.
   return vowelRatio < 0.23 || longTokens >= 2
 }
 
@@ -36,6 +35,15 @@ const highlightIcons = {
   users: Users,
   sparkles: Sparkles,
 } as const
+
+const highlightColors = [
+  "from-primary/20 to-purple-500/20 border-primary/30",
+  "from-purple-500/20 to-pink-500/20 border-purple-500/30",
+  "from-pink-500/20 to-rose-500/20 border-pink-500/30",
+  "from-cyan-500/20 to-primary/20 border-cyan-500/30",
+  "from-amber-500/20 to-orange-500/20 border-amber-500/30",
+  "from-emerald-500/20 to-teal-500/20 border-emerald-500/30",
+]
 
 export default function About({ isReadOnly = false }: AboutProps) {
   const about = useStore((state) => state.about)
@@ -120,42 +128,34 @@ export default function About({ isReadOnly = false }: AboutProps) {
   const hasHighlightContent = Boolean(user.role?.trim()) || visibleProjects > 0 || visibleExperience > 0 || visibleEducation > 0
   const aboutChipLabel = aboutHeading || roleLabel || "Who I Am Now"
 
-  const highlightsCount = renderedHighlights.length
-  const isCompact = highlightsCount > 4
-  const rightGridClass =
-    highlightsCount > 6
-      ? "grid h-full grid-cols-2 xl:grid-cols-3 gap-3"
-      : highlightsCount > 4
-        ? "grid h-full grid-cols-2 gap-3"
-        : "grid h-full grid-cols-1 gap-4 sm:grid-cols-2"
-
-  const cardPaddingClass = isCompact ? "!p-4" : ""
-  const iconSizeClass = isCompact ? "h-5 w-5" : "h-7 w-7"
-  const titleClass = isCompact ? "mb-1 mt-2 text-base" : "mb-2 mt-4 text-lg"
-  const descClass = isCompact ? "text-xs" : "text-sm"
-  const numberClass = isCompact ? "right-3 top-3 text-[10px]" : "right-4 top-4 text-xs"
-
   if (isReadOnly && aboutPoints.length === 0 && !hasHighlightContent) {
     return null
   }
 
   return (
     <section id="about" className="section-shell">
+      {/* Background gradient */}
+      <div className="orb left-[-15%] top-[-10%] h-[35%] w-[35%] bg-primary/5 dark:bg-primary/10" />
+      <div className="orb bottom-[-10%] right-[-10%] h-[30%] w-[30%] bg-purple-500/5 dark:bg-purple-500/10" />
+
       <div className="surface-grid relative z-10">
         {!isReadOnly && userId && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-6 flex justify-end">
             <Link
               href={editAboutHref}
               scroll={false}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+              className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-card/50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
             >
               <PencilLine className="h-3.5 w-3.5" />
               Edit About
             </Link>
           </div>
         )}
-        <AnimatedSectionHeader title="About Me" />
-        <div className="grid items-center gap-10 lg:grid-cols-2">
+
+        <AnimatedSectionHeader title="About Me" subtitle="A glimpse into who I am and what drives me." />
+
+        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
+          {/* About description */}
           {(aboutPoints.length > 0 || !isReadOnly) && (
             <motion.div
               initial={{ opacity: 0, y: 26 }}
@@ -164,54 +164,83 @@ export default function About({ isReadOnly = false }: AboutProps) {
               transition={{ duration: 0.5 }}
             >
               <div className="glass-card relative overflow-hidden">
-                <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl dark:bg-cyan-300/20" />
-                <span className="accent-chip">{aboutChipLabel}</span>
-                {displayAboutPoints.length > 0 ? (
-                  <div className="mt-5 space-y-4">
-                    {displayAboutPoints.map((point, index) => (
-                      <p key={`${point}-${index}`} className="break-words text-base leading-relaxed text-slate-700 [overflow-wrap:anywhere] md:text-lg dark:text-slate-300">
-                        {point}
-                      </p>
+                <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+                <div className="relative z-10">
+                  <span className="accent-chip">{aboutChipLabel}</span>
+
+                  {displayAboutPoints.length > 0 ? (
+                    <div className="mt-6 space-y-4">
+                      {displayAboutPoints.map((point, index) => (
+                        <p
+                          key={`${point}-${index}`}
+                          className="break-words text-base leading-relaxed text-foreground/80 [overflow-wrap:anywhere] md:text-lg"
+                        >
+                          {point}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mb-2 mt-6 text-lg leading-relaxed text-muted-foreground">
+                      Add your about details from <strong>Edit Portfolio Content</strong> to replace this empty state.
+                    </p>
+                  )}
+
+                  {/* Trend signals */}
+                  <div className="mt-8 flex flex-wrap gap-2">
+                    {trendSignals.map((signal) => (
+                      <span
+                        key={signal}
+                        className="skill-badge"
+                      >
+                        {signal}
+                      </span>
                     ))}
                   </div>
-                ) : (
-                  <p className="mb-2 mt-4 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-                    Add your about details from <strong>Edit Portfolio Content</strong> to replace this empty state.
-                  </p>
-                )}
-
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {trendSignals.map((signal) => (
-                    <span
-                      key={signal}
-                      className="rounded-full border border-cyan-300/60 bg-cyan-50/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700 dark:border-cyan-500/40 dark:bg-cyan-500/15 dark:text-cyan-200"
-                    >
-                      {signal}
-                    </span>
-                  ))}
                 </div>
               </div>
             </motion.div>
           )}
-          <div className={rightGridClass}>
-            {renderedHighlights.map((item, index) => (
-              <motion.div
-                key={item.id || index}
-                initial={{ opacity: 0, y: 26 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.35 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className={`glass-card group relative h-full ${cardPaddingClass}`}>
-                  <div className={`pointer-events-none absolute font-semibold tracking-[0.12em] text-cyan-600/70 dark:text-cyan-300/70 ${numberClass}`}>
-                    0{index + 1}
+
+          {/* Highlights grid */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {renderedHighlights.map((item, index) => {
+              const colorClass = highlightColors[index % highlightColors.length]
+              const IconComponent = item.icon
+
+              return (
+                <motion.div
+                  key={item.id || index}
+                  initial={{ opacity: 0, y: 26 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.35 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <div className={`glass-card group relative h-full overflow-hidden border ${colorClass}`}>
+                    <div className="relative z-10">
+                      {/* Number */}
+                      <span className="absolute right-3 top-3 text-[10px] font-bold tracking-[0.15em] text-muted-foreground/30">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      {/* Icon */}
+                      <div className="mb-3 inline-flex rounded-xl border border-border/50 bg-background/50 p-2.5">
+                        <IconComponent className="h-5 w-5 text-primary transition-transform duration-300 group-hover:scale-110" />
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="mb-2 text-base font-semibold text-foreground">
+                        {item.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
-                  <item.icon className={`text-cyan-600 transition-transform duration-300 group-hover:scale-110 dark:text-cyan-300 ${iconSizeClass}`} />
-                  <h3 className={`break-words font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100 ${titleClass}`}>{item.title}</h3>
-                  <p className={`break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300 ${descClass}`}>{item.description}</p>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </div>

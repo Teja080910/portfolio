@@ -699,7 +699,7 @@ export default function ProfileForm() {
                 id="description"
                 {...register("description")}
                 rows={5}
-                className={textInputClassName}
+                className={`${textInputClassName} resize-none`}
                 placeholder="Tell visitors what you build, what you enjoy working on, and what makes your portfolio yours."
               />
               <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">

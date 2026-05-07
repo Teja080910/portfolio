@@ -23,68 +23,99 @@ export default function Experience({ isReadOnly = false }: ExperienceProps) {
 
   return (
     <section id="experience" className="section-shell">
+      {/* Background */}
+      <div className="orb right-[-10%] top-[-5%] h-[30%] w-[30%] bg-primary/5 dark:bg-primary/10" />
+      <div className="orb left-[-5%] bottom-[-5%] h-[25%] w-[25%] bg-purple-500/5 dark:bg-purple-500/10" />
+
       <div className="surface-grid relative z-10">
         {!isReadOnly && userId && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-6 flex justify-end">
             <Link
               href={editExperienceHref}
               scroll={false}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+              className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-card/50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
             >
               <PencilLine className="h-3.5 w-3.5" />
               Edit Experience
             </Link>
           </div>
         )}
-        <AnimatedSectionHeader title="Professional Experience" />
-        <div className="columns-1 gap-6 md:columns-2">
-          {experiences.length > 0 ? experiences.map((exp, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 26 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.35 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="mb-6 break-inside-avoid"
-            >
-              <div className="glass-card group relative overflow-hidden">
-                <div
-                  className="absolute right-0 top-0 h-28 w-28 rounded-bl-full bg-cyan-200/60 opacity-70 transition-transform duration-500 group-hover:scale-110 dark:bg-cyan-700/40"
-                ></div>
-                <div className="relative z-10">
-                  <h3 className="mb-2 flex items-center text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {(exp.type || "").toLowerCase() === "freelance" ? <Globe className="mr-2 h-6 w-6 text-cyan-500" /> : null}
-                    {exp.type}
-                  </h3>
-                  <p className="mb-2 flex items-center text-slate-600 dark:text-slate-300">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    {exp.location}
-                  </p>
-                  <p className="mb-4 flex items-center text-slate-600 dark:text-slate-300">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {exp.duration}
-                  </p>
-                  <p className="mb-4 flex items-center text-xl font-medium text-slate-700 dark:text-slate-200">
-                    <Briefcase className="mr-2 h-5 w-5" />
-                    {exp.role}
-                  </p>
-                  <ul className="list-none space-y-2">
-                    {(exp.decription || "")
-                      .split(/\n|\.|•/)
-                      .map((line) => line.trim())
-                      .filter(Boolean)
-                      .map((resp, idx) => (
-                      <li key={idx} className="flex items-start text-slate-700 dark:text-slate-300">
-                        <span className="mr-2 text-cyan-500">•</span>
-                        {resp}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
-          )) : (
-            <div className="glass-card text-center text-slate-600 dark:text-slate-300">
+
+        <AnimatedSectionHeader title="Experience" subtitle="My professional journey and work history." />
+
+        <div className="relative mx-auto max-w-4xl">
+          {experiences.length > 0 ? (
+            <div className="relative space-y-8 before:absolute before:left-[23px] before:top-0 before:h-full before:w-[2px] before:bg-gradient-to-b before:from-primary/40 before:via-purple-500/20 before:to-transparent">
+              {experiences.map((exp, index) => (
+                <motion.div
+                  key={exp.id || index}
+                  initial={{ opacity: 0, y: 26 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.35 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="relative flex gap-6"
+                >
+                  {/* Timeline dot */}
+                  <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-primary/30 bg-background shadow-sm transition-all duration-300 group-hover:border-primary group-hover:bg-primary/10">
+                    {exp.type?.toLowerCase() === "freelance" ? (
+                      <Globe className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Briefcase className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+
+                  {/* Content card */}
+                  <div className="glass-card group min-w-0 flex-1">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-lg font-bold text-foreground [overflow-wrap:anywhere]">
+                          {exp.type}
+                        </h3>
+                        {exp.role && (
+                          <p className="mt-1 break-words text-base font-medium text-primary [overflow-wrap:anywhere]">
+                            {exp.role}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Meta info */}
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
+                      {exp.location && (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {exp.location}
+                        </span>
+                      )}
+                      {exp.duration && (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {exp.duration}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {exp.decription && (
+                      <ul className="mt-4 space-y-2">
+                        {(exp.decription || "")
+                          .split(/\n|\.|•/)
+                          .map((line) => line.trim())
+                          .filter(Boolean)
+                          .map((resp, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                              <span className="break-words [overflow-wrap:anywhere]">{resp}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="glass-card text-center text-muted-foreground">
               No experience entries yet. Use Edit Experience to add your work history.
             </div>
           )}
