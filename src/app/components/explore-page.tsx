@@ -3,6 +3,7 @@
 import UserCard from "@/app/components/user-card"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/db"
+import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { IUser, ProfileType } from "@/lib/interfaces"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
@@ -197,7 +198,7 @@ export default function ExplorePage() {
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-pink-500 text-xl font-bold text-white shadow-lg">
                       {loggedInProfile.photo ? (
                         <img
-                          src={loggedInProfile.photo}
+                          src={getProxiedImageUrl(loggedInProfile.photo) || ""}
                           alt={`${loggedInProfile.firstname} ${loggedInProfile.lastname}`}
                           className="h-full w-full object-cover"
                         />

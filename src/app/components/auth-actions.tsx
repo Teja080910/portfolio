@@ -11,6 +11,7 @@ import {
   mapSkillsContent,
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
+import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
 import { Compass, Loader2, LogOut, Sparkles, X } from "lucide-react"
 import Link from "next/link"
@@ -33,30 +34,14 @@ export default function AuthActions() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
     const syncSessionState = async () => {
       const { data } = await supabase.auth.getSession()
-      const sessionUser = data.session?.user
-
-      if (!isMounted) return
-
-      setIsAuthenticated(Boolean(sessionUser))
-
-      // Fetch the latest profile photo directly from Supabase
-      if (sessionUser) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("photo")
-          .eq("id", sessionUser.id)
-          .maybeSingle()
-
-        if (isMounted && profile?.photo) {
-          setProfilePhoto(profile.photo)
-        }
+      if (isMounted) {
+        setIsAuthenticated(Boolean(data.session?.user))
       }
     }
 
@@ -65,19 +50,6 @@ export default function AuthActions() {
     const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted) {
         setIsAuthenticated(Boolean(session?.user))
-        // Re-fetch photo on auth change
-        if (session?.user) {
-          supabase
-            .from("profiles")
-            .select("photo")
-            .eq("id", session.user.id)
-            .maybeSingle()
-            .then(({ data: profile }) => {
-              if (isMounted && profile?.photo) {
-                setProfilePhoto(profile.photo)
-              }
-            })
-        }
       }
     })
 
@@ -86,13 +58,6 @@ export default function AuthActions() {
       authSubscription.subscription.unsubscribe()
     }
   }, [])
-
-  // Also sync from Zustand store when it updates
-  useEffect(() => {
-    if (user?.photo && !profilePhoto) {
-      setProfilePhoto(user.photo)
-    }
-  }, [user?.photo, profilePhoto])
 
   useEffect(() => {
     if (!showLogoutConfirm) return
@@ -109,18 +74,6 @@ export default function AuthActions() {
 
   const displayName =
     `${user?.firstname || ""} ${user?.lastname || ""}`.trim() || user?.username || user?.email || "User"
-
-  const avatarText = (() => {
-    if (user?.firstname || user?.lastname) {
-      return `${user?.firstname?.[0] || ""}${user?.lastname?.[0] || ""}`.toUpperCase()
-    }
-
-    if (user?.username) {
-      return user.username.slice(0, 2).toUpperCase()
-    }
-
-    return "U"
-  })()
 
   const handleLogout = async () => {
     if (isLoggingOut) return
@@ -142,10 +95,10 @@ export default function AuthActions() {
     if (!file) return
 
     setIsExtracting(true)
-    
+
     // Quick notification fallback since we don't have the form's local notice banner here
     const showToast = (msg: string) => alert(msg)
-    
+
     const readFileAsBase64 = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
@@ -249,7 +202,7 @@ export default function AuthActions() {
           </Button>
         </Link>
       </div>
-      )
+    )
   }
 
   return (
@@ -269,13 +222,17 @@ export default function AuthActions() {
             disabled={isExtracting}
           />
         </label>
-        
+
         <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
           <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
-            {profilePhoto ? (
-              <img src={profilePhoto} alt={displayName} className="h-full w-full object-cover" />
+            {user?.photo ? (
+              <img
+                src={getProxiedImageUrl(user.photo) || ""}
+                alt={displayName}
+                className="h-full w-full object-cover"
+              />
             ) : (
-              avatarText
+              <span>{displayName.charAt(0).toUpperCase()}</span>
             )}
           </div>
           <span className="max-w-[120px] truncate font-medium">{displayName}</span>

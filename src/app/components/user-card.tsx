@@ -1,9 +1,11 @@
 "use client"
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { IUser } from "@/lib/interfaces"
 import { motion } from "framer-motion"
 import { ExternalLink } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 
 interface UserCardProps {
@@ -13,6 +15,8 @@ interface UserCardProps {
 export default function UserCard({ user }: UserCardProps) {
   const displayName = `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.username || user.email
   const avatarText = (user.firstname?.[0] || user.username?.[0] || "U").toUpperCase()
+  const userPhoto = getProxiedImageUrl(user.photo)
+  const placeholderImg = `https://picsum.photos/seed/${user.username || user.email || "user"}/400/200`
 
   return (
     <motion.div
@@ -21,11 +25,28 @@ export default function UserCard({ user }: UserCardProps) {
       className="h-full"
     >
       <Card className="group h-full overflow-hidden border-border/50 bg-card/60 backdrop-blur-xl transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
-        {/* Gradient header */}
-        <div className="relative h-32 bg-gradient-to-br from-primary via-purple-500 to-pink-500 p-0">
+        {/* Card header — photo as background or seeded placeholder */}
+        <div
+          className="relative h-32 bg-gradient-to-br from-primary via-purple-500 to-pink-500 p-0"
+          style={{
+            backgroundImage: `url(${userPhoto || placeholderImg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Dark overlay so avatar/text remain readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute -bottom-10 left-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-background bg-secondary shadow-lg">
             {user.photo ? (
-              <img src={user.photo} alt={displayName} className="h-full w-full object-cover" />
+              <Image
+                src={userPhoto || ""}
+                alt={displayName}
+                fill
+                className="object-cover"
+                sizes="80px"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-purple-500/20 text-2xl font-bold text-primary">
                 {avatarText}

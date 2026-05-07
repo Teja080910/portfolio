@@ -1,5 +1,6 @@
 "use client"
 
+import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { ArrowDown, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
@@ -152,7 +153,7 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               <div className="relative z-10 flex h-[85%] w-[85%] items-center justify-center overflow-hidden rounded-[2rem] border border-border/50 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 shadow-xl shadow-primary/5">
                 {user.photo ? (
                   <Image
-                    src={user.photo}
+                    src={getProxiedImageUrl(user.photo) || ""}
                     alt={fullName}
                     fill
                     className="object-cover transition-transform duration-700 hover:scale-105"
