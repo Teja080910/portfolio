@@ -1526,8 +1526,14 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         </div>}
 
         {(showExperienceEditor || showEducationEditor || showCertificateEditor) && (
-          <div className="grid gap-8 lg:grid-cols-2">
-          {showExperienceEditor && <div id="edit-experience" className="glass-card scroll-mt-28 p-6">
+          <div className={`grid gap-8 ${showEducationEditor || showCertificateEditor ? "lg:grid-cols-2" : ""}`}>
+          {showExperienceEditor && (
+            <div
+              id="edit-experience"
+              className={`glass-card scroll-mt-28 p-6 ${
+                !showEducationEditor && !showCertificateEditor ? "lg:col-span-full" : ""
+              }`}
+            >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Experience</h3>
               <button
@@ -1553,7 +1559,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                 Add
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {experience.map((item, index) => (
                 <div key={item.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
                   <div className="mb-3 flex items-center justify-between">
@@ -1578,7 +1584,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       Delete
                     </button>
                   </div>
-                  <div className="grid gap-3">
+                  <div className="grid gap-3 md:grid-cols-2">
                     <input
                       value={item.type}
                       onChange={(event) =>
@@ -1619,14 +1625,14 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         )
                       }
                       rows={4}
-                      className={inputClassName}
+                      className={`${inputClassName} md:col-span-2`}
                       placeholder="Responsibilities. You can separate points with new lines."
                     />
                   </div>
                 </div>
               ))}
             </div>
-          </div>}
+          </div>)}
 
           {showEducationEditor && <div id="edit-education" className="glass-card scroll-mt-28 p-6">
             <div className="mb-4 flex items-center justify-between">
