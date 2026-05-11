@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/lib/db"
 import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import { ArrowDown, ArrowLeft, ArrowUp, Compass, Plus, Rocket, Save, Sparkles, Trash2, Users } from "lucide-react"
 import Link from "next/link"
@@ -1500,11 +1501,15 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                             key={`${item.id || index}-photo-${photoIndex}`}
                             className="overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 dark:border-slate-700/80 dark:bg-slate-900/40"
                           >
-                            <img
-                              src={photo}
-                              alt={`Project ${index + 1} photo ${photoIndex + 1}`}
-                              className="h-24 w-full object-cover"
-                            />
+                            <div className="relative h-24 w-full">
+                              <Image
+                                src={photo}
+                                alt={`Project ${index + 1} photo ${photoIndex + 1}`}
+                                fill
+                                sizes="(max-width: 640px) 50vw, 25vw"
+                                className="object-cover"
+                              />
+                            </div>
                             <button
                               type="button"
                               onClick={() => {

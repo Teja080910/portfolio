@@ -11,6 +11,7 @@ import {
   mapSkillsContent,
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
+import Image from "next/image"
 import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
 import { Compass, Loader2, LogOut, Sparkles, X } from "lucide-react"
@@ -226,11 +227,15 @@ export default function AuthActions() {
         <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
           <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
             {user?.photo ? (
-              <img
-                src={getProxiedImageUrl(user.photo) || ""}
-                alt={displayName}
-                className="h-full w-full object-cover"
-              />
+              <div className="relative h-full w-full">
+                <Image
+                  src={getProxiedImageUrl(user.photo) || ""}
+                  alt={displayName}
+                  fill
+                  sizes="24px"
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <span>{displayName.charAt(0).toUpperCase()}</span>
             )}

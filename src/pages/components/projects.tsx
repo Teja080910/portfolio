@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { ExternalLink, GitBranch, PencilLine } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 type ProjectsProps = {
@@ -103,12 +104,15 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                               key={`${project.id}-${photoIndex}`}
                               className="overflow-hidden rounded-xl border border-border/50 bg-secondary/30"
                             >
-                              <img
-                                src={photo}
-                                alt={`${project.name || "Project"} screenshot ${photoIndex + 1}`}
-                                className="h-20 w-full object-cover transition-transform duration-500 hover:scale-110"
-                                loading="lazy"
-                              />
+                              <div className="relative h-20 w-full overflow-hidden">
+                                <Image
+                                  src={photo}
+                                  alt={`${project.name || "Project"} screenshot ${photoIndex + 1}`}
+                                  fill
+                                  sizes="(max-width: 640px) 50vw, 33vw"
+                                  className="object-cover transition-transform duration-500 hover:scale-110"
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>

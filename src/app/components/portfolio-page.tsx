@@ -15,7 +15,7 @@ import Projects from "@/pages/components/projects"
 import Skills from "@/pages/components/skills"
 import { User } from "@supabase/supabase-js"
 import { useRouter } from "next/router"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 const mapProfileToStoreUser = (profile: Partial<IUser>): IUser => ({
   id: profile.id,
@@ -269,7 +269,7 @@ export default function PortfolioPage() {
   const isTeamRoute = router.pathname === "/t/[slug]"
   const isUserRoute = router.pathname === "/u/[username]"
 
-  const validateRouteType = (profileType: string | undefined): boolean => {
+  const validateRouteType = useCallback((profileType: string | undefined): boolean => {
     if (isBusinessRoute) {
       // Visiting /b/[slug] — only "business" type is allowed
       return profileType === "business"
@@ -283,9 +283,9 @@ export default function PortfolioPage() {
       return profileType !== "business" && profileType !== "team"
     }
     return true
-  }
+  }, [isBusinessRoute, isTeamRoute, isUserRoute])
 
-  const loadPortfolioByUserId = async (userId: string, sessionUser?: User) => {
+  const loadPortfolioByUserId = useCallback(async (userId: string, sessionUser?: User) => {
     const storeApi = useStore.getState()
 
     const { data: profile } = await supabase
@@ -333,9 +333,9 @@ export default function PortfolioPage() {
     }
 
     return resolvedUser.username?.trim() || ""
-  }
+  }, [setIsNotFound, validateRouteType])
 
-  const loadPublicProfileByUsername = async (username: string) => {
+  const loadPublicProfileByUsername = useCallback(async (username: string) => {
     const trimmedUsername = username.trim()
     const storeApi = useStore.getState()
 
@@ -385,7 +385,7 @@ export default function PortfolioPage() {
     } else {
       storeApi.resetPortfolio()
     }
-  }
+  }, [setIsNotFound, validateRouteType])
 
   useEffect(() => {
     if (!router.isReady || !usernameFromRoute) {
@@ -455,7 +455,7 @@ export default function PortfolioPage() {
       isSyncingSession.current = false
       sub.data.subscription.unsubscribe()
     }
-  }, [normalizedRouteUsername, router.isReady, usernameFromRoute])
+  }, [normalizedRouteUsername, router.isReady, usernameFromRoute, loadPortfolioByUserId, loadPublicProfileByUsername])
 
   useEffect(() => {
     if (!canRenderFromStore) {

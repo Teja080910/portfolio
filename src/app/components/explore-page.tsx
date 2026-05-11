@@ -10,6 +10,7 @@ import { motion } from "framer-motion"
 import { Building2, ChevronLeft, ChevronRight, Compass, Search, UserRound, Users } from "lucide-react"
 import Head from "next/head"
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 
 const ITEMS_PER_PAGE = 9
@@ -197,11 +198,15 @@ export default function ExplorePage() {
                   <div className="relative flex items-center gap-4">
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-pink-500 text-xl font-bold text-white shadow-lg">
                       {loggedInProfile.photo ? (
-                        <img
-                          src={getProxiedImageUrl(loggedInProfile.photo) || ""}
-                          alt={`${loggedInProfile.firstname} ${loggedInProfile.lastname}`}
-                          className="h-full w-full object-cover"
-                        />
+                        <div className="relative h-full w-full">
+                          <Image
+                            src={getProxiedImageUrl(loggedInProfile.photo) || ""}
+                            alt={`${loggedInProfile.firstname} ${loggedInProfile.lastname}`}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         (loggedInProfile.firstname?.[0] || loggedInProfile.username?.[0] || "U").toUpperCase()
                       )}
