@@ -245,7 +245,7 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-4 rounded-xl bg-emerald-500/10 p-4 text-sm font-medium text-emerald-600 dark:text-emerald-400"
                   >
-                    Message sent successfully! I'll get back to you soon.
+                    Message sent successfully! I&apos;ll get back to you soon.
                   </motion.div>
                 )}
               </form>

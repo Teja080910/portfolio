@@ -513,7 +513,7 @@ export default function PortfolioPage() {
         <div className="relative w-full max-w-md rounded-3xl border border-border/50 bg-card/60 p-8 text-center text-foreground shadow-xl backdrop-blur-xl">
           <h2 className="text-2xl font-bold tracking-tight">Portfolio Not Found</h2>
           <p className="mt-3 text-muted-foreground">
-            The portfolio for <span className="font-semibold text-primary">@{usernameFromRoute}</span> doesn't exist or has been set to private.
+            The portfolio for <span className="font-semibold text-primary">@{usernameFromRoute}</span> doesn&apos;t exist or has been set to private.
           </p>
           <button
             type="button"
