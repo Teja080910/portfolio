@@ -14,7 +14,7 @@ import { supabase } from "@/lib/db"
 import Image from "next/image"
 import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
-import { Compass, Loader2, LogOut, Sparkles, X } from "lucide-react"
+import { ChevronLeft, Compass, Loader2, LogOut, Sparkles, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { ChangeEvent, useEffect, useState } from "react"
@@ -35,6 +35,8 @@ export default function AuthActions() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
@@ -43,6 +45,7 @@ export default function AuthActions() {
       const { data } = await supabase.auth.getSession()
       if (isMounted) {
         setIsAuthenticated(Boolean(data.session?.user))
+        setIsLoading(false)
       }
     }
 
@@ -179,6 +182,10 @@ export default function AuthActions() {
     }
   }
 
+  if (isLoading) {
+    return null
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
@@ -208,6 +215,31 @@ export default function AuthActions() {
 
   return (
     <>
+      <div className="relative">
+
+        {/* Collapsed expand button */}
+        {!isExpanded && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-300/80 bg-white/90 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/85 dark:hover:bg-slate-800"
+            aria-label="Show actions"
+          >
+            <ChevronLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          </button>
+        )}
+
+        {/* Expanded action bar */}
+        {isExpanded && (
+              <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  aria-label="Hide actions"
+                >
+                  <ChevronLeft className="h-4 w-4 rotate-180" />
+                </button>
       <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
         <label
           className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-cyan-50/80 px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
@@ -265,6 +297,9 @@ export default function AuthActions() {
           <LogOut className="mr-1 h-4 w-4" />
           Logout
         </Button>
+      </div>
+              </div>
+          )}
       </div>
 
       {showLogoutConfirm && (
