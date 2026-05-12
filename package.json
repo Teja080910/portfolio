@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "supabase db push",
+    "db:diff": "supabase db diff",
+    "db:new": "supabase migration new",
+    "db:reset": "supabase db reset"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
