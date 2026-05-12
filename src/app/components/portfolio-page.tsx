@@ -229,17 +229,10 @@ export default function PortfolioPage() {
 
   const hasCachedUser = Boolean(user.id)
 
-  // Check if the store already has meaningful data (e.g., from a previous mount in Strict Mode)
-  // This prevents double-loading when React Strict Mode unmounts and remounts the component
-  const storeHasData = Boolean(user.id) && Boolean(
-    useStore.getState().about?.type?.trim() ||
-    useStore.getState().skills?.length ||
-    useStore.getState().projects?.length
-  )
 
   // Only consider store ready when BOTH user data AND portfolio content are fully loaded
   // This prevents the intermediate state where user.id is set but content hasn't arrived yet
-  const canRenderFromStore = hasCachedUser && (isDataReady || storeHasData)
+  const canRenderFromStore = hasCachedUser && isDataReady
   const isOwnerView = Boolean(
     normalizedRouteUsername &&
     viewerUsername &&
