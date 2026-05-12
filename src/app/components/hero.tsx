@@ -3,7 +3,7 @@
 import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { ArrowDown, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
+import { ArrowDown, Award, BookOpen, Briefcase, Code2, Cpu, FolderKanban, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -13,6 +13,11 @@ type HeroProps = {
 
 export default function Hero({ isReadOnly = false }: HeroProps) {
   const user = useStore((state) => state.user)
+  const projects = useStore((state) => state.projects)
+  const experience = useStore((state) => state.experience)
+  const education = useStore((state) => state.education)
+  const skills = useStore((state) => state.skills)
+  const certificate = useStore((state) => state.certificate)
 
   if (!user?.id) {
     return null
@@ -31,6 +36,15 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     .map((part) => part[0]?.toUpperCase())
     .join("") || "U"
   const hasSocialLinks = Boolean(user.gitlink || user.likedlin || emailHref)
+
+  const visibleProjects = projects.filter((p) => p.show).length
+  const visibleExperience = experience.filter((e) => e.show).length
+  const visibleEducation = education.filter((e) => e.show).length
+  const visibleCertificates = certificate.filter((c) => c.show).length
+  const totalSkillCategories = skills.filter((s) => s.show).length
+  const totalSkills = skills
+    .filter((s) => s.show)
+    .reduce((count, s) => count + s.skills.length, 0)
 
   return (
     <section id="user" className="relative min-h-screen overflow-hidden pt-24">
@@ -180,6 +194,43 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               <div className="absolute right-8 -bottom-2 h-2.5 w-2.5 rounded-full bg-pink-500/30 animate-pulse-soft" style={{ animationDelay: "2s" }} />
             </div>
           </motion.div>
+        </div>
+      </div>
+
+      {/* Stats cards — horizontal scroll */}
+      <div className="mx-auto mt-12 w-full max-w-7xl px-6">
+        <div
+          className="flex gap-4 overflow-x-auto pb-2 scrollbar-none"
+          style={{
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {[
+            { icon: FolderKanban, label: "Projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
+            { icon: Briefcase, label: "Experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
+            { icon: BookOpen, label: "Education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
+            { icon: Code2, label: "Skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
+            { icon: Award, label: "Certificates", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
+            { icon: Cpu, label: "Role", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
+          ].map((card, index) => {
+            const Icon = card.icon
+            return (
+              <div key={card.label} className="group min-w-[200px] flex-1 snap-start">
+                <div className="glass-card relative h-full overflow-hidden p-4">
+                  <span className="absolute right-3 top-3 text-[10px] font-bold tracking-[0.15em] text-muted-foreground/30">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="mb-2.5 inline-flex rounded-xl border border-border/50 bg-background/50 p-2">
+                    <Icon className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
+                  </div>
+                  <p className="text-xl font-extrabold tracking-tight text-foreground">{card.value}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-foreground/80">{card.label}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.desc}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -188,27 +188,49 @@ export default function AuthActions() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300"
+      <div className="relative">
+        {!isExpanded && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-300/80 bg-white/90 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/85 dark:hover:bg-slate-800"
+            aria-label="Show actions"
           >
-            <Compass className="h-3.5 w-3.5" />
-            Explore
-          </Button>
-        </Link>
-        <ModeToggle />
-        <Link href="/sign-in">
-          <Button
-            variant="default"
-            size="sm"
-            className="h-8 rounded-full bg-gradient-to-r from-cyan-600 to-teal-500 px-4 text-xs font-semibold text-white hover:from-cyan-500 hover:to-teal-400"
-          >
-            Sign In
-          </Button>
-        </Link>
+            <ChevronLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          </button>
+        )}
+        {isExpanded && (
+          <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              aria-label="Hide actions"
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+            </button>
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300"
+              >
+                <Compass className="h-3.5 w-3.5" />
+                Explore
+              </Button>
+            </Link>
+            <ModeToggle />
+            <Link href="/sign-in">
+              <Button
+                variant="default"
+                size="sm"
+                className="h-8 rounded-full bg-gradient-to-r from-cyan-600 to-teal-500 px-4 text-xs font-semibold text-white hover:from-cyan-500 hover:to-teal-400"
+              >
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     )
   }
