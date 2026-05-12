@@ -1,6 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useInView } from "framer-motion"
+import { useRef } from "react"
 
 interface AnimatedSectionHeaderProps {
   title: string
@@ -14,6 +15,9 @@ const headerVariants = {
 } as const
 
 export default function AnimatedSectionHeader({ title, subtitle, animateState }: AnimatedSectionHeaderProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, amount: 0.15 })
+
   const headerContent = (
     <>
       {/* Section label */}
@@ -46,6 +50,7 @@ export default function AnimatedSectionHeader({ title, subtitle, animateState }:
   if (animateState) {
     return (
       <motion.div
+        ref={ref}
         className="mb-16 text-center"
         initial={false}
         animate={animateState}
@@ -59,12 +64,12 @@ export default function AnimatedSectionHeader({ title, subtitle, animateState }:
 
   return (
     <motion.div
+      ref={ref}
       className="mb-16 text-center"
       initial="hidden"
-      whileInView="visible"
+      animate={isInView ? "visible" : "hidden"}
       variants={headerVariants}
-      viewport={{ once: false, amount: 0.35 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {headerContent}
     </motion.div>
