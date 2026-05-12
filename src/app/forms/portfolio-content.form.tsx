@@ -15,6 +15,7 @@ import {
   normalizeSkillValues,
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
+import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
 import Image from "next/image"
@@ -715,7 +716,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     )
 
     if (error) {
-      setNotice({ tone: "error", message: error.message || "Portfolio content saved locally but not synced to cloud." })
+      setNotice({ tone: "error", message: getFriendlySupabaseError(error) || "Portfolio content saved locally but not synced to cloud." })
       setIsSaving(false)
       return
     }

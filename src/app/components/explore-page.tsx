@@ -2,6 +2,7 @@
 
 import UserCard from "@/app/components/user-card"
 import { Input } from "@/components/ui/input"
+import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { supabase } from "@/lib/db"
 import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { IUser, ProfileType } from "@/lib/interfaces"
@@ -66,7 +67,7 @@ export default function ExplorePage() {
 
       if (error) {
         setProfiles([])
-        setErrorMessage(error.message)
+        setErrorMessage(getFriendlySupabaseError(error))
       } else if (data) {
         setProfiles(data.filter((profile) => profile.username))
       }
@@ -288,7 +289,7 @@ export default function ExplorePage() {
               </div>
               <h3 className="text-xl font-semibold text-foreground">Unable to load portfolios</h3>
               <p className="mt-2 max-w-xl text-muted-foreground">
-                Supabase returned an error while fetching public profiles: {errorMessage}
+                {errorMessage}
               </p>
             </div>
           ) : paginatedProfiles.length > 0 ? (

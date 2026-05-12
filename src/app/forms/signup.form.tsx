@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/lib/db"
+import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -272,7 +273,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
     })
 
     if (error) {
-      setErrors({ form: error.message || "Social signup failed. Please try again." })
+      setErrors({ form: getFriendlySupabaseError(error) || "Social signup failed. Please try again." })
       setOauthPending(null)
     }
   }
@@ -312,7 +313,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
       })
 
       if (error) {
-        setErrors({ form: error.message || "Registration failed. Please try again." })
+        setErrors({ form: getFriendlySupabaseError(error) || "Registration failed. Please try again." })
         return
       }
 

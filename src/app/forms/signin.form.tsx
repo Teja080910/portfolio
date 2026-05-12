@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/db"
+import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { IUser } from "@/lib/interfaces"
 import { cn } from "@/lib/utils"
 import { useLogin } from "@refinedev/core"
@@ -131,7 +132,7 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
                     setPending(false)
                 },
                 onError: (error) => {
-                    setErrors({ form: error.message || "Login failed. Please try again." })
+                    setErrors({ form: getFriendlySupabaseError(error) || "Login failed. Please try again." })
                     setPending(false)
                 },
             },
@@ -222,7 +223,7 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         })
 
         if (error) {
-            setErrors({ form: error.message || "Could not send reset email. Please try again." })
+            setErrors({ form: getFriendlySupabaseError(error) || "Could not send reset email. Please try again." })
             setResetPending(false)
             return
         }
@@ -249,7 +250,7 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         })
 
         if (error) {
-            setErrors({ form: error.message || "Social login failed. Please try again." })
+            setErrors({ form: getFriendlySupabaseError(error) || "Social login failed. Please try again." })
             setOauthPending(null)
         }
     }

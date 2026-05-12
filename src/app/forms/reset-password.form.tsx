@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/db"
+import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, ShieldCheck } from "lucide-react"
@@ -128,7 +129,7 @@ export function ResetPasswordForm({ className }: ResetPasswordFormProps) {
     const { error } = await supabase.auth.updateUser({ password: formData.password })
 
     if (error) {
-      setErrors({ form: error.message || "Could not update password. Please try again." })
+      setErrors({ form: getFriendlySupabaseError(error) || "Could not update password. Please try again." })
       setPending(false)
       return
     }
