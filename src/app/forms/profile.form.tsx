@@ -579,137 +579,137 @@ export default function ProfileForm() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label htmlFor="firstname" className={labelClassName}>
-                  First Name
-                </label>
-                <input id="firstname" {...register("firstname")} className={textInputClassName} placeholder="Teja" />
-                {errors.firstname && <p className="mt-2 text-sm text-rose-500">{errors.firstname.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="lastname" className={labelClassName}>
-                  Last Name
-                </label>
-                <input id="lastname" {...register("lastname")} className={textInputClassName} placeholder="Simma" />
-                {errors.lastname && <p className="mt-2 text-sm text-rose-500">{errors.lastname.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="username" className={labelClassName}>
-                  Username
-                </label>
-                <input
-                  id="username"
-                  {...register("username")}
-                  className={textInputClassName}
-                  placeholder="tejasimma"
-                  autoCapitalize="none"
-                />
-                {errors.username && <p className="mt-2 text-sm text-rose-500">{errors.username.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="role" className={labelClassName}>
-                  Role
-                </label>
-                <input
-                  id="role"
-                  {...register("role")}
-                  className={textInputClassName}
-                  placeholder="Frontend Developer"
-                />
-                {errors.role && <p className="mt-2 text-sm text-rose-500">{errors.role.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="type" className={labelClassName}>
-                  Profile Type
-                </label>
-                <div className="relative">
-                  <Building2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <select
-                    id="type"
-                    {...register("type")}
-                    className={`${textInputClassName} appearance-none pl-11`}
-                  >
-                    <option value="user">Individual User</option>
-                    <option value="team">Team</option>
-                    <option value="business">Business</option>
-                  </select>
-                  <svg
-                    className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-8">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <label htmlFor="firstname" className={labelClassName}>
+                    First Name
+                  </label>
+                  <input id="firstname" {...register("firstname")} className={textInputClassName} placeholder="Teja" />
+                  {errors.firstname && <p className="mt-2 text-sm text-rose-500">{errors.firstname.message}</p>}
                 </div>
-                {errors.type && <p className="mt-2 text-sm text-rose-500">{errors.type.message}</p>}
+
+                <div>
+                  <label htmlFor="lastname" className={labelClassName}>
+                    Last Name
+                  </label>
+                  <input id="lastname" {...register("lastname")} className={textInputClassName} placeholder="Simma" />
+                  {errors.lastname && <p className="mt-2 text-sm text-rose-500">{errors.lastname.message}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="username" className={labelClassName}>
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    {...register("username")}
+                    className={textInputClassName}
+                    placeholder="tejasimma"
+                    autoCapitalize="none"
+                  />
+                  {errors.username && <p className="mt-2 text-sm text-rose-500">{errors.username.message}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="role" className={labelClassName}>
+                    Role
+                  </label>
+                  <input
+                    id="role"
+                    {...register("role")}
+                    className={textInputClassName}
+                    placeholder="Frontend Developer"
+                  />
+                  {errors.role && <p className="mt-2 text-sm text-rose-500">{errors.role.message}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="type" className={labelClassName}>
+                    Profile Type
+                  </label>
+                  <div className="relative">
+                    <Building2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <select
+                      id="type"
+                      {...register("type")}
+                      className={`${textInputClassName} appearance-none pl-11`}
+                    >
+                      <option value="user">Individual User</option>
+                      <option value="team">Team</option>
+                      <option value="business">Business</option>
+                    </select>
+                    <svg
+                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  {errors.type && <p className="mt-2 text-sm text-rose-500">{errors.type.message}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className={labelClassName}>
+                    Phone
+                  </label>
+                  <div className="relative">
+                    <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="phone"
+                      {...register("phone")}
+                      className={`${textInputClassName} pl-11`}
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
+                  {errors.phone && <p className="mt-2 text-sm text-rose-500">{errors.phone.message}</p>}
+                </div>
               </div>
 
               <div>
-                <label htmlFor="phone" className={labelClassName}>
-                  Phone
+                <label htmlFor="email" className={labelClassName}>
+                  Account Email
                 </label>
                 <div className="relative">
-                  <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
-                    id="phone"
-                    {...register("phone")}
-                    className={`${textInputClassName} pl-11`}
-                    placeholder="+91 98765 43210"
+                    id="email"
+                    value={accountEmail}
+                    readOnly
+                    className={`${textInputClassName} pl-11 text-slate-500 dark:text-slate-400`}
                   />
                 </div>
-                {errors.phone && <p className="mt-2 text-sm text-rose-500">{errors.phone.message}</p>}
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  Email is read-only here to avoid Supabase confirmation flow conflicts.
+                </p>
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className={labelClassName}>
-                Account Email
-              </label>
-              <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="email"
-                  value={accountEmail}
-                  readOnly
-                  className={`${textInputClassName} pl-11 text-slate-500 dark:text-slate-400`}
+              <div>
+                <label htmlFor="description" className={labelClassName}>
+                  Short Bio
+                </label>
+                <textarea
+                  id="description"
+                  {...register("description")}
+                  rows={5}
+                  className={`${textInputClassName} resize-none`}
+                  placeholder="Tell visitors what you build, what you enjoy working on, and what makes your portfolio yours."
                 />
+                <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span>This copy appears in your hero section.</span>
+                  <span>{watchedValues.description.length}/320</span>
+                </div>
+                {errors.description && <p className="mt-2 text-sm text-rose-500">{errors.description.message}</p>}
               </div>
-              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                Email is read-only here to avoid Supabase confirmation flow conflicts.
-              </p>
-            </div>
 
-            <div>
-              <label htmlFor="description" className={labelClassName}>
-                Short Bio
-              </label>
-              <textarea
-                id="description"
-                {...register("description")}
-                rows={5}
-                className={`${textInputClassName} resize-none`}
-                placeholder="Tell visitors what you build, what you enjoy working on, and what makes your portfolio yours."
-              />
-              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>This copy appears in your hero section.</span>
-                <span>{watchedValues.description.length}/320</span>
-              </div>
-              {errors.description && <p className="mt-2 text-sm text-rose-500">{errors.description.message}</p>}
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <label htmlFor="photoUpload" className={labelClassName}>
                   Profile Photo
@@ -756,177 +756,179 @@ export default function ProfileForm() {
                 </div>
                 {photoError && <p className="mt-2 text-sm text-rose-500">{photoError}</p>}
               </div>
-
-              <div>
-                <label htmlFor="resumelink" className={labelClassName}>
-                  Resume URL
-                </label>
-                <div className="relative">
-                  <FileText className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="resumelink"
-                    {...register("resumelink")}
-                    className={`${textInputClassName} pl-11`}
-                    placeholder="https://drive.google.com/..."
-                  />
-                </div>
-                {errors.resumelink && <p className="mt-2 text-sm text-rose-500">{errors.resumelink.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="gitlink" className={labelClassName}>
-                  GitHub URL
-                </label>
-                <div className="relative">
-                  <Github className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="gitlink"
-                    {...register("gitlink")}
-                    className={`${textInputClassName} pl-11`}
-                    placeholder="https://github.com/your-handle"
-                  />
-                </div>
-                {errors.gitlink && <p className="mt-2 text-sm text-rose-500">{errors.gitlink.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="likedlin" className={labelClassName}>
-                  LinkedIn URL
-                </label>
-                <div className="relative">
-                  <Linkedin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="likedlin"
-                    {...register("likedlin")}
-                    className={`${textInputClassName} pl-11`}
-                    placeholder="https://linkedin.com/in/your-handle"
-                  />
-                </div>
-                {errors.likedlin && <p className="mt-2 text-sm text-rose-500">{errors.likedlin.message}</p>}
-              </div>
             </div>
 
-            {status && (
-              <div
-                className={`rounded-2xl border px-4 py-3 text-sm ${
-                  status.tone === "success"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                    : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+            <div className="space-y-6">
+              <motion.div
+                className="glass-card overflow-hidden"
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.55, delay: 0.12 }}
+              >
+                <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-slate-100 p-6 dark:border-slate-700/70 dark:bg-slate-950/55">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-cyan-500/20 via-teal-400/10 to-transparent" />
+                  <div className="relative flex flex-col gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 to-teal-500 text-2xl font-bold text-white shadow-lg">
+                      {preview.photo ? (
+                          <div
+                            aria-label={preview.fullName}
+                            className="h-full w-full bg-cover bg-center"
+                            role="img"
+                            style={{ backgroundImage: `url(${preview.photo})` }}
+                          />
+                        ) : (
+                          preview.initials
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Live Preview</p>
+                        <h2 className="mt-1 break-words text-2xl font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100">{preview.fullName}</h2>
+                        <p className="mt-1 break-words text-sm text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{preview.username}</p>
+                      </div>
+                    </div>
+
+                    <div className="min-w-0 space-y-4">
+                      <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
+                        <Briefcase className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                        <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{preview.role}</span>
+                      </div>
+                      <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
+                        <UserRound className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                        <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{preview.description}</span>
+                      </div>
+                      <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
+                        <Mail className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                        <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{accountEmail || "Your email will appear here"}</span>
+                      </div>
+                      <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
+                        <Phone className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                        <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{watchedValues.phone || "Add a phone number if you want it in the contact section"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="glass-card"
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.55, delay: 0.18 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
+                    <PencilLine className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">What updates from here</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      These fields feed the personalized sections we already switched away from starter content.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                  <p>Your hero section uses your name, role, bio, photo, GitHub, LinkedIn, and email.</p>
+                  <p>Your contact section uses your name, email, phone, and role.</p>
+                  <p>Portfolio sections are now editable from the Edit Portfolio Content area below this form.</p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            <div>
+              <label htmlFor="gitlink" className={labelClassName}>
+                GitHub URL
+              </label>
+              <div className="relative">
+                <Github className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="gitlink"
+                  {...register("gitlink")}
+                  className={`${textInputClassName} pl-11`}
+                  placeholder="https://github.com/your-handle"
+                />
+              </div>
+              {errors.gitlink && <p className="mt-2 text-sm text-rose-500">{errors.gitlink.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="likedlin" className={labelClassName}>
+                LinkedIn URL
+              </label>
+              <div className="relative">
+                <Linkedin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="likedlin"
+                  {...register("likedlin")}
+                  className={`${textInputClassName} pl-11`}
+                  placeholder="https://linkedin.com/in/your-handle"
+                />
+              </div>
+              {errors.likedlin && <p className="mt-2 text-sm text-rose-500">{errors.likedlin.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="resumelink" className={labelClassName}>
+                Resume URL
+              </label>
+              <div className="relative">
+                <FileText className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="resumelink"
+                  {...register("resumelink")}
+                  className={`${textInputClassName} pl-11`}
+                  placeholder="https://drive.google.com/..."
+                />
+              </div>
+              {errors.resumelink && <p className="mt-2 text-sm text-rose-500">{errors.resumelink.message}</p>}
+            </div>
+          </div>
+
+          {status && (
+            <div
+              className={`rounded-2xl border px-4 py-3 text-sm mt-8 ${
+                status.tone === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+              }`}
+            >
+              {status.message}
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {isDirty ? "You have unsaved changes." : "Everything here is in sync with your saved profile."}
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => resetFormFromUser(useStore.getState().user)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-300/80 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition-transform duration-300 hover:-translate-y-0.5 dark:border-slate-600 dark:bg-slate-950/35 dark:text-slate-200"
+              >
+                Reset
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || isHydrating}
+                className={`inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-600 to-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform duration-300 hover:-translate-y-0.5 ${
+                  isSubmitting || isHydrating ? "cursor-not-allowed opacity-75" : ""
                 }`}
               >
-                {status.message}
-              </div>
-            )}
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {isDirty ? "You have unsaved changes." : "Everything here is in sync with your saved profile."}
-              </p>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => resetFormFromUser(useStore.getState().user)}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300/80 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition-transform duration-300 hover:-translate-y-0.5 dark:border-slate-600 dark:bg-slate-950/35 dark:text-slate-200"
-                >
-                  Reset
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || isHydrating}
-                  className={`inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-600 to-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform duration-300 hover:-translate-y-0.5 ${
-                    isSubmitting || isHydrating ? "cursor-not-allowed opacity-75" : ""
-                  }`}
-                >
-                  {isSubmitting || isHydrating ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                  )}
-                  {isSubmitting ? "Saving Changes..." : isHydrating ? "Loading Profile..." : "Save Profile"}
-                </button>
-              </div>
+                {isSubmitting || isHydrating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                {isSubmitting ? "Saving Changes..." : isHydrating ? "Loading Profile..." : "Save Profile"}
+              </button>
             </div>
-          </form>
-
-          <div className="space-y-6">
-            <motion.div
-              className="glass-card overflow-hidden"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55, delay: 0.12 }}
-            >
-              <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-slate-100 p-6 dark:border-slate-700/70 dark:bg-slate-950/55">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-cyan-500/20 via-teal-400/10 to-transparent" />
-                <div className="relative flex flex-col gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 to-teal-500 text-2xl font-bold text-white shadow-lg">
-                    {preview.photo ? (
-                        <div
-                          aria-label={preview.fullName}
-                          className="h-full w-full bg-cover bg-center"
-                          role="img"
-                          style={{ backgroundImage: `url(${preview.photo})` }}
-                        />
-                      ) : (
-                        preview.initials
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Live Preview</p>
-                      <h2 className="mt-1 break-words text-2xl font-semibold text-slate-900 [overflow-wrap:anywhere] dark:text-slate-100">{preview.fullName}</h2>
-                      <p className="mt-1 break-words text-sm text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{preview.username}</p>
-                    </div>
-                  </div>
-
-                  <div className="min-w-0 space-y-4">
-                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
-                      <Briefcase className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{preview.role}</span>
-                    </div>
-                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
-                      <UserRound className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{preview.description}</span>
-                    </div>
-                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
-                      <Mail className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{accountEmail || "Your email will appear here"}</span>
-                    </div>
-                    <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
-                      <Phone className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
-                      <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{watchedValues.phone || "Add a phone number if you want it in the contact section"}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="glass-card"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55, delay: 0.18 }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
-                  <PencilLine className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">What updates from here</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    These fields feed the personalized sections we already switched away from starter content.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>Your hero section uses your name, role, bio, photo, GitHub, LinkedIn, and email.</p>
-                <p>Your contact section uses your name, email, phone, and role.</p>
-                <p>Portfolio sections are now editable from the Edit Portfolio Content area below this form.</p>
-              </div>
-            </motion.div>
           </div>
-        </div>
+        </form>
       </div>
     </motion.section>
   )
