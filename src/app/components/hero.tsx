@@ -216,19 +216,28 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
           ].map((card, index) => {
             const Icon = card.icon
             return (
-              <button key={card.label} type="button" onClick={() => document.getElementById(card.sectionId)?.scrollIntoView({ behavior: "smooth" })} className="group min-w-[200px] flex-1 snap-start text-left">
-                <div className="glass-card relative h-full overflow-hidden p-4">
-                  <span className="absolute right-3 top-3 text-[10px] font-bold tracking-[0.15em] text-muted-foreground/30">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div className="mb-2.5 inline-flex rounded-xl border border-border/50 bg-background/50 p-2">
-                    <Icon className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
+              <motion.div
+                key={card.label}
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                className="min-w-[200px] flex-1 snap-start"
+              >
+                <button type="button" onClick={() => document.getElementById(card.sectionId)?.scrollIntoView({ behavior: "smooth" })} className="w-full text-left">
+                  <div className="glass-card relative h-full overflow-hidden p-4">
+                    <span className="absolute right-3 top-3 text-[10px] font-bold tracking-[0.15em] text-muted-foreground/30">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="mb-2.5 inline-flex rounded-xl border border-border/50 bg-background/50 p-2">
+                      <Icon className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+                    <p className="text-xl font-extrabold tracking-tight text-foreground">{card.value}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-foreground/80">{card.label}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.desc}</p>
                   </div>
-                  <p className="text-xl font-extrabold tracking-tight text-foreground">{card.value}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-foreground/80">{card.label}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.desc}</p>
-                </div>
-              </button>
+                </button>
+              </motion.div>
             )
           })}
         </div>

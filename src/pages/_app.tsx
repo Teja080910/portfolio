@@ -1,4 +1,6 @@
 import AuthActions from "@/app/components/auth-actions";
+import { PopupProvider } from "@/app/components/popup";
+import { ToastProvider } from "@/app/components/toast";
 import { ThemeProvider } from "@/app/components/theme-provider";
 import { supabase } from "@/lib/db";
 import "@/styles/globals.css";
@@ -41,6 +43,8 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <RefineKbarProvider>
+        <PopupProvider>
+        <ToastProvider>
         <Refine
           dataProvider={dataProvider}
           notificationProvider={notificationProvider}
@@ -56,6 +60,8 @@ export default function App({ Component, pageProps }: AppProps) {
 
           <Component {...pageProps} />
         </Refine>
+        </ToastProvider>
+        </PopupProvider>
       </RefineKbarProvider>
     </ThemeProvider>
   );

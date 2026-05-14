@@ -18,6 +18,7 @@ import { ChevronLeft, Compass, Loader2, LogOut, Sparkles, X } from "lucide-react
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { ChangeEvent, useEffect, useState } from "react"
+import { usePopup } from "@/app/components/popup"
 
 export default function AuthActions() {
   const router = useRouter()
@@ -37,6 +38,7 @@ export default function AuthActions() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const { showPopup } = usePopup()
 
   useEffect(() => {
     let isMounted = true
@@ -99,9 +101,6 @@ export default function AuthActions() {
     if (!file) return
 
     setIsExtracting(true)
-
-    // Quick notification fallback since we don't have the form's local notice banner here
-    const showToast = (msg: string) => alert(msg)
 
     const readFileAsBase64 = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
@@ -172,10 +171,10 @@ export default function AuthActions() {
       setProjects(projectsPayload)
       setCertificate(certificatesPayload)
 
-      showToast("Successfully extracted and seeded your portfolio data!")
+      showPopup("Successfully extracted and seeded your portfolio data!")
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Failed to extract data."
-      showToast(message)
+      showPopup(message, "error")
     } finally {
       setIsExtracting(false)
       event.target.value = ""
