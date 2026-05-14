@@ -17,7 +17,7 @@ import { useStore } from "@/lib/store"
 import { ChevronLeft, Compass, Loader2, LogOut, Sparkles, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { ChangeEvent, useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { usePopup } from "@/app/components/popup"
 
 export default function AuthActions() {
@@ -39,6 +39,20 @@ export default function AuthActions() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const { showPopup } = usePopup()
+  const actionsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isExpanded) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
+        setIsExpanded(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [isExpanded])
 
   useEffect(() => {
     let isMounted = true
@@ -236,7 +250,7 @@ export default function AuthActions() {
 
   return (
     <>
-      <div className="relative">
+      <div className="relative" ref={actionsRef}>
 
         {/* Collapsed expand button */}
         {!isExpanded && (

@@ -218,10 +218,10 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
             return (
               <motion.div
                 key={card.label}
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
+                transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
                 className="min-w-[200px] flex-1 snap-start"
               >
                 <button type="button" onClick={() => document.getElementById(card.sectionId)?.scrollIntoView({ behavior: "smooth" })} className="w-full text-left">
