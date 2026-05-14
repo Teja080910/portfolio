@@ -82,6 +82,7 @@ export interface IProjects {
     photos: string[];
     skills: string[];
     show: boolean;
+    projectType: string;
 }
 
 export interface ISkills {

@@ -20,6 +20,7 @@ import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperie
 import { useStore } from "@/lib/store"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import DatePicker from "@/components/ui/date-picker"
 import { ArrowDown, ArrowLeft, ArrowUp, Compass, Plus, Rocket, Save, Sparkles, Trash2, Users } from "lucide-react"
 import Link from "next/link"
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
@@ -658,6 +659,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           gitlink: item.gitlink.trim(),
           weblink: item.weblink.trim(),
           logo: normalizedPhotos[0] ?? item.logo.trim(),
+          projectType: item.projectType?.trim() || "",
           photos: normalizedPhotos,
           skills: item.skills.map((skill) => skill.trim()).filter(Boolean),
         }
@@ -1395,6 +1397,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     logo: "",
                     photos: [],
                     skills: [],
+                    projectType: "",
                     show: true,
                   },
                 ])
@@ -1440,14 +1443,31 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     className={inputClassName}
                     placeholder="Project name"
                   />
-                  <input
+                  <DatePicker
                     value={item.duration}
+                    onChange={(value) =>
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, duration: value } : row)))
+                    }
+                  />
+                  <input
+                    value={item.projectType || ""}
                     onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, duration: event.target.value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, projectType: event.target.value } : row)))
                     }
                     className={inputClassName}
-                    placeholder="Duration"
+                    placeholder="Project type (e.g. App, Web, Script, ML Model)"
+                    list="project-type-suggestions"
                   />
+                  <datalist id="project-type-suggestions">
+                    <option value="App" />
+                    <option value="Web" />
+                    <option value="Script" />
+                    <option value="ML Model" />
+                    <option value="API" />
+                    <option value="CLI" />
+                    <option value="Library" />
+                    <option value="Mobile" />
+                  </datalist>
                   <input
                     value={item.gitlink}
                     onChange={(event) =>
@@ -1477,7 +1497,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     onChange={(event) =>
                       setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)))
                     }
-                    className={inputClassName}
+                    className={`${inputClassName} md:col-span-2`}
                     rows={3}
                     placeholder="Project description"
                   />

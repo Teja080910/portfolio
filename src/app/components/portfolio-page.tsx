@@ -138,6 +138,7 @@ const mapProjectsContent = (value: unknown, userId: string): IProjects[] =>
             weblink: toString(item.weblink),
             logo,
             photos: photos.length ? photos : (logo ? [logo] : []),
+            projectType: toString(item.projectType),
             skills: toStringArray(item.skills),
             show: typeof item.show === "boolean" ? item.show : true,
           }

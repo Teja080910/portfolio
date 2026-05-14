@@ -118,6 +118,7 @@ export const mapProjectsContent = (value: unknown, person: string): IProjects[] 
       photos,
       skills: asStringArray(raw.skills),
       show: asBoolean(raw.show, true),
+      projectType: asString(raw.projectType),
     }
   })
 }

@@ -207,16 +207,16 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
           }}
         >
           {[
-            { icon: FolderKanban, label: "Projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
-            { icon: Briefcase, label: "Experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
-            { icon: BookOpen, label: "Education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
-            { icon: Code2, label: "Skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
-            { icon: Award, label: "Certificates", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
-            { icon: Cpu, label: "Role", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
+            { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
+            { icon: Briefcase, label: "Experience", sectionId: "experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
+            { icon: BookOpen, label: "Education", sectionId: "education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
+            { icon: Code2, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
+            { icon: Award, label: "Certificates", sectionId: "certificate", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
+            { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
           ].map((card, index) => {
             const Icon = card.icon
             return (
-              <div key={card.label} className="group min-w-[200px] flex-1 snap-start">
+              <button key={card.label} type="button" onClick={() => document.getElementById(card.sectionId)?.scrollIntoView({ behavior: "smooth" })} className="group min-w-[200px] flex-1 snap-start text-left">
                 <div className="glass-card relative h-full overflow-hidden p-4">
                   <span className="absolute right-3 top-3 text-[10px] font-bold tracking-[0.15em] text-muted-foreground/30">
                     {String(index + 1).padStart(2, "0")}
@@ -228,7 +228,7 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                   <p className="mt-0.5 text-sm font-semibold text-foreground/80">{card.label}</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.desc}</p>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>

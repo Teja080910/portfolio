@@ -2,10 +2,12 @@
 
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { ExternalLink, GitBranch, PencilLine } from "lucide-react"
+import { ExternalLink, GitBranch, PencilLine, X } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useState } from "react"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
+import ImageLightbox from "@/components/ui/image-lightbox"
 
 type ProjectsProps = {
   isReadOnly?: boolean
@@ -17,6 +19,7 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
   const username = useStore((state) => state.user.username)
   const editProjectsHref = `/u/${encodeURIComponent(username || "me")}/edit-projects`
   const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.skills.length))
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
 
   if (isReadOnly && projects.length === 0) {
     return null
@@ -77,10 +80,18 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                         {String(index + 1).padStart(2, "0")}
                       </span>
 
+                      <div className="flex flex-wrap items-start gap-3">
                       {/* Project name */}
                       <h3 className="break-words text-xl font-bold text-foreground [overflow-wrap:anywhere] transition-colors duration-300 group-hover:text-primary">
                         {project.name}
                       </h3>
+                      {/* Project type badge */}
+                      {project.projectType?.trim() && (
+                        <span className="project-type-badge">
+                          {project.projectType}
+                        </span>
+                      )}
+                      </div>
 
                       {/* Duration */}
                       {project.duration && (
@@ -100,9 +111,11 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                       {projectPhotos.length > 0 && (
                         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
                           {projectPhotos.slice(0, 3).map((photo, photoIndex) => (
-                            <div
+                            <button
+                              type="button"
                               key={`${project.id}-${photoIndex}`}
-                              className="overflow-hidden rounded-xl border border-border/50 bg-secondary/30"
+                              onClick={() => setLightboxSrc(photo)}
+                              className="overflow-hidden rounded-xl border border-border/50 bg-secondary/30 text-left"
                             >
                               <div className="relative h-20 w-full overflow-hidden">
                                 <Image
@@ -113,7 +126,7 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                                   className="object-cover transition-transform duration-500 hover:scale-110"
                                 />
                               </div>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -169,6 +182,14 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
           )}
         </div>
       </div>
+
+      {lightboxSrc && (
+        <ImageLightbox
+          src={lightboxSrc}
+          alt="Project screenshot"
+          onClose={() => setLightboxSrc(null)}
+        />
+      )}
     </section>
   )
 }
