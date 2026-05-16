@@ -52,6 +52,8 @@ export default function App({ Component, pageProps }: AppProps) {
           resources={resources}
           options={refineOptions}
         >
+          <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.08),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.06),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
+
           {!isAuthRoute && (
             <div className="fixed right-4 top-4 z-[60]">
               <AuthActions />
