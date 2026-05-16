@@ -386,7 +386,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
       transition={{ duration: 0.55, ease: "easeOut" }}
     >
       <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-600 via-sky-500 to-teal-500 p-8 text-white sm:p-10 lg:p-12">
+        <div className="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-cyan-600 via-sky-500 to-teal-500 p-8 text-white sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.28),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.18),transparent_34%)]" />
           <div className="pointer-events-none absolute -right-14 top-10 h-40 w-40 rounded-full border border-white/20 bg-white/10 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-0 h-56 w-56 rounded-full border border-white/10 bg-slate-950/15 blur-3xl" />
@@ -682,7 +682,7 @@ export function UserRegistrationForm({ className }: UserRegistrationFormProps) {
 
                     <div className="relative py-1">
                       <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-slate-700" />
-                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:bg-slate-950/70 dark:text-slate-500">
+                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-white px-3 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:bg-slate-950/70 dark:text-slate-500">
                         Or continue with details
                       </span>
                     </div>
