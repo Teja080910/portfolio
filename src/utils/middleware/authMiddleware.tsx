@@ -54,27 +54,39 @@ const buildProfileFromAuthUser = (user: User) => {
     const metadata = user.user_metadata ?? {};
 
     // OAuth mapping (Google/GitHub standard fields)
-    const oauthFullName = (metadata.full_name as string | undefined) || (metadata.name as string | undefined) || "";
-    const oauthFirstName = oauthFullName ? oauthFullName.split(" ")[0] : "New";
-    const oauthLastName = oauthFullName ? oauthFullName.split(" ").slice(1).join(" ") : "User";
+    const oauthFullName = (metadata.name as string | undefined) || (metadata.full_name as string | undefined) || "";
     const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined) || "";
 
     return {
         id: user.id,
         email: user.email ?? "",
         username: buildGeneratedUsername(metadata.username || oauthFullName, user.email, user.id.slice(0, 4)),
-        firstname: (metadata.firstname as string | undefined)?.trim() || oauthFirstName,
-        lastname: (metadata.lastname as string | undefined)?.trim() || (oauthLastName || "User"),
+        firstname: oauthFullName || (metadata.firstname as string | undefined)?.trim() || "New",
+        lastname: (metadata.lastname as string | undefined)?.trim() || "",
         role: (metadata.role as string | undefined)?.trim() || "Developer",
         phone: (metadata.phone as string | undefined)?.trim() || "",
         photo: oauthPhoto,
-        password: "oauth-placeholder-password", // satisfies NOT NULL constraint in database
+        password: "oauth-placeholder-password",
         show: true,
     };
 };
 
-const mapAuthUserToStoreUser = (user: User): IUser =>
-    mapProfileToUser(buildProfileFromAuthUser(user));
+const buildUserFromAuthAndProfile = (user: User, profile?: Partial<IUser> | null): IUser => {
+    const fromAuth = buildProfileFromAuthUser(user);
+    return mapProfileToUser({
+        ...(profile || {}),
+        id: user.id,
+        email: user.email ?? profile?.email ?? "",
+        username: profile?.username || fromAuth.username,
+        firstname: fromAuth.firstname,
+        lastname: fromAuth.lastname,
+        photo: fromAuth.photo,
+        role: profile?.role || fromAuth.role,
+        phone: profile?.phone || fromAuth.phone,
+        password: profile?.password || fromAuth.password,
+        show: profile?.show ?? true,
+    });
+};
 
 const getOrCreateProfile = async (user: User) => {
     // 1. Try to get existing profile
@@ -88,9 +100,7 @@ const getOrCreateProfile = async (user: User) => {
         const metadata = user.user_metadata ?? {};
         const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined);
 
-        // Update photo if missing
         if (oauthPhoto && !existingProfile.photo) {
-            console.log("Found OAuth photo, updating existing profile...");
             const { data: updatedProfile } = await supabase
                 .from("profiles")
                 .update({ photo: oauthPhoto })
@@ -137,7 +147,7 @@ const getOrCreateProfile = async (user: User) => {
 
 const hydrateStoreUserFromSession = async (user: User) => {
     const { profile } = await getOrCreateProfile(user);
-    const resolvedUser = profile ? mapProfileToUser(profile) : mapAuthUserToStoreUser(user);
+    const resolvedUser = buildUserFromAuthAndProfile(user, profile);
 
     useStore.getState().addUser(resolvedUser);
 
@@ -185,7 +195,7 @@ export const authProvider: AuthProvider = {
             };
         }
 
-        useStore.getState().addUser(mapProfileToUser(profile));
+        useStore.getState().addUser(buildUserFromAuthAndProfile(signInData.user, profile));
 
         return {
             success: true,
@@ -197,7 +207,7 @@ export const authProvider: AuthProvider = {
         useStore.getState().removeUser();
         return {
             success: true,
-            redirectTo: "/sign-in",
+            redirectTo: "/",
         };
     },
     check: async () => {
@@ -213,7 +223,9 @@ export const authProvider: AuthProvider = {
             if (
                 currentStoreUser?.id !== sessionUser.id ||
                 currentStoreUser?.email !== sessionEmail ||
-                (oauthPhoto && !currentStoreUser?.photo) // Force hydration if photo is missing to trigger sync logic
+                (oauthPhoto && !currentStoreUser?.photo) ||
+                currentStoreUser?.firstname === "New" ||
+                currentStoreUser?.lastname === "User"
             ) {
                 await hydrateStoreUserFromSession(sessionUser);
             }
@@ -227,7 +239,7 @@ export const authProvider: AuthProvider = {
 
         return {
             authenticated: false,
-            redirectTo: "/sign-in",
+            redirectTo: "/",
         };
     },
     getIdentity: async () => {
@@ -236,11 +248,16 @@ export const authProvider: AuthProvider = {
         if (data.user) {
             const currentStoreUser = useStore.getState().user;
             const oauthPhoto = (data.user.user_metadata?.avatar_url as string | undefined) || (data.user.user_metadata?.picture as string | undefined);
+            const metadata = data.user.user_metadata ?? {};
+            const oauthGivenName = (metadata.given_name as string | undefined) || "";
+            const oauthFamilyName = (metadata.family_name as string | undefined) || "";
 
             if (
                 currentStoreUser?.id !== data.user.id ||
                 currentStoreUser?.email !== (data.user.email ?? "") ||
-                (oauthPhoto && !currentStoreUser?.photo)
+                (oauthPhoto && !currentStoreUser?.photo) ||
+                currentStoreUser?.firstname === "New" ||
+                currentStoreUser?.lastname === "User"
             ) {
                 await hydrateStoreUserFromSession(data.user);
             }

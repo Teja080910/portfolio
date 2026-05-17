@@ -290,6 +290,15 @@ export default function PortfolioPage() {
 
     const resolvedUser = profile ? mapProfileToStoreUser(profile) : (sessionUser ? mapSessionUserToStoreUser(sessionUser) : null)
 
+    if (resolvedUser && sessionUser) {
+      const meta = sessionUser.user_metadata ?? {}
+      const oauthFullName = (meta.name as string) || (meta.full_name as string) || ""
+      const oauthPhoto = (meta.avatar_url as string) || (meta.picture as string) || ""
+      if (!resolvedUser.photo && oauthPhoto) resolvedUser.photo = oauthPhoto
+      if (!resolvedUser.firstname?.trim() || resolvedUser.firstname === "New") resolvedUser.firstname = oauthFullName || (meta.firstname as string) || ""
+      if (!resolvedUser.lastname?.trim() || resolvedUser.lastname === "User") resolvedUser.lastname = ""
+    }
+
     if (!resolvedUser) {
       storeApi.removeUser()
       storeApi.resetPortfolio()

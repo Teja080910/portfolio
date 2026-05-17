@@ -51,7 +51,7 @@ const optionalUrlSchema = z
 
 const profileSchema = z.object({
   firstname: z.string().trim().min(2, "First name must be at least 2 characters").max(40, "Keep it under 40 characters"),
-  lastname: z.string().trim().min(1, "Last name is required").max(40, "Keep it under 40 characters"),
+  lastname: z.string().trim().max(40, "Keep it under 40 characters").optional().default(""),
   username: z
     .string()
     .trim()
@@ -127,9 +127,9 @@ const buildDefaults = (user: Partial<IUser>): ProfileFormValues => ({
 
 const buildFallbackUser = (authUser: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>, currentUser: IUser) => {
   const metadata = authUser.user_metadata ?? {}
-  const oauthFullName = (metadata.full_name as string | undefined) || (metadata.name as string | undefined) || ""
-  const oauthFirstName = oauthFullName ? oauthFullName.split(" ")[0] : "New"
-  const oauthLastName = oauthFullName ? oauthFullName.split(" ").slice(1).join(" ") : "User"
+  const oauthFullName = (metadata.name as string | undefined) || (metadata.full_name as string | undefined) || ""
+  const oauthFirstName = oauthFullName || (metadata.firstname as string | undefined)?.trim() || ""
+  const oauthLastName = (metadata.lastname as string | undefined)?.trim() || ""
   const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined) || ""
 
   return mapProfileToUser(
@@ -142,8 +142,8 @@ const buildFallbackUser = (authUser: NonNullable<Awaited<ReturnType<typeof supab
         oauthFullName.replace(/\s+/g, "").toLowerCase().slice(0, 15) ||
         authUser.email?.split("@")[0] ||
         "",
-      firstname: currentUser.firstname || (typeof metadata.firstname === "string" ? metadata.firstname.trim() : "") || oauthFirstName,
-      lastname: currentUser.lastname || (typeof metadata.lastname === "string" ? metadata.lastname.trim() : "") || oauthLastName,
+      firstname: oauthFirstName,
+      lastname: oauthLastName,
       role: currentUser.role || (typeof metadata.role === "string" ? metadata.role.trim() : "") || "Developer",
       phone: currentUser.phone || (typeof metadata.phone === "string" ? metadata.phone.trim() : ""),
       description: currentUser.description ?? "",
@@ -280,22 +280,14 @@ export default function ProfileForm() {
       let resolvedUser: IUser;
       
       if (profile) {
-        // Sync photo from OAuth if it's missing in the profile
         const metadata = authUser.user_metadata ?? {};
         const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined);
-        
-        if (oauthPhoto && !profile.photo) {
-          const { data: updatedProfile } = await supabase
-            .from("profiles")
-            .update({ photo: oauthPhoto })
-            .eq("id", authUser.id)
-            .select("*")
-            .single();
-            
-          resolvedUser = mapProfileToUser(updatedProfile || profile, authUser.email ?? "");
-        } else {
-          resolvedUser = mapProfileToUser(profile, authUser.email ?? "");
-        }
+        const oauthName = (metadata.name as string | undefined) || (metadata.full_name as string | undefined) || "";
+        const merged = mapProfileToUser(profile, authUser.email ?? "");
+        if (oauthPhoto && !merged.photo) merged.photo = enhancePhotoUrl(oauthPhoto);
+        if (!merged.firstname || merged.firstname === "New") merged.firstname = oauthName || "";
+        if (!merged.lastname || merged.lastname === "User") merged.lastname = "";
+        resolvedUser = merged;
       } else {
         resolvedUser = buildFallbackUser(authUser, useStore.getState().user);
       }
@@ -504,6 +496,7 @@ export default function ProfileForm() {
 
     const { error: metadataError } = await supabase.auth.updateUser({
       data: {
+        name: trimmedValues.firstname,
         firstname: trimmedValues.firstname,
         lastname: trimmedValues.lastname,
         username: trimmedValues.username,
@@ -512,7 +505,7 @@ export default function ProfileForm() {
       },
     })
 
-    const resolvedUser = mapProfileToUser(updatedProfile, authUser.email ?? accountEmail)
+    const resolvedUser = mapProfileToUser({ ...updatedProfile, firstname: trimmedValues.firstname, lastname: trimmedValues.lastname }, authUser.email ?? accountEmail)
 
     if (removePhoto && existingPhotoPath) {
       await supabase.storage.from(PROFILE_PHOTOS_BUCKET).remove([existingPhotoPath])
@@ -583,21 +576,15 @@ export default function ProfileForm() {
           <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-8">
               <div className="grid gap-6 md:grid-cols-2">
-                <div>
+                <div className="md:col-span-2">
                   <label htmlFor="firstname" className={labelClassName}>
-                    First Name
+                    Display Name
                   </label>
-                  <input id="firstname" {...register("firstname")} className={textInputClassName} placeholder="Teja" />
+                  <input id="firstname" {...register("firstname")} className={textInputClassName} placeholder="Teja Simma" />
                   {errors.firstname && <p className="mt-2 text-sm text-rose-500">{errors.firstname.message}</p>}
                 </div>
 
-                <div>
-                  <label htmlFor="lastname" className={labelClassName}>
-                    Last Name
-                  </label>
-                  <input id="lastname" {...register("lastname")} className={textInputClassName} placeholder="Simma" />
-                  {errors.lastname && <p className="mt-2 text-sm text-rose-500">{errors.lastname.message}</p>}
-                </div>
+                <input id="lastname" type="hidden" {...register("lastname")} />
 
                 <div>
                   <label htmlFor="username" className={labelClassName}>

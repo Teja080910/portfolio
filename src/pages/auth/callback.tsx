@@ -3,6 +3,23 @@ import { useStore } from "@/lib/store"
 import { useRouter } from "next/router"
 import { useEffect } from "react"
 
+const enhancePhotoUrl = (url?: string | null) => {
+    if (!url) return ""
+    let enhancedUrl = url
+    if (enhancedUrl.includes("googleusercontent.com")) {
+        if (enhancedUrl.match(/=s\d+-c/)) {
+            enhancedUrl = enhancedUrl.replace(/=s\d+-c/g, "=s800-c")
+        } else if (!enhancedUrl.includes("=")) {
+            enhancedUrl += "=s800-c"
+        }
+    } else if (enhancedUrl.includes("avatars.githubusercontent.com")) {
+        if (!enhancedUrl.includes("s=")) {
+            enhancedUrl = enhancedUrl.includes("?") ? `${enhancedUrl}&s=800` : `${enhancedUrl}?s=800`
+        }
+    }
+    return enhancedUrl
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter()
 
@@ -39,26 +56,27 @@ export default function AuthCallbackPage() {
             profile.type = storedType
             sessionStorage.removeItem("signup_profile_type")
           } else if (storedType) {
-            // Type already set, just clean up
             sessionStorage.removeItem("signup_profile_type")
           }
         }
 
+        const meta = sessionUser.user_metadata ?? {}
+
         useStore.getState().addUser({
-          id: profile.id,
-          username: profile.username ?? "",
-          email: profile.email ?? "",
-          photo: profile.photo,
-          firstname: profile.firstname ?? "",
-          lastname: profile.lastname ?? "",
-          role: profile.role ?? "",
-          description: profile.description,
-          gitlink: profile.gitlink,
-          likedlin: profile.likedlin,
-          resumelink: profile.resumelink,
-          phone: profile.phone ?? "",
-          password: profile.password ?? "",
-          show: profile.show ?? true,
+          id: sessionUser.id,
+          username: profile?.username || meta.username || sessionUser.email?.split("@")[0] || "",
+          email: sessionUser.email ?? "",
+          photo: enhancePhotoUrl((meta.avatar_url as string) || (meta.picture as string) || ""),
+          firstname: (meta.name as string) || (meta.full_name as string) || (meta.firstname as string) || "",
+          lastname: "",
+          role: profile?.role ?? (meta.role as string) ?? "Developer",
+          description: profile?.description,
+          gitlink: profile?.gitlink,
+          likedlin: profile?.likedlin,
+          resumelink: profile?.resumelink,
+          phone: profile?.phone ?? "",
+          password: profile?.password ?? "",
+          show: profile?.show ?? true,
         })
       }
 

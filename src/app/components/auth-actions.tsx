@@ -104,7 +104,7 @@ export default function AuthActions() {
       removeUser()
       setShowLogoutConfirm(false)
       setIsAuthenticated(false)
-      await router.replace("/sign-in")
+      await router.replace("/")
     } finally {
       setIsLoggingOut(false)
     }
