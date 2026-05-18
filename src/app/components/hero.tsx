@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { ArrowDown, Award, BookOpen, Briefcase, Code2, Cpu, FolderKanban, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRef, useState } from "react"
 
 type HeroProps = {
   isReadOnly?: boolean
@@ -23,6 +24,24 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     return null
   }
 
+  const visibleProjects = projects.filter((p) => p.show).length
+  const visibleExperience = experience.filter((e) => e.show).length
+  const visibleEducation = education.filter((e) => e.show).length
+  const visibleCertificates = certificate.filter((c) => c.show).length
+  const totalSkillCategories = skills.filter((s) => s.show).length
+  const totalSkills = skills
+    .filter((s) => s.show)
+    .reduce((count, s) => count + s.skills.length, 0)
+
+  const cardsData = [
+    { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
+    { icon: Briefcase, label: "Experience", sectionId: "experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
+    { icon: BookOpen, label: "Education", sectionId: "education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
+    { icon: Code2, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
+    { icon: Award, label: "Certificates", sectionId: "certificate", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
+    { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
+  ]
+
   const fullName = [user.firstname, user.lastname].filter(Boolean).join(" ").trim() || user.username || user.email
   const roleLabel = user.role?.trim() || "Portfolio Owner"
   const description =
@@ -36,15 +55,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     .map((part) => part[0]?.toUpperCase())
     .join("") || "U"
   const hasSocialLinks = Boolean(user.gitlink || user.likedlin || emailHref)
-
-  const visibleProjects = projects.filter((p) => p.show).length
-  const visibleExperience = experience.filter((e) => e.show).length
-  const visibleEducation = education.filter((e) => e.show).length
-  const visibleCertificates = certificate.filter((c) => c.show).length
-  const totalSkillCategories = skills.filter((s) => s.show).length
-  const totalSkills = skills
-    .filter((s) => s.show)
-    .reduce((count, s) => count + s.skills.length, 0)
 
   const floatingOrbs = [
     { size: "h-[500px] w-[500px]", pos: "left-[-15%] top-[-20%]", color: "bg-primary/20 dark:bg-primary/25", delay: 0, duration: 18 },
@@ -381,41 +391,28 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
         </div>
       </div>
 
-      {/* Stats cards — horizontal scroll */}
-      <div className="mx-auto mt-12 w-full max-w-7xl px-6">
+      {/* Stats cards — continuous scroll */}
+      <div className="mx-auto mt-12 w-full max-w-7xl overflow-hidden px-6">
         <motion.div
-          className="flex gap-4 overflow-x-auto pb-2 scrollbar-none"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          style={{
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-          }}
+          className="flex gap-4"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
         >
-          {[
-            { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
-            { icon: Briefcase, label: "Experience", sectionId: "experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
-            { icon: BookOpen, label: "Education", sectionId: "education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
-            { icon: Code2, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
-            { icon: Award, label: "Certificates", sectionId: "certificate", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
-            { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
-          ].map((card, index) => {
+          {[...cardsData, ...cardsData].map((card, index) => {
             const Icon = card.icon
             return (
               <motion.div
-                key={card.label}
+                key={`${card.label}-${index}`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.45, delay: index * 0.08, ease: "easeOut" }}
                 whileHover={{ y: -4 }}
-                className="min-w-[200px] flex-1 snap-start"
+                className="min-w-[200px] flex-none snap-start"
               >
                 <button type="button" onClick={() => document.getElementById(card.sectionId)?.scrollIntoView({ behavior: "smooth" })} className="w-full text-left">
                   <motion.div
-                    className="glass-card relative h-full overflow-hidden p-4"
+                    className="glass-card relative h-[180px] overflow-hidden p-4"
                     whileHover={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
                   >
                     <motion.span
@@ -432,7 +429,7 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                       <Icon className="h-4 w-4 text-primary" />
                     </motion.div>
                     <motion.p
-                      className="text-xl font-extrabold tracking-tight text-foreground"
+                      className="text-xl font-extrabold tracking-tight text-foreground whitespace-nowrap"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                       transition={{ delay: index * 0.08 + 0.2 }}
@@ -440,7 +437,7 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                       {card.value}
                     </motion.p>
                     <p className="mt-0.5 text-sm font-semibold text-foreground/80">{card.label}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.desc}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground whitespace-nowrap">{card.desc}</p>
                   </motion.div>
                 </button>
               </motion.div>

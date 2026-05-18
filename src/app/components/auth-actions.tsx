@@ -31,6 +31,7 @@ export default function AuthActions() {
   const setEducation = useStore((state) => state.setEducation)
   const setProjects = useStore((state) => state.setProjects)
   const setCertificate = useStore((state) => state.setCertificate)
+  const addUser = useStore((state) => state.addUser)
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -180,6 +181,29 @@ export default function AuthActions() {
 
       if (error) {
         throw new Error("Extracted successfully, but failed to save to database: " + error.message)
+      }
+
+      const bioText = parsedAbout.list?.length ? parsedAbout.list.join(". ") : ""
+      const roleText = (parsedAbout.type || "").trim()
+
+      if (bioText || roleText) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            description: bioText || user.description,
+            role: roleText || user.role,
+          })
+          .eq("id", person)
+
+        if (profileError) {
+          console.error("Failed to update profile bio/role:", profileError.message)
+        }
+
+        addUser({
+          ...user,
+          description: bioText || user.description,
+          role: roleText || user.role,
+        })
       }
 
       setAbout(aboutPayload)
