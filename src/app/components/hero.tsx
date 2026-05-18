@@ -6,7 +6,6 @@ import { motion } from "framer-motion"
 import { ArrowDown, Award, BookOpen, Briefcase, Code2, Cpu, FolderKanban, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRef, useState } from "react"
 
 type HeroProps = {
   isReadOnly?: boolean
@@ -82,7 +81,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
 
   return (
     <section id="user" className="relative min-h-screen overflow-hidden pt-24">
-      {/* Animated floating orbs */}
       {floatingOrbs.map((orb) => (
         <motion.div
           key={orb.pos}
@@ -101,30 +99,21 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
         />
       ))}
 
-      {/* Grid pattern overlay */}
       <motion.div
         className="pointer-events-none absolute inset-0 grid-pattern"
         animate={{ opacity: [0.2, 0.5, 0.2] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Vignette overlay for depth */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-background/30" />
 
-      {/* Floating particles */}
       {particles.map((p) => (
         <motion.div
           key={p.id}
           className="pointer-events-none absolute rounded-full bg-primary/30 dark:bg-primary/40"
           animate={{
-            y: [p.driftY, 0, p.driftY * 0.5, -p.driftY * 0.3, p.driftY],
+            y: [0, -30 - p.driftY, 10, -20 + p.driftY, 0],
             x: [0, p.driftX, -p.driftX / 2, p.driftX / 2, 0],
-            opacity: [0, 1, 0.4, 0.7, 0],
-            scale: [0, 1.5, 0.6, 1, 0],
-          }}
-          animate={{
-            y: [0, -30 - p.drift, 10, -20 + p.drift, 0],
-            x: [0, p.drift, -p.drift / 2, p.drift / 2, 0],
             opacity: [0, 0.8, 0.3, 0.6, 0],
             scale: [0, 1, 0.6, 0.8, 0],
           }}
@@ -137,7 +126,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
         />
       ))}
 
-      {/* Sweeping gradient lines */}
       {gradientLines.map((line) => (
         <motion.div
           key={line.top}
@@ -165,14 +153,12 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
 
       <div className="surface-grid relative z-10 px-6 pb-16">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Left: Text Content */}
           <motion.div
             className="min-w-0 text-center lg:text-left"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: "easeOut" }}
           >
-            {/* Role chip */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -188,7 +174,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               </span>
             </motion.div>
 
-            {/* Name */}
             <motion.h1
               className="mt-6 text-4xl font-extrabold tracking-tight text-foreground md:text-5xl lg:text-6xl"
               initial={{ opacity: 0, y: 30 }}
@@ -206,7 +191,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               </motion.span>
             </motion.h1>
 
-            {/* Username */}
             <motion.p
               className="mt-3 text-lg text-muted-foreground"
               initial={{ opacity: 0 }}
@@ -216,7 +200,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               @{user.username || "complete-your-profile"}
             </motion.p>
 
-            {/* Description */}
             <motion.p
               className="mx-auto mt-6 max-w-xl break-words text-base leading-relaxed text-muted-foreground [overflow-wrap:anywhere] lg:mx-0"
               initial={{ opacity: 0 }}
@@ -226,7 +209,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               {description}
             </motion.p>
 
-            {/* Social links */}
             {hasSocialLinks && (
               <motion.div
                 className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start"
@@ -274,7 +256,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
               </motion.div>
             )}
 
-            {/* Action buttons */}
             <motion.div
               className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
               initial={{ opacity: 0, y: 20 }}
@@ -310,7 +291,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
             </motion.div>
           </motion.div>
 
-          {/* Right: Profile Image / Avatar */}
           <motion.div
             className="relative mx-auto"
             initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
@@ -318,7 +298,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
             transition={{ duration: 0.75, delay: 0.12, ease: "easeOut" }}
           >
             <div className="relative flex h-72 w-72 items-center justify-center sm:h-80 sm:w-80 md:h-96 md:w-96">
-              {/* Decorative rings */}
               <motion.div
                 className="absolute inset-0"
                 animate={{ rotate: 360 }}
@@ -334,7 +313,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                 <div className="absolute inset-8 rounded-[2rem] border border-primary/10" />
               </motion.div>
 
-              {/* Photo or initials */}
               <motion.div
                 className="relative z-10 flex h-[85%] w-[85%] items-center justify-center overflow-hidden rounded-[2rem] border border-border/50 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 shadow-xl shadow-primary/5"
                 whileHover={{ scale: 1.03 }}
@@ -370,7 +348,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                 )}
               </motion.div>
 
-              {/* Floating decoration dots */}
               <motion.div
                 className="absolute -right-4 top-8 h-3 w-3 rounded-full bg-primary/40"
                 animate={{ y: [-6, 6, -6], opacity: [0.4, 1, 0.4] }}
@@ -391,25 +368,17 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
         </div>
       </div>
 
-      {/* Stats cards — continuous scroll */}
+      {/* Stats cards — auto scroll */}
       <div className="mx-auto mt-12 w-full max-w-7xl overflow-hidden px-6">
-        <motion.div
-          className="flex gap-4"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        <div
+          className="flex gap-4 marquee-track"
+          onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = "paused")}
+          onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = "running")}
         >
           {[...cardsData, ...cardsData].map((card, index) => {
             const Icon = card.icon
             return (
-              <motion.div
-                key={`${card.label}-${index}`}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.45, delay: index * 0.08, ease: "easeOut" }}
-                whileHover={{ y: -4 }}
-                className="min-w-[200px] flex-none snap-start"
-              >
+              <div key={`${card.label}-${index}`} className="min-w-[200px] flex-none">
                 <button type="button" onClick={() => document.getElementById(card.sectionId)?.scrollIntoView({ behavior: "smooth" })} className="w-full text-left">
                   <motion.div
                     className="glass-card relative h-[180px] overflow-hidden p-4"
@@ -440,10 +409,10 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground whitespace-nowrap">{card.desc}</p>
                   </motion.div>
                 </button>
-              </motion.div>
+              </div>
             )
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   )
