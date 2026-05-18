@@ -45,7 +45,11 @@ export default function AuthActions() {
     if (!isExpanded) return
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (target instanceof Element && target.closest('[role="menu"]')) {
+        return
+      }
+      if (actionsRef.current && !actionsRef.current.contains(target)) {
         setIsExpanded(false)
       }
     }
@@ -266,75 +270,73 @@ export default function AuthActions() {
 
         {/* Expanded action bar */}
         {isExpanded && (
-              <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
-                <button
-                  type="button"
-                  onClick={() => setIsExpanded(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                  aria-label="Hide actions"
-                >
-                  <ChevronLeft className="h-4 w-4 rotate-180" />
-                </button>
-      <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
-        <label
-          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-cyan-50/80 px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
-          title="Auto-fill from Resume"
-        >
-          {isExtracting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">{isExtracting ? "Extracting..." : "Auto-fill"}</span>
-          <input
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={handleResumeUpload}
-            disabled={isExtracting}
-          />
-        </label>
+          <div className="flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              aria-label="Hide actions"
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+            </button>
+            <label
+              className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-cyan-50/80 px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
+              title="Auto-fill from Resume"
+            >
+              {isExtracting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{isExtracting ? "Extracting..." : "Auto-fill"}</span>
+              <input
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={handleResumeUpload}
+                disabled={isExtracting}
+              />
+            </label>
 
-        <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
-          <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
-            {user?.photo ? (
-              <div className="relative h-full w-full">
-                <Image
-                  src={getProxiedImageUrl(user.photo) || ""}
-                  alt={displayName}
-                  fill
-                  sizes="24px"
-                  className="object-cover"
-                />
+            <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
+              <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
+                {user?.photo ? (
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={getProxiedImageUrl(user.photo) || ""}
+                      alt={displayName}
+                      fill
+                      sizes="24px"
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <span>{displayName.charAt(0).toUpperCase()}</span>
+                )}
               </div>
-            ) : (
-              <span>{displayName.charAt(0).toUpperCase()}</span>
-            )}
+              <span className="max-w-[120px] truncate font-medium">{displayName}</span>
+            </div>
+
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300"
+              >
+                <Compass className="h-4 w-4" />
+                <span className="hidden sm:inline">Explore</span>
+              </Button>
+            </Link>
+
+            <ModeToggle />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLogoutConfirm(true)}
+              className="h-9 rounded-full border-slate-300/80 bg-white/90 px-3 text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-200"
+            >
+              <LogOut className="mr-1 h-4 w-4" />
+              Logout
+            </Button>
           </div>
-          <span className="max-w-[120px] truncate font-medium">{displayName}</span>
-        </div>
-
-        <Link href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 gap-1.5 rounded-full px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300"
-          >
-            <Compass className="h-4 w-4" />
-            <span className="hidden sm:inline">Explore</span>
-          </Button>
-        </Link>
-
-        <ModeToggle />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowLogoutConfirm(true)}
-          className="h-9 rounded-full border-slate-300/80 bg-white/90 px-3 text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-200"
-        >
-          <LogOut className="mr-1 h-4 w-4" />
-          Logout
-        </Button>
-      </div>
-              </div>
-          )}
+        )}
       </div>
 
       {showLogoutConfirm && (
