@@ -205,7 +205,7 @@ export default function AuthActions() {
 
   if (!isAuthenticated) {
     return (
-      <div className="relative">
+      <div className="relative" ref={actionsRef}>
         {!isExpanded && (
           <button
             type="button"
@@ -330,7 +330,7 @@ export default function AuthActions() {
               variant="outline"
               size="sm"
               onClick={() => setShowLogoutConfirm(true)}
-              className="h-9 rounded-full border-slate-300/80 bg-white/90 px-3 text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-200"
+              className="h-9 rounded-full border-slate-300/80 px-3 text-slate-700 transition-colors hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-300"
             >
               <LogOut className="mr-1 h-4 w-4" />
               Logout

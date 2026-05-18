@@ -43,9 +43,15 @@ export default function AuthCallbackPage() {
         .eq("id", sessionUser.id)
         .maybeSingle()
 
+      const signinIntent = typeof window !== "undefined" ? sessionStorage.getItem("oauth_signin_intent") : null
+      const signupType = typeof window !== "undefined" ? sessionStorage.getItem("signup_profile_type") : null
+
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("oauth_signin_intent")
+      }
+
+      // If profile already exists — existing user signing in
       if (profile) {
-        // For OAuth signups, restore the type from sessionStorage if the profile
-        // still has the default 'user' type but the user selected a different type
         if (typeof window !== "undefined") {
           const storedType = sessionStorage.getItem("signup_profile_type")
           if (storedType && (profile.type === "user" || !profile.type)) {
@@ -54,14 +60,11 @@ export default function AuthCallbackPage() {
               .update({ type: storedType })
               .eq("id", sessionUser.id)
             profile.type = storedType
-            sessionStorage.removeItem("signup_profile_type")
-          } else if (storedType) {
-            sessionStorage.removeItem("signup_profile_type")
           }
+          sessionStorage.removeItem("signup_profile_type")
         }
 
         const meta = sessionUser.user_metadata ?? {}
-
         useStore.getState().addUser({
           id: sessionUser.id,
           username: profile?.username || meta.username || sessionUser.email?.split("@")[0] || "",
@@ -78,16 +81,97 @@ export default function AuthCallbackPage() {
           password: profile?.password ?? "",
           show: profile?.show ?? true,
         })
+
+        const pUsername = profile?.username?.trim()
+        const pType = profile?.type
+        const destination = pUsername
+          ? pType === "business"
+            ? `/b/${encodeURIComponent(pUsername)}`
+            : pType === "team"
+              ? `/t/${encodeURIComponent(pUsername)}`
+              : `/u/${encodeURIComponent(pUsername)}`
+          : "/"
+
+        if (isActive) {
+          void router.replace(destination)
+        }
+        return
       }
 
-      const username = profile?.username?.trim()
-      const profileType = profile?.type
-      const destination = username
-        ? profileType === "business"
-          ? `/b/${encodeURIComponent(username)}`
-          : profileType === "team"
-            ? `/t/${encodeURIComponent(username)}`
-            : `/u/${encodeURIComponent(username)}`
+      // No profile exists — check intent
+      if (signinIntent && !signupType) {
+        // Came from sign-in page without an account — reject
+        await supabase.auth.signOut()
+        if (isActive) {
+          void router.replace("/sign-up?error=no_account")
+        }
+        return
+      }
+
+      // Came from sign-up page — create the profile
+      const meta = sessionUser.user_metadata ?? {}
+      const oauthFullName = (meta.name as string) || (meta.full_name as string) || (meta.firstname as string) || ""
+      const oauthPhoto = (meta.avatar_url as string) || (meta.picture as string) || ""
+      const generatedUsername = oauthFullName
+        ? oauthFullName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().slice(0, 18)
+        : sessionUser.email?.split("@")[0]?.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase().slice(0, 18) || "user"
+
+      const storedType = typeof window !== "undefined" ? sessionStorage.getItem("signup_profile_type") : null
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("signup_profile_type")
+      }
+
+      const { data: createdProfile } = await supabase
+        .from("profiles")
+        .insert({
+          id: sessionUser.id,
+          email: sessionUser.email ?? "",
+          username: generatedUsername,
+          firstname: oauthFullName || "New",
+          lastname: "",
+          role: (meta.role as string) || "Developer",
+          phone: "",
+          photo: oauthPhoto,
+          password: "oauth-placeholder-password",
+          show: true,
+          type: storedType || "user",
+        })
+        .select("*")
+        .single()
+
+      if (!createdProfile) {
+        await supabase.auth.signOut()
+        if (isActive) {
+          void router.replace("/sign-up?error=no_account")
+        }
+        return
+      }
+
+      useStore.getState().addUser({
+        id: sessionUser.id,
+        username: createdProfile.username,
+        email: sessionUser.email ?? "",
+        photo: enhancePhotoUrl(oauthPhoto),
+        firstname: oauthFullName,
+        lastname: "",
+        role: createdProfile.role ?? (meta.role as string) ?? "Developer",
+        description: createdProfile.description,
+        gitlink: createdProfile.gitlink,
+        likedlin: createdProfile.likedlin,
+        resumelink: createdProfile.resumelink,
+        phone: createdProfile.phone ?? "",
+        password: createdProfile.password ?? "",
+        show: createdProfile.show ?? true,
+      })
+
+      const cUsername = createdProfile.username?.trim()
+      const cType = createdProfile.type
+      const destination = cUsername
+        ? cType === "business"
+          ? `/b/${encodeURIComponent(cUsername)}`
+          : cType === "team"
+            ? `/t/${encodeURIComponent(cUsername)}`
+            : `/u/${encodeURIComponent(cUsername)}`
         : "/"
 
       if (isActive) {

@@ -25,8 +25,8 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         email: "",
         password: "",
     })
-    const [oauthPending, setOauthPending] = useState<"google" | "github" | null>(null)
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [oauthPending, setOauthPending] = useState<"google" | "github" | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const router = useRouter()
 
@@ -232,6 +232,8 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         setResetPending(false)
     }
 
+    const isBusy = pending || Boolean(oauthPending) || resetPending
+
     const handleSocialAuth = async (provider: "google" | "github") => {
         if (typeof window === "undefined") return
 
@@ -241,6 +243,12 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
             delete next.form
             return next
         })
+
+        // Mark this as a sign-in intent (not sign-up) so the callback can
+        // reject users who don't already have an account
+        if (typeof window !== "undefined") {
+            sessionStorage.setItem("oauth_signin_intent", Date.now().toString())
+        }
 
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
@@ -255,20 +263,9 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
         }
     }
 
-    const isBusy = pending || Boolean(oauthPending) || resetPending
-
     if (isAuthenticated) {
         return null
     }
-
-    const GoogleIcon = () => (
-        <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-1.9 3l3 2.3c1.8-1.6 2.8-4 2.8-6.8 0-.7-.1-1.4-.2-2H12z" />
-            <path fill="#34A853" d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3-2.3c-.8.6-2 .9-3.5.9-2.7 0-4.9-1.8-5.7-4.2l-3.1 2.4C5 19.7 8.2 22 12 22z" />
-            <path fill="#4A90E2" d="M6.3 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L3.2 7.6C2.4 9.1 2 10.5 2 12s.4 2.9 1.2 4.4L6.3 14z" />
-            <path fill="#FBBC05" d="M12 5.8c1.5 0 2.8.5 3.9 1.5l2.9-2.9C16.9 2.6 14.7 2 12 2 8.2 2 5 4.3 3.2 7.6L6.3 10c.8-2.4 3-4.2 5.7-4.2z" />
-        </svg>
-    )
 
     return (
         <motion.section
@@ -432,9 +429,16 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
                                                 variant="outline"
                                                 disabled={isBusy}
                                                 onClick={() => handleSocialAuth("google")}
-                                                className="h-12 rounded-2xl border-slate-200 bg-white text-slate-700 transition-all duration-300 hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                                                className="h-12 rounded-2xl border-slate-200 text-slate-700 transition-all duration-300 hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-300"
                                             >
-                                                {oauthPending === "google" ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
+                                                {oauthPending === "google" ? <Loader2 className="size-4 animate-spin" /> : (
+                                                    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
+                                                        <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-1.9 3l3 2.3c1.8-1.6 2.8-4 2.8-6.8 0-.7-.1-1.4-.2-2H12z" />
+                                                        <path fill="#34A853" d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3-2.3c-.8.6-2 .9-3.5.9-2.7 0-4.9-1.8-5.7-4.2l-3.1 2.4C5 19.7 8.2 22 12 22z" />
+                                                        <path fill="#4A90E2" d="M6.3 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L3.2 7.6C2.4 9.1 2 10.5 2 12s.4 2.9 1.2 4.4L6.3 14z" />
+                                                        <path fill="#FBBC05" d="M12 5.8c1.5 0 2.8.5 3.9 1.5l2.9-2.9C16.9 2.6 14.7 2 12 2 8.2 2 5 4.3 3.2 7.6L6.3 10c.8-2.4 3-4.2 5.7-4.2z" />
+                                                    </svg>
+                                                )}
                                                 Continue with Google
                                             </Button>
                                             <Button
@@ -442,12 +446,13 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
                                                 variant="outline"
                                                 disabled={isBusy}
                                                 onClick={() => handleSocialAuth("github")}
-                                                className="h-12 rounded-2xl border-slate-200 bg-white text-slate-700 transition-all duration-300 hover:border-cyan-300 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                                                className="h-12 rounded-2xl border-slate-200 text-slate-700 transition-all duration-300 hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-300"
                                             >
                                                 {oauthPending === "github" ? <Loader2 className="size-4 animate-spin" /> : <Github className="size-4" />}
                                                 Continue with GitHub
                                             </Button>
                                         </div>
+
                                     </CardContent>
 
                                     <CardFooter className="mt-8 flex flex-col gap-4 border-t border-slate-200 p-0 pt-6 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">

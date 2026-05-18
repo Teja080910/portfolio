@@ -57,6 +57,8 @@ export default function ExplorePage() {
         if (ownProfile?.username) {
           setLoggedInProfile(ownProfile as IUser)
         }
+      } else {
+        setLoggedInProfile(null)
       }
 
       const { data, error } = await supabase
@@ -76,6 +78,16 @@ export default function ExplorePage() {
     }
 
     void fetchData()
+
+    const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        setLoggedInProfile(null)
+      }
+    })
+
+    return () => {
+      authSubscription.subscription.unsubscribe()
+    }
   }, [])
 
   const filteredProfiles = useMemo(() => {
