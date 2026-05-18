@@ -1,25 +1,28 @@
-const ALLOWED_HOSTS = [
-  "lh3.googleusercontent.com",
-  "avatars.githubusercontent.com",
-  "hebbkx1anhila5yf.public.blob.vercel-storage.com",
-]
+/**
+ * Enhance photo URL to request a high-resolution version from the provider.
+ */
+function enhancePhotoUrl(url: string): string {
+  let enhanced = url
+  if (enhanced.includes("googleusercontent.com")) {
+    if (enhanced.match(/=s\d+-c/)) {
+      enhanced = enhanced.replace(/=s\d+-c/g, "=s800-c")
+    } else if (!enhanced.includes("=")) {
+      enhanced += "=s800-c"
+    }
+  } else if (enhanced.includes("avatars.githubusercontent.com")) {
+    if (!enhanced.includes("s=")) {
+      enhanced = enhanced.includes("?") ? `${enhanced}&s=800` : `${enhanced}?s=800`
+    }
+  }
+  return enhanced
+}
 
 /**
- * Returns a proxied URL for external images to bypass browser tracking protection.
- * Local/Supabase images are returned as-is.
+ * Returns the direct high-resolution image URL from the provider.
+ * Uses referrerPolicy="no-referrer" on the Image component instead of proxying,
+ * so the image loads directly from the CDN without a server round trip.
  */
 export function getProxiedImageUrl(url: string | undefined | null): string | undefined {
   if (!url) return undefined
-
-  try {
-    const parsed = new URL(url)
-    if (ALLOWED_HOSTS.includes(parsed.hostname)) {
-      return `/api/image-proxy?url=${encodeURIComponent(url)}`
-    }
-    // Already local — return as-is
-    return url
-  } catch {
-    // Invalid URL — return as-is
-    return url
-  }
+  return enhancePhotoUrl(url) || undefined
 }

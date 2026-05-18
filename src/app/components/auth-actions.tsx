@@ -304,6 +304,7 @@ export default function AuthActions() {
                       fill
                       sizes="24px"
                       className="object-cover"
+                      referrerPolicy="no-referrer"
                     />
                   </div>
                 ) : (

@@ -339,6 +339,7 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                     className="object-cover transition-transform duration-700 hover:scale-105"
                     priority
                     referrerPolicy="no-referrer"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
