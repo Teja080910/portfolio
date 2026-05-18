@@ -600,14 +600,16 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       return
     }
 
-    const invalidProjectIndex = projects.findIndex((item) => {
-      const normalizedPhotos = normalizeProjectPhotos(item)
-      return isProjectConfigured(item) && normalizedPhotos.length < 3
-    })
+    if (focusSection === null || focusSection === "projects") {
+      const invalidProjectIndex = projects.findIndex((item) => {
+        const normalizedPhotos = normalizeProjectPhotos(item)
+        return isProjectConfigured(item) && normalizedPhotos.length < 3
+      })
 
-    if (invalidProjectIndex !== -1) {
-      setNotice({ tone: "error", message: `Project #${invalidProjectIndex + 1} needs at least 3 photos.` })
-      return
+      if (invalidProjectIndex !== -1) {
+        setNotice({ tone: "error", message: `Project #${invalidProjectIndex + 1} needs at least 3 photos.` })
+        return
+      }
     }
 
     setIsSaving(true)
@@ -1513,7 +1515,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       disabled={isSaving || isUploadingProjectPhotos}
                     />
                     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      Upload photos directly. Minimum 3 photos per project, and you can add more than 10.
+                      Upload photos directly. Minimum 1 photo per project.
                     </p>
                     {normalizeProjectPhotos(item).length > 0 && (
                       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">

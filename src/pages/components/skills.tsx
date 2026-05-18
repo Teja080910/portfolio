@@ -37,11 +37,29 @@ export default function Skills({ isReadOnly = false }: SkillsProps) {
   const editSkillsHref = `/u/${encodeURIComponent(username || "me")}/edit-skills`
   const skills = skillsStore.filter((item) => item.show && (item.skilltype || item.skills.length || item.description))
 
-  if (isReadOnly && skills.length === 0) {
-    return null
-  }
+  const mergedSkills = skills.reduce<Array<{ skilltype: string; skills: string[]; description: string; id: string }>>(
+    (acc, item) => {
+      const key = item.skilltype.trim().toLowerCase()
+      const existing = acc.find((s) => s.skilltype.toLowerCase() === key)
+      if (existing) {
+        const existingSkills = new Set(existing.skills.map((s) => s.toLowerCase()))
+        for (const s of item.skills) {
+          if (!existingSkills.has(s.toLowerCase())) {
+            existing.skills.push(s)
+          }
+        }
+        if (item.description && !existing.description) {
+          existing.description = item.description
+        }
+      } else {
+        acc.push({ skilltype: item.skilltype, skills: [...item.skills], description: item.description, id: item.id })
+      }
+      return acc
+    },
+    [],
+  )
 
-  const allSkills = skills.flatMap((s) => s.skills)
+  const allSkills = mergedSkills.flatMap((s) => s.skills)
   const flattenedUniqueSkills = [...new Set(allSkills.map((s) => s.toLowerCase()))].slice(0, 24)
 
   return (
@@ -92,8 +110,8 @@ export default function Skills({ isReadOnly = false }: SkillsProps) {
 
         {/* Skill categories */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {skills.length > 0 ? (
-            skills.map((skill, index) => (
+          {mergedSkills.length > 0 ? (
+            mergedSkills.map((skill, index) => (
               <motion.div
                 key={skill.id || index}
                 initial={{ opacity: 0, y: 26 }}
