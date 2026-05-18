@@ -55,7 +55,8 @@ const buildProfileFromAuthUser = (user: User) => {
 
     // OAuth mapping (Google/GitHub standard fields)
     const oauthFullName = (metadata.name as string | undefined) || (metadata.full_name as string | undefined) || "";
-    const oauthPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined) || "";
+    const rawPhoto = (metadata.avatar_url as string | undefined) || (metadata.picture as string | undefined) || "";
+    const oauthPhoto = enhancePhotoUrl(rawPhoto);
 
     return {
         id: user.id,

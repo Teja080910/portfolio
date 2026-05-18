@@ -335,8 +335,10 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
                     src={getProxiedImageUrl(user.photo) || ""}
                     alt={fullName}
                     fill
+                    sizes="(max-width: 768px) 280px, 400px"
                     className="object-cover transition-transform duration-700 hover:scale-105"
                     priority
+                    referrerPolicy="no-referrer"
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">

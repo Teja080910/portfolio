@@ -1,6 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 
 /**
+ * Request a larger image size from provider-specific URLs.
+ */
+function enhancePhotoUrl(url: string): string {
+  let enhanced = url
+  if (enhanced.includes("googleusercontent.com")) {
+    if (enhanced.match(/=s\d+-c/)) {
+      enhanced = enhanced.replace(/=s\d+-c/g, "=s800-c")
+    } else if (!enhanced.includes("=")) {
+      enhanced += "=s800-c"
+    }
+  } else if (enhanced.includes("avatars.githubusercontent.com")) {
+    if (!enhanced.includes("s=")) {
+      enhanced = enhanced.includes("?") ? `${enhanced}&s=800` : `${enhanced}?s=800`
+    }
+  }
+  return enhanced
+}
+
+/**
  * Proxies external images (e.g. Google profile photos) through the same origin
  * to bypass browser tracking protection (Firefox ETP, etc.).
  *
@@ -29,8 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Invalid URL" })
   }
 
+  // Enhance the URL to request a high-resolution version before fetching
+  const enhancedUrl = enhancePhotoUrl(url)
+
   try {
-    const response = await fetch(url, {
+    const response = await fetch(enhancedUrl, {
       headers: {
         // No referrer so the upstream server doesn't block us
         "Referer": "",

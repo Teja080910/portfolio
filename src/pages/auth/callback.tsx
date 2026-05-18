@@ -110,8 +110,9 @@ export default function AuthCallbackPage() {
 
       // Came from sign-up page — create the profile
       const meta = sessionUser.user_metadata ?? {}
+      const rawPhoto = (meta.avatar_url as string) || (meta.picture as string) || ""
       const oauthFullName = (meta.name as string) || (meta.full_name as string) || (meta.firstname as string) || ""
-      const oauthPhoto = (meta.avatar_url as string) || (meta.picture as string) || ""
+      const enhancedPhoto = enhancePhotoUrl(rawPhoto)
       const generatedUsername = oauthFullName
         ? oauthFullName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().slice(0, 18)
         : sessionUser.email?.split("@")[0]?.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase().slice(0, 18) || "user"
@@ -131,7 +132,7 @@ export default function AuthCallbackPage() {
           lastname: "",
           role: (meta.role as string) || "Developer",
           phone: "",
-          photo: oauthPhoto,
+          photo: enhancedPhoto,
           password: "oauth-placeholder-password",
           show: true,
           type: storedType || "user",
@@ -151,7 +152,7 @@ export default function AuthCallbackPage() {
         id: sessionUser.id,
         username: createdProfile.username,
         email: sessionUser.email ?? "",
-        photo: enhancePhotoUrl(oauthPhoto),
+        photo: enhancePhotoUrl(rawPhoto),
         firstname: oauthFullName,
         lastname: "",
         role: createdProfile.role ?? (meta.role as string) ?? "Developer",
