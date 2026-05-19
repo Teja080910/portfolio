@@ -3,6 +3,7 @@
 import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
+import { useRef, useEffect } from "react"
 import { ArrowDown, Award, BookOpen, Briefcase, Code2, Cpu, FolderKanban, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -12,6 +13,7 @@ type HeroProps = {
 }
 
 export default function Hero({ isReadOnly = false }: HeroProps) {
+  const marqueeRef = useRef<HTMLDivElement>(null)
   const user = useStore((state) => state.user)
   const projects = useStore((state) => state.projects)
   const experience = useStore((state) => state.experience)
@@ -79,57 +81,61 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     { top: "85%", left: "20%", angle: 60, width: "40%", delay: 8 },
   ]
 
+  useEffect(() => {
+    const el = marqueeRef.current
+    if (!el) return
+    let animationId: number
+    let scrollAmount = 0
+    const speed = 0.5
+
+    const scroll = () => {
+      if (el.dataset.paused === "true") {
+        animationId = requestAnimationFrame(scroll)
+        return
+      }
+      scrollAmount += speed
+      if (scrollAmount >= el.scrollWidth / 2) {
+        scrollAmount = 0
+      }
+      el.scrollLeft = scrollAmount
+      animationId = requestAnimationFrame(scroll)
+    }
+
+    animationId = requestAnimationFrame(scroll)
+    return () => cancelAnimationFrame(animationId)
+  }, [])
+
   return (
     <section id="user" className="relative min-h-screen overflow-hidden pt-24">
       {floatingOrbs.map((orb) => (
-        <motion.div
+        <div
           key={orb.pos}
           className={`pointer-events-none absolute ${orb.pos} ${orb.size} rounded-full ${orb.color} blur-[100px]`}
-          animate={{
-            x: [0, 60, -40, 80, 0],
-            y: [0, -80, 50, -60, 0],
-            scale: [1, 1.15, 0.9, 1.1, 1],
-          }}
-          transition={{
-            duration: orb.duration,
-            delay: orb.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
         />
       ))}
 
-      <motion.div
-        className="pointer-events-none absolute inset-0 grid-pattern"
-        animate={{ opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
+      <div className="pointer-events-none absolute inset-0 grid-pattern opacity-30" />
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-background/30" />
 
       {particles.map((p) => (
-        <motion.div
+        <div
           key={p.id}
           className="pointer-events-none absolute rounded-full bg-primary/30 dark:bg-primary/40"
-          animate={{
-            y: [0, -30 - p.driftY, 10, -20 + p.driftY, 0],
-            x: [0, p.driftX, -p.driftX / 2, p.driftX / 2, 0],
-            opacity: [0, 0.8, 0.3, 0.6, 0],
-            scale: [0, 1, 0.6, 0.8, 0],
-          }}
-          transition={{
-            duration: p.duration,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            opacity: 0.5,
           }}
         />
       ))}
 
       {gradientLines.map((line) => (
-        <motion.div
+        <div
           key={line.top}
-          className="pointer-events-none absolute h-[2px]"
+          className="pointer-events-none absolute h-[2px] opacity-20"
           style={{
             top: line.top,
             left: line.left,
@@ -137,16 +143,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
             width: line.width,
             rotate: `${line.angle}deg`,
             background: "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.6), hsl(var(--primary) / 0.4), transparent)",
-          }}
-          animate={{
-            opacity: [0, 0.8, 1, 0.8, 0],
-            scaleX: [0.2, 0.7, 1, 0.7, 0.2],
-          }}
-          transition={{
-            duration: 6,
-            delay: line.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
           }}
         />
       ))}
@@ -368,12 +364,13 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
         </div>
       </div>
 
-      {/* Stats cards — auto scroll */}
-      <div className="mx-auto mt-12 w-full max-w-7xl overflow-hidden px-6">
+      {/* Stats cards — auto scroll + manual scroll */}
+      <div className="mx-auto mt-12 w-full max-w-7xl px-6">
         <div
-          className="flex gap-4 marquee-track"
-          onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = "paused")}
-          onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = "running")}
+          ref={marqueeRef}
+          className="flex gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          onMouseEnter={() => { if (marqueeRef.current) marqueeRef.current.dataset.paused = "true" }}
+          onMouseLeave={() => { if (marqueeRef.current) marqueeRef.current.dataset.paused = "false" }}
         >
           {[...cardsData, ...cardsData].map((card, index) => {
             const Icon = card.icon

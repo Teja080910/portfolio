@@ -21,26 +21,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const pdfBuffer = Buffer.from(fileBase64, 'base64');
-    
-    // Robustly bypass Turbopack require rewriting
-    const pdfParseModule = eval("require('pdf-parse')");
-    let parseFunc = pdfParseModule;
-    if (typeof parseFunc !== 'function') {
-      parseFunc = pdfParseModule.default || pdfParseModule.PDFParse;
-    }
-    
-    if (typeof parseFunc !== 'function') {
-      throw new Error('Failed to resolve pdf-parse function. Exports: ' + Object.keys(pdfParseModule).join(', '));
-    }
 
     let pdfData;
     try {
-      if (parseFunc.prototype && parseFunc.prototype.parse) {
-        const p = new parseFunc();
-        pdfData = await p.parse(pdfBuffer);
-      } else {
-        pdfData = await parseFunc(pdfBuffer);
-      }
+      const pdfParse = (await import('pdf-parse')).default;
+      pdfData = await pdfParse(pdfBuffer);
     } catch (e: unknown) {
       throw new Error('PDF parsing error: ' + (e instanceof Error ? e.message : String(e)));
     }
