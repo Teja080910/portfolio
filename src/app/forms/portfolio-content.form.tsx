@@ -831,8 +831,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                 type="button"
                 onClick={() =>
                   setAboutHighlights((prev) => [
-                    ...prev,
                     { id: createId(), title: "", description: "", icon: "compass", show: true },
+                    ...prev,
                   ])
                 }
                 className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
@@ -1036,12 +1036,12 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Skills</h3>
             <button
               type="button"
-              onClick={() =>
-                setSkillsDraft((prev) => [
-                  ...prev,
-                  { id: createId(), person: user.id || "", skilltype: "", skills: [], description: "", show: true },
-                ])
-              }
+                onClick={() =>
+                  setSkillsDraft((prev) => [
+                    { id: createId(), person: user.id || "", skilltype: "", skills: [], description: "", show: true },
+                    ...prev,
+                  ])
+                }
               className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
             >
               <Plus className="h-4 w-4" />
@@ -1389,7 +1389,6 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
               type="button"
               onClick={() =>
                 setProjectsDraft((prev) => [
-                  ...prev,
                   {
                     id: createId(),
                     person: user.id || "",
@@ -1406,12 +1405,70 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     projectType: "",
                     show: true,
                   },
+                  ...prev,
                 ])
               }
               className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
             >
               <Plus className="h-4 w-4" />
               Add Project
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setExperienceDraft((prev) => [
+                  {
+                    id: createId(),
+                    person: user.id || "",
+                    type: "",
+                    location: "",
+                    duration: "",
+                    role: "",
+                    decription: "",
+                    show: true,
+                  },
+                  ...prev,
+                ])
+              }
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setEducationDraft((prev) => [
+                  {
+                    id: createId(),
+                    person: user.id || "",
+                    name: "",
+                    duration: "",
+                    course: "",
+                    branch: "",
+                    keyachivements: "",
+                    show: true,
+                  },
+                  ...prev,
+                ])
+              }
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setCertificatesDraft((prev) => [
+                  { id: createId(), person: user.id || "", name: "", duration: "", link: "", photo: "", show: true },
+                  ...prev,
+                ])
+              }
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+            >
+              <Plus className="h-4 w-4" />
+              Add Certificate
             </button>
           </div>
           <div className="space-y-4">

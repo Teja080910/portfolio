@@ -32,6 +32,14 @@ export default function AuthActions() {
   const setProjects = useStore((state) => state.setProjects)
   const setCertificate = useStore((state) => state.setCertificate)
   const addUser = useStore((state) => state.addUser)
+  const skills = useStore((state) => state.skills)
+  const experience = useStore((state) => state.experience)
+  const education = useStore((state) => state.education)
+  const projects = useStore((state) => state.projects)
+  const certificates = useStore((state) => state.certificate)
+  const hasPortfolioData = [skills, experience, education, projects, certificates].some(
+    (arr) => Array.isArray(arr) && arr.length > 0
+  )
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -149,6 +157,7 @@ export default function AuthActions() {
 
       const data = await response.json()
       const person = user.id || "temp-id"
+      const { skills: currentSkills, experience: currentExperience, education: currentEducation, projects: currentProjects, certificate: currentCertificates } = useStore.getState()
 
       const parsedAbout = data.about || {}
       const aboutPayload = {
@@ -160,11 +169,24 @@ export default function AuthActions() {
         highlights: about?.highlights || [],
       }
 
-      const skillsPayload = mapSkillsContent(data.skills, person)
-      const experiencePayload = mapExperienceContent(data.experience, person)
-      const educationPayload = mapEducationContent(data.education, person)
-      const projectsPayload = mapProjectsContent(data.projects, person)
-      const certificatesPayload = mapCertificatesContent(data.certificates, person)
+      const mergeByKey = <T extends { id: string }>(current: T[], parsed: T[], matchKey: keyof T): T[] => {
+        const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase()
+        const parsedKeys = new Set(parsed.map((p) => normalize(p[matchKey])))
+        const kept = current.filter((c) => !parsedKeys.has(normalize(c[matchKey])))
+        return [...kept, ...parsed]
+      }
+
+      const parsedSkills = mapSkillsContent(data.skills, person)
+      const parsedExperience = mapExperienceContent(data.experience, person)
+      const parsedEducation = mapEducationContent(data.education, person)
+      const parsedProjects = mapProjectsContent(data.projects, person)
+      const parsedCertificates = mapCertificatesContent(data.certificates, person)
+
+      const skillsPayload = mergeByKey(currentSkills, parsedSkills, "skilltype")
+      const experiencePayload = mergeByKey(currentExperience, parsedExperience, "type")
+      const educationPayload = mergeByKey(currentEducation, parsedEducation, "name")
+      const projectsPayload = mergeByKey(currentProjects, parsedProjects, "name")
+      const certificatesPayload = mergeByKey(currentCertificates, parsedCertificates, "name")
 
       const { error } = await supabase.from("portfolio_contents").upsert(
         {
@@ -303,6 +325,7 @@ export default function AuthActions() {
             >
               <ChevronLeft className="h-4 w-4 rotate-180" />
             </button>
+            {!hasPortfolioData && (
             <label
               className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-cyan-50/80 px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
               title="Auto-fill from Resume"
@@ -317,6 +340,7 @@ export default function AuthActions() {
                 disabled={isExtracting}
               />
             </label>
+            )}
 
             <div className="hidden items-center gap-2 rounded-full bg-slate-100/80 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 sm:flex">
               <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-600 to-teal-500 text-[11px] font-semibold text-white shadow-sm">
