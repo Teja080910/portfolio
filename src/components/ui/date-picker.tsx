@@ -23,8 +23,8 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 export default function DatePicker({ value, onChange, className, placeholder = "Select a date" }: DatePickerProps) {
-  const selected = value ? new Date(value + "T00:00:00") : null
   const [open, setOpen] = useState(false)
+  const selected = useMemo(() => value ? new Date(value + "T00:00:00") : null, [value])
   const [viewYear, setViewYear] = useState(selected?.getFullYear() || new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? new Date().getMonth())
   const ref = useRef<HTMLDivElement>(null)

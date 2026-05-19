@@ -2,7 +2,7 @@
 
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { ExternalLink, GitBranch, PencilLine, ArrowUpRight, Code2, Calendar, X } from "lucide-react"
+import { GitBranch, PencilLine, ArrowUpRight, Code2, Calendar, X } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
