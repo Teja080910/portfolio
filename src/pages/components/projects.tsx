@@ -18,7 +18,7 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
   const editProjectsHref = `/u/${encodeURIComponent(username || "me")}/edit-projects`
-  const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.skills.length))
+  const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate || item.skills.length))
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
 
   if (isReadOnly && projects.length === 0) {
@@ -94,9 +94,9 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                       </div>
 
                       {/* Duration */}
-                      {project.duration && (
+                      {(project.startDate || project.endDate) && (
                         <p className="mt-2 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
-                          {project.duration}
+                          {project.startDate}{project.startDate && project.endDate && " — "}{project.endDate}
                         </p>
                       )}
 

@@ -134,6 +134,8 @@ const mapProjectsContent = (value: unknown, userId: string): IProjects[] =>
             name: toString(item.name),
             description: toString(item.description),
             duration: toString(item.duration),
+            startDate: toString(item.startDate),
+            endDate: toString(item.endDate),
             gitlink: toString(item.gitlink),
             weblink: toString(item.weblink),
             logo,
@@ -243,7 +245,7 @@ export default function PortfolioPage() {
 
   const hasExperienceContent = experience.some((item) => item.show && (item.type || item.role || item.decription))
   const hasSkillsContent = skills.some((item) => item.show && (item.skilltype || item.skills.length || item.description))
-  const hasProjectsContent = projects.some((item) => item.show && (item.name || item.description || item.duration))
+  const hasProjectsContent = projects.some((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate))
   const hasCertificateContent = certificate.some((item) => item.show && (item.name || item.duration || item.link))
   const hasEducationContent = education.some((item) => item.show && (item.name || item.course || item.branch || item.keyachivements))
   const hasContactContent = Boolean(user.email || user.phone || user.firstname || user.lastname || user.username || user.role)

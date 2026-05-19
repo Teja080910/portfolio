@@ -195,7 +195,7 @@ body {
   }
 
   .dark .project-type-badge {
-    @apply border-primary/40 bg-primary/15 text-primary-foreground/90 hover:bg-primary/25;
+    @apply border-primary/40 bg-primary/25 text-white;
   }
 
   /* Social link button */

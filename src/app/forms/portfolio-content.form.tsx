@@ -658,6 +658,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           name: item.name.trim(),
           description: item.description.trim(),
           duration: item.duration.trim(),
+          startDate: item.startDate?.trim() || "",
+          endDate: item.endDate?.trim() || "",
           gitlink: item.gitlink.trim(),
           weblink: item.weblink.trim(),
           logo: normalizedPhotos[0] ?? item.logo.trim(),
@@ -1394,6 +1396,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     name: "",
                     description: "",
                     duration: "",
+                    startDate: "",
+                    endDate: "",
                     gitlink: "",
                     weblink: "",
                     logo: "",
@@ -1446,9 +1450,17 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     placeholder="Project name"
                   />
                   <DatePicker
-                    value={item.duration}
+                    value={item.startDate}
+                    placeholder="Start date"
                     onChange={(value) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, duration: value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, startDate: value } : row)))
+                    }
+                  />
+                  <DatePicker
+                    value={item.endDate}
+                    placeholder="End date"
+                    onChange={(value) =>
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, endDate: value } : row)))
                     }
                   />
                   <input

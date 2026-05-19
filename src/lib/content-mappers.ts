@@ -112,6 +112,8 @@ export const mapProjectsContent = (value: unknown, person: string): IProjects[] 
       name: asString(raw.name),
       description: asString(raw.description),
       duration: asString(raw.duration),
+      startDate: asString(raw.startDate),
+      endDate: asString(raw.endDate),
       gitlink: asString(raw.gitlink),
       weblink: asString(raw.weblink),
       logo: asString(raw.logo),

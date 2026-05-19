@@ -76,6 +76,8 @@ export interface IProjects {
     name: string;
     description: string;
     duration: string;
+    startDate: string;
+    endDate: string;
     gitlink: string;
     weblink: string;
     logo: string;

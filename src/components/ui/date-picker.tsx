@@ -8,6 +8,7 @@ type DatePickerProps = {
   value: string
   onChange: (value: string) => void
   className?: string
+  placeholder?: string
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -21,7 +22,7 @@ function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay()
 }
 
-export default function DatePicker({ value, onChange, className }: DatePickerProps) {
+export default function DatePicker({ value, onChange, className, placeholder = "Select a date" }: DatePickerProps) {
   const selected = value ? new Date(value + "T00:00:00") : null
   const [open, setOpen] = useState(false)
   const [viewYear, setViewYear] = useState(selected?.getFullYear() || new Date().getFullYear())
@@ -109,7 +110,7 @@ export default function DatePicker({ value, onChange, className }: DatePickerPro
           !displayValue && "text-slate-400 dark:text-slate-500",
         )}
       >
-        {displayValue || "Select a date"}
+        {displayValue || placeholder}
       </button>
 
       {open && (
