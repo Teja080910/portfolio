@@ -13,13 +13,38 @@ type HeroProps = {
 }
 
 export default function Hero({ isReadOnly = false }: HeroProps) {
-  const marqueeRef = useRef<HTMLDivElement>(null)
   const user = useStore((state) => state.user)
   const projects = useStore((state) => state.projects)
   const experience = useStore((state) => state.experience)
   const education = useStore((state) => state.education)
   const skills = useStore((state) => state.skills)
   const certificate = useStore((state) => state.certificate)
+
+  const marqueeRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = marqueeRef.current
+    if (!el) return
+    let animationId: number
+    let scrollAmount = 0
+    const speed = 0.5
+
+    const scroll = () => {
+      if (el.dataset.paused === "true") {
+        animationId = requestAnimationFrame(scroll)
+        return
+      }
+      scrollAmount += speed
+      if (scrollAmount >= el.scrollWidth / 2) {
+        scrollAmount = 0
+      }
+      el.scrollLeft = scrollAmount
+      animationId = requestAnimationFrame(scroll)
+    }
+
+    animationId = requestAnimationFrame(scroll)
+    return () => cancelAnimationFrame(animationId)
+  }, [])
 
   if (!user?.id) {
     return null
@@ -80,30 +105,6 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     { top: "60%", right: "0%", angle: -30, width: "45%", delay: 4 },
     { top: "85%", left: "20%", angle: 60, width: "40%", delay: 8 },
   ]
-
-  useEffect(() => {
-    const el = marqueeRef.current
-    if (!el) return
-    let animationId: number
-    let scrollAmount = 0
-    const speed = 0.5
-
-    const scroll = () => {
-      if (el.dataset.paused === "true") {
-        animationId = requestAnimationFrame(scroll)
-        return
-      }
-      scrollAmount += speed
-      if (scrollAmount >= el.scrollWidth / 2) {
-        scrollAmount = 0
-      }
-      el.scrollLeft = scrollAmount
-      animationId = requestAnimationFrame(scroll)
-    }
-
-    animationId = requestAnimationFrame(scroll)
-    return () => cancelAnimationFrame(animationId)
-  }, [])
 
   return (
     <section id="user" className="relative min-h-screen overflow-hidden pt-24">

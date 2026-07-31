@@ -250,8 +250,6 @@ export const authProvider: AuthProvider = {
             const currentStoreUser = useStore.getState().user;
             const oauthPhoto = (data.user.user_metadata?.avatar_url as string | undefined) || (data.user.user_metadata?.picture as string | undefined);
             const metadata = data.user.user_metadata ?? {};
-            const oauthGivenName = (metadata.given_name as string | undefined) || "";
-            const oauthFamilyName = (metadata.family_name as string | undefined) || "";
 
             if (
                 currentStoreUser?.id !== data.user.id ||
