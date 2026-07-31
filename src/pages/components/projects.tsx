@@ -21,7 +21,6 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
   const projectsStore = useStore((state) => state.projects)
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
-  const addProject = useStore((state) => state.addProject)
   const editProjectsHref = `/u/${encodeURIComponent(username || "me")}/edit-projects`
   const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate || item.skills.length))
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
@@ -73,8 +72,6 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
         person: viewerUserId,
       }
 
-      addProject(newProject)
-
       const { data: existing } = await supabase
         .from("portfolio_contents")
         .select("projects")
@@ -91,11 +88,11 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
 
       setCopiedIds((prev) => new Set(prev).add(project.id))
     } catch {
-      // silently fail, project is added locally
+      // silently fail
     } finally {
       setCopyingId(null)
     }
-  }, [viewerUserId, addProject])
+  }, [viewerUserId])
 
   if (isReadOnly && projects.length === 0) {
     return null

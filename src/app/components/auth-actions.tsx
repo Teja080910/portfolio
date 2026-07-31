@@ -37,7 +37,7 @@ export default function AuthActions() {
   const education = useStore((state) => state.education)
   const projects = useStore((state) => state.projects)
   const certificates = useStore((state) => state.certificate)
-  const hasPortfolioData = [skills, experience, education, projects, certificates].some(
+  const hasAllPortfolioData = [skills, experience, education, projects, certificates].every(
     (arr) => Array.isArray(arr) && arr.length > 0
   )
 
@@ -169,12 +169,13 @@ export default function AuthActions() {
         highlights: about?.highlights || [],
       }
 
-      const mergeByKey = <T extends { id: string }>(current: T[], parsed: T[], matchKey: keyof T): T[] => {
-        const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase()
-        const parsedKeys = new Set(parsed.map((p) => normalize(p[matchKey])))
-        const kept = current.filter((c) => !parsedKeys.has(normalize(c[matchKey])))
-        return [...kept, ...parsed]
-      }
+      // Never drop existing entries here: parsed rows are appended alongside whatever the
+      // user already has, with fresh ids so nothing collides. If a row turns out to be an
+      // unwanted duplicate, the user removes it themselves from the portfolio editor.
+      const appendParsed = <T extends { id: string }>(current: T[], parsed: T[]): T[] => [
+        ...current,
+        ...parsed.map((item) => ({ ...item, id: createId() })),
+      ]
 
       const parsedSkills = mapSkillsContent(data.skills, person)
       const parsedExperience = mapExperienceContent(data.experience, person)
@@ -182,11 +183,11 @@ export default function AuthActions() {
       const parsedProjects = mapProjectsContent(data.projects, person)
       const parsedCertificates = mapCertificatesContent(data.certificates, person)
 
-      const skillsPayload = mergeByKey(currentSkills, parsedSkills, "skilltype")
-      const experiencePayload = mergeByKey(currentExperience, parsedExperience, "type")
-      const educationPayload = mergeByKey(currentEducation, parsedEducation, "name")
-      const projectsPayload = mergeByKey(currentProjects, parsedProjects, "name")
-      const certificatesPayload = mergeByKey(currentCertificates, parsedCertificates, "name")
+      const skillsPayload = appendParsed(currentSkills, parsedSkills)
+      const experiencePayload = appendParsed(currentExperience, parsedExperience)
+      const educationPayload = appendParsed(currentEducation, parsedEducation)
+      const projectsPayload = appendParsed(currentProjects, parsedProjects)
+      const certificatesPayload = appendParsed(currentCertificates, parsedCertificates)
 
       const { error } = await supabase.from("portfolio_contents").upsert(
         {
@@ -325,7 +326,7 @@ export default function AuthActions() {
             >
               <ChevronLeft className="h-4 w-4 rotate-180" />
             </button>
-            {!hasPortfolioData && (
+            {!hasAllPortfolioData && (
             <label
               className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-cyan-50/80 px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-500/10 dark:text-cyan-300 ${isExtracting ? "opacity-75 cursor-wait" : ""}`}
               title="Auto-fill from Resume"
