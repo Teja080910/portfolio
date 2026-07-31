@@ -1,19 +1,23 @@
 "use client"
 
 import { useStore } from "@/lib/store"
+import { supabase } from "@/lib/db"
 import { motion } from "framer-motion"
-import { GitBranch, PencilLine, ArrowUpRight, Code2, Calendar, X } from "lucide-react"
+import { GitBranch, PencilLine, ArrowUpRight, Code2, Calendar, X, Copy, Check } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 import ImageLightbox from "@/components/ui/image-lightbox"
+import { IProjects } from "@/lib/interfaces"
+import { createId } from "@/lib/content-mappers"
 
 type ProjectsProps = {
   isReadOnly?: boolean
+  viewerUserId?: string
 }
 
-export default function Projects({ isReadOnly = false }: ProjectsProps) {
+export default function Projects({ isReadOnly = false, viewerUserId = "" }: ProjectsProps) {
   const projectsStore = useStore((state) => state.projects)
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
@@ -23,6 +27,8 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([])
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [descModal, setDescModal] = useState<string | null>(null)
+  const [copiedIds, setCopiedIds] = useState<Set<string>>(new Set())
+  const [copyingId, setCopyingId] = useState<string | null>(null)
   const openDescModal = (desc: string) => {
     setDescModal(desc)
     document.body.style.overflow = "hidden"
@@ -55,6 +61,38 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
     setLightboxPhotos([])
     setLightboxIndex(0)
   }
+
+  const handleCopyProject = useCallback(async (project: IProjects) => {
+    if (!viewerUserId) return
+    setCopyingId(project.id)
+    try {
+      const newProject: IProjects = {
+        ...project,
+        id: createId(),
+        person: viewerUserId,
+      }
+
+      const { data: existing } = await supabase
+        .from("portfolio_contents")
+        .select("projects")
+        .eq("user_id", viewerUserId)
+        .maybeSingle()
+
+      const existingProjects = Array.isArray(existing?.projects) ? existing.projects : []
+      const updatedProjects = [...existingProjects, newProject]
+
+      await supabase.from("portfolio_contents").upsert(
+        { user_id: viewerUserId, projects: updatedProjects },
+        { onConflict: "user_id" },
+      )
+
+      setCopiedIds((prev) => new Set(prev).add(project.id))
+    } catch {
+      // silently fail
+    } finally {
+      setCopyingId(null)
+    }
+  }, [viewerUserId])
 
   if (isReadOnly && projects.length === 0) {
     return null
@@ -208,6 +246,24 @@ export default function Projects({ isReadOnly = false }: ProjectsProps) {
                             <GitBranch className="h-3.5 w-3.5" />
                             Source
                           </a>
+                        )}
+                        {isReadOnly && viewerUserId && (
+                          copiedIds.has(project.id) ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400">
+                              <Check className="h-3.5 w-3.5" />
+                              Copied
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={copyingId === project.id}
+                              onClick={() => handleCopyProject(project)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 bg-secondary/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                              {copyingId === project.id ? "Copying..." : "Copy to My Portfolio"}
+                            </button>
+                          )
                         )}
                         {project.weblink && (
                           <a

@@ -215,6 +215,7 @@ export default function PortfolioPage() {
 
   const [isNotFound, setIsNotFound] = useState(false)
   const [viewerUsername, setViewerUsername] = useState("")
+  const [viewerUserId, setViewerUserId] = useState("")
   const [hydrated, setHydrated] = useState(false)
   const [isDataReady, setIsDataReady] = useState(false)
   const isSyncingSession = useRef(false)
@@ -426,6 +427,7 @@ export default function PortfolioPage() {
         }
 
         setViewerUsername(sessionUsername)
+        setViewerUserId(sessionUser?.id || "")
 
         if (sessionUsername && sessionUsername.toLowerCase() === normalizedRouteUsername) {
           // Session user is viewing their own portfolio — load full data
@@ -437,6 +439,7 @@ export default function PortfolioPage() {
 
         if (isActive) {
           setViewerUsername(sessionUsername)
+          setViewerUserId(sessionUser?.id || "")
           // Mark data as ready only after ALL data (user + portfolio content) is loaded
           // This prevents the intermediate state where user.id is set but content hasn't arrived
           setIsDataReady(true)
@@ -557,7 +560,7 @@ export default function PortfolioPage() {
       {showAbout && <About isReadOnly={isReadOnlyView} />}
       {showExperience && <Experience isReadOnly={isReadOnlyView} />}
       {showSkills && <Skills isReadOnly={isReadOnlyView} />}
-      {showProjects && <Projects isReadOnly={isReadOnlyView} />}
+      {showProjects && <Projects isReadOnly={isReadOnlyView} viewerUserId={viewerUserId} />}
       {showCertificate && <Certificate isReadOnly={isReadOnlyView} />}
       {showEducation && <Education isReadOnly={isReadOnlyView} />}
       {showContact && <Contact isReadOnly={isReadOnlyView} />}

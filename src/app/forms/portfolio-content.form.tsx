@@ -187,6 +187,12 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const setCertificate = useStore((state) => state.setCertificate)
   const setUser = useStore((state) => state.setUser)
   const hasHydratedRef = useRef(false)
+  const skillSyncDoneRef = useRef(false)
+  const projectSyncDoneRef = useRef(false)
+  const experienceSyncDoneRef = useRef(false)
+  const educationSyncDoneRef = useRef(false)
+  const certificateSyncDoneRef = useRef(false)
+  const initialSyncRef = useRef(false)
 
   const [aboutHeading, setAboutHeading] = useState(about.type || "")
   const [aboutBody, setAboutBody] = useState((about.list || []).join("\n"))
@@ -202,16 +208,39 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         ],
   )
 
-  const [skills, setSkillsDraft] = useState<ISkills[]>(() =>
-    skillsStore.map((item) => ({
+  const [skills, setSkillsDraft] = useState<ISkills[]>(() => {
+    if (skillsStore.length > 0) {
+      skillSyncDoneRef.current = true
+    }
+    return skillsStore.map((item) => ({
       ...item,
       skills: normalizeSkillValues(item.skills),
-    })),
-  )
-  const [projects, setProjectsDraft] = useState<IProjects[]>(projectsStore)
-  const [experience, setExperienceDraft] = useState<IExperience[]>(experienceStore)
-  const [education, setEducationDraft] = useState<IEducation[]>(educationStore)
-  const [certificates, setCertificatesDraft] = useState<ICertificate[]>(certificateStore)
+    }))
+  })
+  const [projects, setProjectsDraft] = useState<IProjects[]>(() => {
+    if (projectsStore.length > 0) {
+      projectSyncDoneRef.current = true
+    }
+    return projectsStore
+  })
+  const [experience, setExperienceDraft] = useState<IExperience[]>(() => {
+    if (experienceStore.length > 0) {
+      experienceSyncDoneRef.current = true
+    }
+    return experienceStore
+  })
+  const [education, setEducationDraft] = useState<IEducation[]>(() => {
+    if (educationStore.length > 0) {
+      educationSyncDoneRef.current = true
+    }
+    return educationStore
+  })
+  const [certificates, setCertificatesDraft] = useState<ICertificate[]>(() => {
+    if (certificateStore.length > 0) {
+      certificateSyncDoneRef.current = true
+    }
+    return certificateStore
+  })
   const [notice, setNotice] = useState<Notice>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingProjectPhotos, setIsUploadingProjectPhotos] = useState(false)
@@ -427,12 +456,24 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         return
       }
 
+      const mappedSkills = mapSkillsContent(portfolioContent.skills, sessionUser.id)
+      const mappedProjects = mapProjectsContent(portfolioContent.projects, sessionUser.id)
+      const mappedExperience = mapExperienceContent(portfolioContent.experience, sessionUser.id)
+      const mappedEducation = mapEducationContent(portfolioContent.education, sessionUser.id)
+      const mappedCertificates = mapCertificatesContent(portfolioContent.certificates, sessionUser.id)
+
       setAbout(mapAboutContent(portfolioContent.about, sessionUser.id))
-      setSkills(mapSkillsContent(portfolioContent.skills, sessionUser.id))
-      setProjects(mapProjectsContent(portfolioContent.projects, sessionUser.id))
-      setExperience(mapExperienceContent(portfolioContent.experience, sessionUser.id))
-      setEducation(mapEducationContent(portfolioContent.education, sessionUser.id))
-      setCertificate(mapCertificatesContent(portfolioContent.certificates, sessionUser.id))
+      setSkills(mappedSkills)
+      setProjects(mappedProjects)
+      setExperience(mappedExperience)
+      setEducation(mappedEducation)
+      setCertificate(mappedCertificates)
+
+      skillSyncDoneRef.current = true
+      projectSyncDoneRef.current = true
+      experienceSyncDoneRef.current = true
+      educationSyncDoneRef.current = true
+      certificateSyncDoneRef.current = true
     }
 
     void hydratePortfolioContent()
@@ -456,21 +497,6 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           ],
     )
   }, [about])
-
-  useEffect(() => {
-    setSkillsDraft(
-      skillsStore.map((item) => ({
-        ...item,
-        skills: normalizeSkillValues(item.skills),
-      })),
-    )
-    setSkillValueInputDrafts({})
-  }, [skillsStore])
-
-  useEffect(() => {
-    setProjectsDraft(projectsStore)
-  }, [projectsStore])
-
   const handleProjectPhotoUpload = async (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     const person = user.id || ""
@@ -579,18 +605,6 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       }),
     )
   }
-
-  useEffect(() => {
-    setExperienceDraft(experienceStore)
-  }, [experienceStore])
-
-  useEffect(() => {
-    setEducationDraft(educationStore)
-  }, [educationStore])
-
-  useEffect(() => {
-    setCertificatesDraft(certificateStore)
-  }, [certificateStore])
 
   const saveContent = async () => {
     const person = user.id || ""
@@ -829,12 +843,14 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
               <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">About Right Cards</h4>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setAboutHighlights((prev) => [
                     { id: createId(), title: "", description: "", icon: "compass", show: true },
                     ...prev,
                   ])
-                }
+                  const el = document.getElementById("edit-about")
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }}
                 className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
               >
                 <Plus className="h-4 w-4" />
@@ -1036,12 +1052,15 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Skills</h3>
             <button
               type="button"
-                onClick={() =>
+                onClick={() => {
+                  skillSyncDoneRef.current = true
                   setSkillsDraft((prev) => [
                     { id: createId(), person: user.id || "", skilltype: "", skills: [], description: "", show: true },
                     ...prev,
                   ])
-                }
+                  const el = document.getElementById("edit-skills")
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
             >
               <Plus className="h-4 w-4" />
@@ -1387,89 +1406,35 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Projects</h3>
             <button
               type="button"
-              onClick={() =>
-                setProjectsDraft((prev) => [
-                  {
-                    id: createId(),
-                    person: user.id || "",
-                    name: "",
-                    description: "",
-                    duration: "",
-                    startDate: "",
-                    endDate: "",
-                    gitlink: "",
-                    weblink: "",
-                    logo: "",
-                    photos: [],
-                    skills: [],
-                    projectType: "",
-                    show: true,
-                  },
-                  ...prev,
-                ])
-              }
+                onClick={() => {
+                  setProjectsDraft((prev) => [
+                    {
+                      id: createId(),
+                      person: user.id || "",
+                      name: "",
+                      description: "",
+                      duration: "",
+                      startDate: "",
+                      endDate: "",
+                      gitlink: "",
+                      weblink: "",
+                      logo: "",
+                      projectType: "",
+                      photos: [],
+                      skills: [],
+                      show: true,
+                    },
+                    ...prev,
+                  ])
+                const el = document.getElementById("edit-projects")
+                el?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
             >
               <Plus className="h-4 w-4" />
               Add Project
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                setExperienceDraft((prev) => [
-                  {
-                    id: createId(),
-                    person: user.id || "",
-                    type: "",
-                    location: "",
-                    duration: "",
-                    role: "",
-                    decription: "",
-                    show: true,
-                  },
-                  ...prev,
-                ])
-              }
-              className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
-            >
-              <Plus className="h-4 w-4" />
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setEducationDraft((prev) => [
-                  {
-                    id: createId(),
-                    person: user.id || "",
-                    name: "",
-                    duration: "",
-                    course: "",
-                    branch: "",
-                    keyachivements: "",
-                    show: true,
-                  },
-                  ...prev,
-                ])
-              }
-              className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
-            >
-              <Plus className="h-4 w-4" />
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setCertificatesDraft((prev) => [
-                  { id: createId(), person: user.id || "", name: "", duration: "", link: "", photo: "", show: true },
-                  ...prev,
-                ])
-              }
-              className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
-            >
-              <Plus className="h-4 w-4" />
-              Add Certificate
-            </button>
+
           </div>
           <div className="space-y-4">
             {projects.map((item, index) => (
@@ -1623,21 +1588,18 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         </div>}
 
         {(showExperienceEditor || showEducationEditor || showCertificateEditor) && (
-          <div className={`grid gap-8 ${showEducationEditor || showCertificateEditor ? "lg:grid-cols-2" : ""}`}>
+          <div className="grid gap-8">
           {showExperienceEditor && (
             <div
               id="edit-experience"
-              className={`glass-card scroll-mt-28 p-6 ${
-                !showEducationEditor && !showCertificateEditor ? "lg:col-span-full" : ""
-              }`}
+              className="glass-card scroll-mt-28 p-6"
             >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Experience</h3>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setExperienceDraft((prev) => [
-                    ...prev,
                     {
                       id: createId(),
                       person: user.id || "",
@@ -1648,8 +1610,11 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       decription: "",
                       show: true,
                     },
+                    ...prev,
                   ])
-                }
+                  const el = document.getElementById("edit-experience")
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }}
                 className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
               >
                 <Plus className="h-4 w-4" />
@@ -1736,9 +1701,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
               <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Education</h3>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setEducationDraft((prev) => [
-                    ...prev,
                     {
                       id: createId(),
                       person: user.id || "",
@@ -1749,8 +1713,11 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       keyachivements: "",
                       show: true,
                     },
+                    ...prev,
                   ])
-                }
+                  const el = document.getElementById("edit-education")
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }}
                 className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
               >
                 <Plus className="h-4 w-4" />
@@ -1782,7 +1749,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       Delete
                     </button>
                   </div>
-                  <div className="grid gap-3">
+                  <div className="grid gap-3 md:grid-cols-2">
                     <input
                       value={item.name}
                       onChange={(event) =>
@@ -1823,7 +1790,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         )
                       }
                       rows={4}
-                      className={inputClassName}
+                      className={`${inputClassName} md:col-span-2`}
                       placeholder="Key achievements"
                     />
                   </div>
@@ -1833,17 +1800,22 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           </div>}
 
           {showCertificateEditor && (
-            <div id="edit-certificate" className="glass-card scroll-mt-28 p-6">
+            <div
+              id="edit-certificate"
+              className="glass-card scroll-mt-28 p-6"
+            >
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Certificates</h3>
                 <button
                   type="button"
-                  onClick={() =>
-                    setCertificatesDraft((prev) => [
-                      ...prev,
-                      { id: createId(), person: user.id || "", name: "", duration: "", link: "", photo: "", show: true },
-                    ])
-                  }
+                onClick={() => {
+                  setCertificatesDraft((prev) => [
+                    { id: createId(), person: user.id || "", name: "", duration: "", link: "", photo: "", show: true },
+                    ...prev,
+                  ])
+                    const el = document.getElementById("edit-certificate")
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
                 >
                   <Plus className="h-4 w-4" />
