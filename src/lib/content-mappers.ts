@@ -21,8 +21,12 @@ export const asStringArray = (value: unknown) =>
         .filter(Boolean)
     : []
 
-export const normalizeSkillValues = (values: string[]) => {
+export const normalizeSkillValues = (values: string[] | undefined) => {
   const normalized: string[] = []
+
+  if (!Array.isArray(values)) {
+    return normalized
+  }
 
   values
     .flatMap((value) => value.split(","))

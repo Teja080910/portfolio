@@ -22,7 +22,7 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
   const editProjectsHref = `/u/${encodeURIComponent(username || "me")}/edit-projects`
-  const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate || item.skills.length))
+  const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate || (item.skills && item.skills.length)))
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([])
   const [lightboxIndex, setLightboxIndex] = useState(0)
@@ -217,7 +217,7 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
                         </button>
                       )}
 
-                      {project.skills.length > 0 && (
+                      {project.skills && project.skills.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-1.5">
                           {project.skills.slice(0, 4).map((skill, skillIndex) => (
                             <span

@@ -130,7 +130,7 @@ const aboutPreviewIcons: Record<AboutHighlightIcon, typeof Compass> = {
 const inputClassName =
   "w-full rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3 text-sm text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/15 break-words [overflow-wrap:anywhere] dark:border-slate-700/80 dark:bg-slate-950/45 dark:text-slate-100 dark:placeholder:text-slate-500"
 
-const toCsv = (items: string[]) => items.join(", ")
+const toCsv = (items: string[] | undefined) => (items && Array.isArray(items) ? items.join(", ") : "")
 
 const fromCsv = (value: string) => normalizeSkillValues([value])
 
@@ -163,7 +163,7 @@ const isProjectConfigured = (project: IProjects) =>
       project.duration.trim() ||
       project.gitlink.trim() ||
       project.weblink.trim() ||
-      project.skills.length ||
+      (Array.isArray(project.skills) && project.skills.length) ||
         project.logo.trim() ||
         normalizeProjectPhotos(project).length,
   )
@@ -282,7 +282,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       return
     }
 
-    const nextSkills = [...row.skills, normalizedSuggestion]
+    const nextSkills = [...(row.skills || []), normalizedSuggestion]
     const dedupedSkills: string[] = []
 
     nextSkills.forEach((skill) => {
@@ -497,6 +497,33 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           ],
     )
   }, [about])
+
+  useEffect(() => {
+    setSkillsDraft(
+      skillsStore.map((item) => ({
+        ...item,
+        skills: normalizeSkillValues(item.skills),
+      })),
+    )
+    setSkillValueInputDrafts({})
+  }, [skillsStore])
+
+  useEffect(() => {
+    setProjectsDraft(projectsStore.map((item) => ({ ...item, skills: normalizeSkillValues(item.skills) })))
+  }, [projectsStore])
+
+  useEffect(() => {
+    setExperienceDraft(experienceStore)
+  }, [experienceStore])
+
+  useEffect(() => {
+    setEducationDraft(educationStore)
+  }, [educationStore])
+
+  useEffect(() => {
+    setCertificatesDraft(certificateStore)
+  }, [certificateStore])
+
   const handleProjectPhotoUpload = async (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     const person = user.id || ""
@@ -679,7 +706,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           logo: normalizedPhotos[0] ?? item.logo.trim(),
           projectType: item.projectType?.trim() || "",
           photos: normalizedPhotos,
-          skills: item.skills.map((skill) => skill.trim()).filter(Boolean),
+          skills: (item.skills || []).map((skill) => skill.trim()).filter(Boolean),
         }
       })
 

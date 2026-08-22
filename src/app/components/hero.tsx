@@ -57,7 +57,7 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
   const totalSkillCategories = skills.filter((s) => s.show).length
   const totalSkills = skills
     .filter((s) => s.show)
-    .reduce((count, s) => count + s.skills.length, 0)
+    .reduce((count, s) => count + (Array.isArray(s.skills) ? s.skills.length : 0), 0)
 
   const cardsData = [
     { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },

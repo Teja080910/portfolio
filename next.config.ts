@@ -29,6 +29,7 @@ if (supabaseUrl) {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   images: {
     remotePatterns,
   },
