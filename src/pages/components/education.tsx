@@ -97,7 +97,7 @@ export default function Education({ isReadOnly = false }: EducationProps) {
                         </h4>
                         <ul className="space-y-2">
                           {(edu.keyachivements || "")
-                            .split(/\n|\.|•/)
+                            .split(/\n|;|•/)
                             .map((line) => line.trim())
                             .filter(Boolean)
                             .map((achievement, idx) => (

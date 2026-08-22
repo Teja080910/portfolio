@@ -21,6 +21,34 @@ export const asStringArray = (value: unknown) =>
         .filter(Boolean)
     : []
 
+export const parseProjectTypes = (projectType: string) =>
+  projectType
+    .split(/[,\s]+/)
+    .map((type) => type.trim())
+    .filter(Boolean)
+
+export const mapWeblinks = (raw: Record<string, unknown>) => {
+  if (Array.isArray(raw.weblinks)) {
+    const links = raw.weblinks
+      .filter((entry): entry is { type?: unknown; url?: unknown } => Boolean(entry) && typeof entry === "object")
+      .map((entry) => ({
+        type: asString(entry.type),
+        url: asString(entry.url),
+      }))
+      .filter((entry) => entry.url)
+    if (links.length > 0) {
+      return links
+    }
+  }
+
+  const singleUrl = asString(raw.weblink)
+  if (singleUrl) {
+    return [{ type: asString(raw.projectType), url: singleUrl }]
+  }
+
+  return []
+}
+
 export const normalizeSkillValues = (values: string[] | undefined) => {
   const normalized: string[] = []
 
@@ -120,11 +148,13 @@ export const mapProjectsContent = (value: unknown, person: string): IProjects[] 
       endDate: asString(raw.endDate),
       gitlink: asString(raw.gitlink),
       weblink: asString(raw.weblink),
+      weblinks: mapWeblinks(raw),
       logo: asString(raw.logo),
       photos,
       skills: asStringArray(raw.skills),
       show: asBoolean(raw.show, true),
       projectType: asString(raw.projectType),
+      sortOrder: typeof raw.sortOrder === "number" ? raw.sortOrder : index,
     }
   })
 }

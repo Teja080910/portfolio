@@ -22,7 +22,9 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
   const editProjectsHref = `/u/${encodeURIComponent(username || "me")}/edit-projects`
-  const projects = projectsStore.filter((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate || (item.skills && item.skills.length)))
+  const projects = projectsStore
+    .filter((item) => item.show && (item.name || item.description || item.duration || item.startDate || item.endDate || (item.skills && item.skills.length)))
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([])
   const [lightboxIndex, setLightboxIndex] = useState(0)
@@ -265,7 +267,23 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
                             </button>
                           )
                         )}
-                        {project.weblink && (
+                        {project.weblinks && project.weblinks.length > 0 ? (
+                          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                            {project.weblinks.map((link, linkIndex) => (
+                              <a
+                                key={`${project.id}-weblink-${linkIndex}`}
+                                href={link.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary/90 px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary hover:shadow-md"
+                              >
+                                {link.type?.trim() ? `${link.type}: ` : ""}
+                                Live Demo
+                                <ArrowUpRight className="h-3 w-3" />
+                              </a>
+                            ))}
+                          </div>
+                        ) : project.weblink ? (
                           <a
                             href={project.weblink}
                             target="_blank"
@@ -275,7 +293,7 @@ export default function Projects({ isReadOnly = false, viewerUserId = "" }: Proj
                             Live Demo
                             <ArrowUpRight className="h-3 w-3" />
                           </a>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </article>

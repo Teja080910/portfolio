@@ -13,6 +13,7 @@ import {
   mapSkillsContent,
   normalizeProjectPhotos,
   normalizeSkillValues,
+  parseProjectTypes,
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
 import { getCurrentSession } from "@/lib/auth-session"
@@ -252,6 +253,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [activeSkillValueSuggestionIndex, setActiveSkillValueSuggestionIndex] = useState(-1)
   const [activeSkillDescriptionSuggestionIndex, setActiveSkillDescriptionSuggestionIndex] = useState(-1)
   const [skillValueInputDrafts, setSkillValueInputDrafts] = useState<Record<string, string>>({})
+  const [projectSkillInputDrafts, setProjectSkillInputDrafts] = useState<Record<string, string>>({})
 
   const distinctSkillTypes = useMemo(
     () => Array.from(new Set(skills.map((item) => (item.skilltype || "").trim()).filter(Boolean))),
@@ -534,7 +536,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     setCertificatesDraft(certificateStore)
   }, [certificateStore])
 
-  const handleProjectPhotoUpload = async (index: number, event: ChangeEvent<HTMLInputElement>) => {
+  const handleProjectPhotoUpload = async (projectIdParam: string | undefined, event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     const person = user.id || ""
 
@@ -561,7 +563,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       return
     }
 
-    const projectId = projects[index]?.id || createId()
+    const projectId = projects.find((p) => p.id === projectIdParam)?.id || projectIdParam || createId()
     setIsUploadingProjectPhotos(true)
 
     try {
@@ -589,8 +591,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       }
 
       setProjectsDraft((prev) =>
-        prev.map((row, rowIndex) => {
-          if (rowIndex !== index) {
+        prev.map((row) => {
+          if (row.id !== (projectIdParam || row.id)) {
             return row
           }
 
@@ -620,7 +622,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     }
   }
 
-  const handleProjectPhotoRemove = async (index: number, photoUrl: string) => {
+  const handleProjectPhotoRemove = async (projectId: string, photoUrl: string) => {
     const objectPath = getStorageObjectPath(photoUrl)
 
     if (objectPath) {
@@ -628,8 +630,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     }
 
     setProjectsDraft((prev) =>
-      prev.map((row, rowIndex) => {
-        if (rowIndex !== index) {
+      prev.map((row) => {
+        if (row.id !== projectId) {
           return row
         }
 
@@ -712,7 +714,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
           startDate: item.startDate?.trim() || "",
           endDate: item.endDate?.trim() || "",
           gitlink: item.gitlink.trim(),
-          weblink: item.weblink.trim(),
+          weblink: (item.weblinks?.find((link) => link.url)?.url ?? item.weblink ?? "").trim(),
+          weblinks: (item.weblinks ?? []).filter((link) => link.url.trim()).map((link) => ({ type: link.type.trim(), url: link.url.trim() })),
           logo: normalizedPhotos[0] ?? item.logo.trim(),
           projectType: item.projectType?.trim() || "",
           photos: normalizedPhotos,
@@ -795,8 +798,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       id="portfolio-content"
       className="scroll-mt-28 mt-8 rounded-[2rem] border border-slate-200/70 bg-white/75 p-6 shadow-2xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/75 md:p-8 lg:p-10"
       initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
     >
       <div className="flex flex-col gap-4 border-b border-slate-200/70 pb-6 dark:border-slate-700/70 md:flex-row md:items-end md:justify-between">
@@ -1455,11 +1457,13 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       endDate: "",
                       gitlink: "",
                       weblink: "",
+                      weblinks: [],
                       logo: "",
                       projectType: "",
                       photos: [],
                       skills: [],
                       show: true,
+                      sortOrder: 1,
                     },
                     ...prev,
                   ])
@@ -1474,24 +1478,47 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
 
           </div>
           <div className="space-y-4">
-            {projects.map((item, index) => (
+            {[...projects]
+              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+              .map((item, index) => (
               <div key={item.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Project #{index + 1}</p>
                   <div className="flex items-center gap-3">
                     <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                       <input
+                        type="number"
+                        min={1}
+                        value={item.sortOrder ?? index + 1}
+                        onChange={(event) => {
+                          const newOrder = Number(event.target.value) || 0;
+                          if (newOrder <= 0) return;
+                          setProjectsDraft((prev) => {
+                            const others = prev
+                              .filter((row) => row.id !== item.id)
+                              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                            const insertAt = Math.min(newOrder - 1, others.length);
+                            others.splice(insertAt, 0, { ...item, sortOrder: newOrder });
+                            return others.map((row, i) => ({ ...row, sortOrder: i + 1 }));
+                          });
+                        }}
+                        className="w-20 rounded-lg border border-slate-300/70 bg-white/80 px-2 py-1 text-center text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                      />
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Order</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                      <input
                         type="checkbox"
                         checked={item.show}
                         onChange={(event) =>
-                          setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, show: event.target.checked } : row)))
+                          setProjectsDraft((prev) => prev.map((row) => (row.id === item.id ? { ...row, show: event.target.checked } : row)))
                         }
                       />
                       Show
                     </label>
                     <button
                       type="button"
-                      onClick={() => setProjectsDraft((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
+                      onClick={() => setProjectsDraft((prev) => prev.filter((row) => row.id !== item.id))}
                       className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -1503,7 +1530,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                   <input
                     value={item.name}
                     onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, name: event.target.value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, name: event.target.value } : row)))
                     }
                     className={inputClassName}
                     placeholder="Project name"
@@ -1512,21 +1539,29 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     value={item.startDate}
                     placeholder="Start date"
                     onChange={(value) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, startDate: value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, startDate: value } : row)))
                     }
                   />
                   <DatePicker
                     value={item.endDate}
                     placeholder="End date"
                     onChange={(value) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, endDate: value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, endDate: value } : row)))
                     }
                   />
                   <input
                     value={item.projectType || ""}
-                    onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, projectType: event.target.value } : row)))
-                    }
+                    onChange={(event) => {
+                      const projectType = event.target.value
+                      const newTypes = parseProjectTypes(projectType)
+                      setProjectsDraft((prev) =>
+                        prev.map((row, rowIndex) => {
+                          if (row.id !== item.id) return row
+                          const keep = newTypes.length > 0 ? (row.weblinks ?? []).filter((l) => newTypes.includes(l.type)) : row.weblinks
+                          return { ...row, projectType, weblinks: keep }
+                        }),
+                      )
+                    }}
                     className={inputClassName}
                     placeholder="Project type (e.g. App, Web, Script, ML Model)"
                     list="project-type-suggestions"
@@ -1544,31 +1579,66 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                   <input
                     value={item.gitlink}
                     onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, gitlink: event.target.value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, gitlink: event.target.value } : row)))
                     }
                     className={inputClassName}
                     placeholder="GitHub link"
                   />
+                  {(parseProjectTypes(item.projectType || "").length > 0 ? parseProjectTypes(item.projectType || "") : ["Live"]).map((linkType, linkIndex) => {
+                    const typedLink = (item.weblinks ?? []).find((link) => link.type === linkType)
+                    const isDefault = item.weblinks && item.weblinks.length === 0
+                    const urlValue = typedLink?.url ?? (isDefault && linkIndex === 0 ? item.weblink : "")
+                    return (
+                      <input
+                        key={`${item.id || index}-weblink-${linkIndex}-${linkType}`}
+                        value={urlValue}
+                        onChange={(event) => {
+                          const url = event.target.value
+                          setProjectsDraft((prev) =>
+                            prev.map((row, rowIndex) => {
+                              if (row.id !== item.id) return row
+                              const current = row.weblinks ?? []
+                              const idx = current.findIndex((l) => l.type === linkType)
+                              const next = [...current]
+                              if (idx >= 0) {
+                                next[idx] = { ...next[idx], url }
+                              } else {
+                                next.push({ type: linkType, url })
+                              }
+                              return { ...row, weblinks: next }
+                            }),
+                          )
+                        }}
+                        className={inputClassName}
+                        placeholder={`${linkType === "Live" ? "" : linkType + ": "}Live demo link`}
+                      />
+                    )
+                  })}
                   <input
-                    value={item.weblink}
-                    onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, weblink: event.target.value } : row)))
-                    }
-                    className={inputClassName}
-                    placeholder="Live demo link"
-                  />
-                  <input
-                    value={toCsv(item.skills)}
-                    onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, skills: fromCsv(event.target.value) } : row)))
-                    }
+                    value={projectSkillInputDrafts[item.id ?? index] ?? toCsv(item.skills)}
+                    onBlur={() => {
+                      window.setTimeout(() => {
+                        setProjectSkillInputDrafts((prev) => {
+                          const next = { ...prev }
+                          delete next[item.id ?? index]
+                          return next
+                        })
+                      }, 100)
+                    }}
+                    onChange={(event) => {
+                      const inputValue = event.target.value
+                      setProjectSkillInputDrafts((prev) => ({ ...prev, [item.id ?? index]: inputValue }))
+                      setProjectsDraft((prev) =>
+                        prev.map((row, rowIndex) => (row.id === item.id ? { ...row, skills: fromCsv(inputValue) } : row)),
+                      )
+                    }}
                     className={inputClassName}
                     placeholder="Tech stack (comma separated)"
                   />
                   <textarea
                     value={item.description}
                     onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)))
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, description: event.target.value } : row)))
                     }
                     className={`${inputClassName} md:col-span-2`}
                     rows={3}
@@ -1580,7 +1650,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       accept={ALLOWED_PROJECT_PHOTO_TYPES.join(",")}
                       multiple
                       onChange={(event) => {
-                        void handleProjectPhotoUpload(index, event)
+                        void handleProjectPhotoUpload(item.id, event)
                       }}
                       className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-cyan-600 file:px-4 file:py-2.5 file:font-semibold file:text-white hover:file:bg-cyan-500 disabled:opacity-70 dark:text-slate-300"
                       disabled={isSaving || isUploadingProjectPhotos}
@@ -1607,7 +1677,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                             <button
                               type="button"
                               onClick={() => {
-                                void handleProjectPhotoRemove(index, photo)
+                                void handleProjectPhotoRemove(item.id, photo)
                               }}
                               className="w-full border-t border-slate-200/80 bg-white/80 px-2 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:border-slate-700/80 dark:bg-slate-900/70 dark:text-rose-300 dark:hover:bg-rose-500/10"
                             >

@@ -27,7 +27,38 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     if (!el) return
     let animationId: number
     let scrollAmount = 0
+    let touchTimeout: ReturnType<typeof setTimeout>
     const speed = 0.5
+
+    const resumeAfterTouch = () => {
+      clearTimeout(touchTimeout)
+      touchTimeout = setTimeout(() => {
+        el.dataset.paused = "false"
+      }, 2000)
+    }
+
+    const onTouchStart = () => {
+      el.dataset.paused = "true"
+      clearTimeout(touchTimeout)
+    }
+    const onTouchMove = () => {
+      el.dataset.paused = "true"
+      clearTimeout(touchTimeout)
+      resumeAfterTouch()
+    }
+    const onTouchEnd = () => {
+      resumeAfterTouch()
+    }
+    const onScroll = () => {
+      if (el.dataset.paused === "true") {
+        resumeAfterTouch()
+      }
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true })
+    el.addEventListener("touchmove", onTouchMove, { passive: true })
+    el.addEventListener("touchend", onTouchEnd, { passive: true })
+    el.addEventListener("scroll", onScroll, { passive: true })
 
     const scroll = () => {
       if (el.dataset.paused === "true") {
@@ -43,7 +74,14 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     }
 
     animationId = requestAnimationFrame(scroll)
-    return () => cancelAnimationFrame(animationId)
+    return () => {
+      cancelAnimationFrame(animationId)
+      clearTimeout(touchTimeout)
+      el.removeEventListener("touchstart", onTouchStart)
+      el.removeEventListener("touchmove", onTouchMove)
+      el.removeEventListener("touchend", onTouchEnd)
+      el.removeEventListener("scroll", onScroll)
+    }
   }, [])
 
   if (!user?.id) {

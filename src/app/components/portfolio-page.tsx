@@ -138,11 +138,20 @@ const mapProjectsContent = (value: unknown, userId: string): IProjects[] =>
             endDate: toString(item.endDate),
             gitlink: toString(item.gitlink),
             weblink: toString(item.weblink),
+            weblinks: Array.isArray(item.weblinks)
+              ? item.weblinks
+                  .filter((entry) => Boolean(entry) && typeof entry === "object")
+                  .map((entry) => ({ type: toString(entry.type), url: toString(entry.url) }))
+                  .filter((entry) => entry.url)
+              : toString(item.weblink)
+                ? [{ type: toString(item.projectType), url: toString(item.weblink) }]
+                : [],
             logo,
             photos: photos.length ? photos : (logo ? [logo] : []),
             projectType: toString(item.projectType),
             skills: toStringArray(item.skills),
             show: typeof item.show === "boolean" ? item.show : true,
+            sortOrder: typeof item.sortOrder === "number" ? item.sortOrder : index,
           }
         })
     : []

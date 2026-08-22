@@ -80,11 +80,13 @@ export interface IProjects {
     endDate: string;
     gitlink: string;
     weblink: string;
+    weblinks?: { type: string; url: string }[];
     logo: string;
     photos: string[];
     skills: string[];
     show: boolean;
     projectType: string;
+    sortOrder: number;
 }
 
 export interface ISkills {
