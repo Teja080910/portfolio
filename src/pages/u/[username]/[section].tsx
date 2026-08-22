@@ -61,57 +61,64 @@ export default function UserEditorBySectionPage() {
     let isActive = true
 
     const verifyEditorAccess = async () => {
-      // First, validate that the profile at this username is allowed on /u/ route
-      if (username) {
-        const { data: urlProfile } = await supabase
+      try {
+        // First, validate that the profile at this username is allowed on /u/ route
+        if (username) {
+          const { data: urlProfile } = await supabase
+            .from("profiles")
+            .select("type")
+            .eq("username", username)
+            .maybeSingle()
+
+          if (!urlProfile) {
+            if (isActive) {
+              setRouteError("not_found")
+            }
+            return
+          }
+
+          // /u/ route is only for individual users, not team or business
+          if (urlProfile.type === "team" || urlProfile.type === "business") {
+            if (isActive) {
+              setRouteError("wrong_type")
+            }
+            return
+          }
+        }
+
+        const { data } = await getCurrentSession()
+        const sessionUser = data.session?.user
+
+        if (!sessionUser) {
+          if (isActive) {
+            void router.replace("/sign-in")
+          }
+          return
+        }
+
+        const { data: profile } = await supabase
           .from("profiles")
-          .select("type")
-          .eq("username", username)
+          .select("username")
+          .eq("id", sessionUser.id)
           .maybeSingle()
 
-        if (!urlProfile) {
+        const sessionUsername = profile?.username?.trim() || ""
+
+        if (sessionUsername && username && sessionUsername !== username) {
           if (isActive) {
-            setRouteError("not_found")
+            void router.replace(`/u/${encodeURIComponent(sessionUsername)}/${section}`)
           }
           return
         }
 
-        // /u/ route is only for individual users, not team or business
-        if (urlProfile.type === "team" || urlProfile.type === "business") {
-          if (isActive) {
-            setRouteError("wrong_type")
-          }
-          return
-        }
-      }
-
-      const { data } = await getCurrentSession()
-      const sessionUser = data.session?.user
-
-      if (!sessionUser) {
         if (isActive) {
-          void router.replace("/sign-in")
+          setIsAuthorizing(false)
         }
-        return
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", sessionUser.id)
-        .maybeSingle()
-
-      const sessionUsername = profile?.username?.trim() || ""
-
-      if (sessionUsername && username && sessionUsername !== username) {
+      } catch (err) {
+        console.error("verifyEditorAccess failed:", err)
         if (isActive) {
-          void router.replace(`/u/${encodeURIComponent(sessionUsername)}/${section}`)
+          setIsAuthorizing(false)
         }
-        return
-      }
-
-      if (isActive) {
-        setIsAuthorizing(false)
       }
     }
 

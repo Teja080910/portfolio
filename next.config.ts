@@ -13,6 +13,11 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
     protocol: "https",
     hostname: "avatars.githubusercontent.com",
   },
+  {
+    protocol: "https",
+    hostname: "db.portfoli.store",
+    pathname: "/storage/v1/object/public/**",
+  },
 ]
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
