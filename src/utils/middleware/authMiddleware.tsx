@@ -1,5 +1,6 @@
 // utility/authProvider.ts
 
+import { getCurrentSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/db";
 import { IUser } from "@/lib/interfaces";
 import { useStore } from "@/lib/store";
@@ -212,7 +213,7 @@ export const authProvider: AuthProvider = {
         };
     },
     check: async () => {
-        const { data } = await supabase.auth.getSession();
+        const { data } = await getCurrentSession();
 
         if (data.session?.user) {
             const sessionUser = data.session.user;

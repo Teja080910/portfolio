@@ -10,6 +10,7 @@ import {
   mapProjectsContent,
   mapSkillsContent,
 } from "@/lib/content-mappers"
+import { getCurrentSession } from "@/lib/auth-session"
 import { supabase } from "@/lib/db"
 import Image from "next/image"
 import { getProxiedImageUrl } from "@/lib/image-proxy"
@@ -71,7 +72,7 @@ export default function AuthActions() {
     let isMounted = true
 
     const syncSessionState = async () => {
-      const { data } = await supabase.auth.getSession()
+      const { data } = await getCurrentSession()
       if (isMounted) {
         setIsAuthenticated(Boolean(data.session?.user))
         setIsLoading(false)

@@ -15,6 +15,7 @@ import {
   normalizeSkillValues,
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
+import { getCurrentSession } from "@/lib/auth-session"
 import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
@@ -399,8 +400,17 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     let isMounted = true
 
     const hydratePortfolioContent = async () => {
-      const { data } = await supabase.auth.getSession()
-      const sessionUser = data.session?.user
+      let session = await getCurrentSession()
+      for (let attempt = 0; attempt < 3 && !session.data?.session; attempt++) {
+        try {
+          session = await getCurrentSession()
+          if (session.data?.session) break
+        } catch {
+          if (attempt === 2) throw session
+          await new Promise((resolve) => setTimeout(resolve, 150))
+        }
+      }
+      const sessionUser = session.data.session?.user
 
       if (!sessionUser) {
         return

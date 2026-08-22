@@ -1,5 +1,6 @@
 import PortfolioContentForm from "@/app/forms/portfolio-content.form"
 import ProfileForm from "@/app/forms/profile.form"
+import { getCurrentSession } from "@/lib/auth-session"
 import { supabase } from "@/lib/db"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -84,7 +85,7 @@ export default function UserEditorBySectionPage() {
         }
       }
 
-      const { data } = await supabase.auth.getSession()
+      const { data } = await getCurrentSession()
       const sessionUser = data.session?.user
 
       if (!sessionUser) {
