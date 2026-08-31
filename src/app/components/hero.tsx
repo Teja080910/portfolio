@@ -4,7 +4,7 @@ import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
 import { useRef, useEffect } from "react"
-import { ArrowDown, Award, BookOpen, Briefcase, Code2, Cpu, FolderKanban, GitlabIcon as GitHub, Linkedin, Mail, PencilLine } from "lucide-react"
+import { ArrowDown, Award, BookOpen, Briefcase, Brush, Code2, Cpu, FolderKanban, GitlabIcon as GitHub, Globe, Linkedin, Mail, PencilLine, TrendingUp, Tv, Users, Wrench } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -19,6 +19,12 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
   const education = useStore((state) => state.education)
   const skills = useStore((state) => state.skills)
   const certificate = useStore((state) => state.certificate)
+  const contentChannels = useStore((state) => state.contentChannels)
+  const contentWorks = useStore((state) => state.contentWorks)
+  const collaborations = useStore((state) => state.collaborations)
+  const creatorTools = useStore((state) => state.creatorTools)
+
+  const template = user.template || "software"
 
   const marqueeRef = useRef<HTMLDivElement>(null)
 
@@ -97,14 +103,39 @@ export default function Hero({ isReadOnly = false }: HeroProps) {
     .filter((s) => s.show)
     .reduce((count, s) => count + (Array.isArray(s.skills) ? s.skills.length : 0), 0)
 
-  const cardsData = [
-    { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
-    { icon: Briefcase, label: "Experience", sectionId: "experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
-    { icon: BookOpen, label: "Education", sectionId: "education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
-    { icon: Code2, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
-    { icon: Award, label: "Certificates", sectionId: "certificate", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
-    { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
-  ]
+  const visibleChannels = contentChannels.filter((c) => c.show).length
+  const visibleWorks = contentWorks.filter((w) => w.show).length
+  const visibleCollabs = collaborations.filter((c) => c.show).length
+  const visibleTools = creatorTools.filter((t) => t.show).length
+
+  const isCreator = template === "content_creator"
+  const isMarketer = template === "marketer"
+
+  const cardsData = isCreator
+    ? [
+        { icon: Tv, label: "Channels", sectionId: "content-channels", value: visibleChannels, desc: visibleChannels > 0 ? `${visibleChannels} channel${visibleChannels === 1 ? "" : "s"}` : "Add your channels" },
+        { icon: FolderKanban, label: "Content", sectionId: "content-portfolio", value: visibleWorks, desc: visibleWorks > 0 ? `${visibleWorks} content piece${visibleWorks === 1 ? "" : "s"}` : "Showcase your work" },
+        { icon: TrendingUp, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"}` : "Skills in development" },
+        { icon: Wrench, label: "Tools", sectionId: "creator-tools", value: visibleTools, desc: visibleTools > 0 ? `${visibleTools} tool${visibleTools === 1 ? "" : "s"}` : "List your tools" },
+        { icon: Users, label: "Collaborations", sectionId: "collaborations", value: visibleCollabs, desc: visibleCollabs > 0 ? `${visibleCollabs} brand${visibleCollabs === 1 ? "" : "s"}` : "Brand partnerships" },
+        { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
+      ]
+    : isMarketer
+      ? [
+          { icon: Briefcase, label: "Experience", sectionId: "experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
+          { icon: TrendingUp, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"}` : "Skills in development" },
+          { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"}` : "Projects in the works" },
+          { icon: Users, label: "Collaborations", sectionId: "collaborations", value: visibleCollabs, desc: visibleCollabs > 0 ? `${visibleCollabs} brand${visibleCollabs === 1 ? "" : "s"}` : "Brand partnerships" },
+          { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
+        ]
+      : [
+          { icon: FolderKanban, label: "Projects", sectionId: "projects", value: visibleProjects, desc: visibleProjects > 0 ? `${visibleProjects} project${visibleProjects === 1 ? "" : "s"} built` : "Projects in the works" },
+          { icon: Briefcase, label: "Experience", sectionId: "experience", value: visibleExperience, desc: visibleExperience > 0 ? `${visibleExperience} position${visibleExperience === 1 ? "" : "s"}` : "Building experience" },
+          { icon: BookOpen, label: "Education", sectionId: "education", value: visibleEducation, desc: visibleEducation > 0 ? `${visibleEducation} entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning" },
+          { icon: Code2, label: "Skills", sectionId: "skills", value: totalSkills, desc: totalSkills > 0 ? `${totalSkills} skill${totalSkills === 1 ? "" : "s"} across ${totalSkillCategories} categor${totalSkillCategories === 1 ? "y" : "ies"}` : "Skills in development" },
+          { icon: Award, label: "Certificates", sectionId: "certificate", value: visibleCertificates, desc: visibleCertificates > 0 ? `${visibleCertificates} certificate${visibleCertificates === 1 ? "" : "s"}` : "Certifications pending" },
+          { icon: Cpu, label: "Role", sectionId: "about", value: user.role?.trim() || "Open to work", desc: user.role?.trim() ? `Working as ${user.role.trim()}` : "Open to opportunities" },
+        ]
 
   const fullName = [user.firstname, user.lastname].filter(Boolean).join(" ").trim() || user.username || user.email
   const roleLabel = user.role?.trim() || "Portfolio Owner"

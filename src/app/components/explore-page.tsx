@@ -8,7 +8,7 @@ import { getProxiedImageUrl } from "@/lib/image-proxy"
 import { IUser, ProfileType } from "@/lib/interfaces"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
-import { Building2, ChevronLeft, ChevronRight, Compass, Search, UserRound, Users } from "lucide-react"
+import { Building2, ChevronLeft, ChevronRight, Compass, Search, UserRound, Users, BookOpen } from "lucide-react"
 import Head from "next/head"
 import Link from "next/link"
 import Image from "next/image"
@@ -194,6 +194,22 @@ export default function ExplorePage() {
               </div>
             </motion.div>
           </header>
+
+          {/* Guide CTA */}
+          <motion.div
+            className="mb-10 flex justify-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.4 }}
+          >
+            <Link
+              href="/guide"
+              className="inline-flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-3.5 text-sm font-semibold text-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 hover:shadow-md"
+            >
+              <BookOpen className="h-4 w-4" />
+              New to portfolios? Read the Guide
+            </Link>
+          </motion.div>
 
           {/* Logged-in user's own portfolio */}
           {loggedInProfile && (

@@ -43,36 +43,16 @@ export default function AuthCallbackPage() {
         .eq("id", sessionUser.id)
         .maybeSingle()
 
-      const signinIntent = typeof window !== "undefined" ? sessionStorage.getItem("oauth_signin_intent") : null
-      const signupType = typeof window !== "undefined" ? sessionStorage.getItem("signup_profile_type") : null
-
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("oauth_signin_intent")
-      }
-
-      // If profile already exists — existing user signing in
+      // Existing user — redirect to their portfolio
       if (profile) {
-        if (typeof window !== "undefined") {
-          const storedType = sessionStorage.getItem("signup_profile_type")
-          if (storedType && (profile.type === "user" || !profile.type)) {
-            await supabase
-              .from("profiles")
-              .update({ type: storedType })
-              .eq("id", sessionUser.id)
-            profile.type = storedType
-          }
-          sessionStorage.removeItem("signup_profile_type")
-        }
-
-        const meta = sessionUser.user_metadata ?? {}
         useStore.getState().addUser({
           id: sessionUser.id,
-          username: profile?.username || meta.username || sessionUser.email?.split("@")[0] || "",
+          username: profile?.username || sessionUser.email?.split("@")[0] || "",
           email: sessionUser.email ?? "",
-          photo: enhancePhotoUrl((meta.avatar_url as string) || (meta.picture as string) || ""),
-          firstname: (meta.name as string) || (meta.full_name as string) || (meta.firstname as string) || "",
+          photo: enhancePhotoUrl((sessionUser.user_metadata?.avatar_url as string) || (sessionUser.user_metadata?.picture as string) || ""),
+          firstname: (sessionUser.user_metadata?.name as string) || (sessionUser.user_metadata?.full_name as string) || (sessionUser.user_metadata?.firstname as string) || "",
           lastname: "",
-          role: profile?.role ?? (meta.role as string) ?? "Developer",
+          role: profile?.role ?? (sessionUser.user_metadata?.role as string) ?? "Developer",
           description: profile?.description,
           gitlink: profile?.gitlink,
           likedlin: profile?.likedlin,
@@ -98,17 +78,7 @@ export default function AuthCallbackPage() {
         return
       }
 
-      // No profile exists — check intent
-      if (signinIntent && !signupType) {
-        // Came from sign-in page without an account — reject
-        await supabase.auth.signOut()
-        if (isActive) {
-          void router.replace("/sign-up?error=no_account")
-        }
-        return
-      }
-
-      // Came from sign-up page — create the profile
+      // New user — create minimal profile from OAuth data, redirect to onboarding
       const meta = sessionUser.user_metadata ?? {}
       const rawPhoto = (meta.avatar_url as string) || (meta.picture as string) || ""
       const oauthFullName = (meta.name as string) || (meta.full_name as string) || (meta.firstname as string) || ""
@@ -117,33 +87,27 @@ export default function AuthCallbackPage() {
         ? oauthFullName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().slice(0, 18)
         : sessionUser.email?.split("@")[0]?.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase().slice(0, 18) || "user"
 
-      const storedType = typeof window !== "undefined" ? sessionStorage.getItem("signup_profile_type") : null
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("signup_profile_type")
-      }
-
       const { data: createdProfile } = await supabase
         .from("profiles")
         .insert({
           id: sessionUser.id,
           email: sessionUser.email ?? "",
           username: generatedUsername,
-          firstname: oauthFullName || "New",
+          firstname: oauthFullName || "",
           lastname: "",
-          role: (meta.role as string) || "Developer",
+          role: "Developer",
           phone: "",
           photo: enhancedPhoto,
           password: "oauth-placeholder-password",
           show: true,
-          type: storedType || "user",
+          type: "user",
         })
         .select("*")
         .single()
 
       if (!createdProfile) {
-        await supabase.auth.signOut()
         if (isActive) {
-          void router.replace("/sign-up?error=no_account")
+          void router.replace("/sign-in?error=profile_creation_failed")
         }
         return
       }
@@ -152,10 +116,10 @@ export default function AuthCallbackPage() {
         id: sessionUser.id,
         username: createdProfile.username,
         email: sessionUser.email ?? "",
-        photo: enhancePhotoUrl(rawPhoto),
+        photo: enhancedPhoto,
         firstname: oauthFullName,
         lastname: "",
-        role: createdProfile.role ?? (meta.role as string) ?? "Developer",
+        role: createdProfile.role ?? "Developer",
         description: createdProfile.description,
         gitlink: createdProfile.gitlink,
         likedlin: createdProfile.likedlin,
@@ -165,18 +129,8 @@ export default function AuthCallbackPage() {
         show: createdProfile.show ?? true,
       })
 
-      const cUsername = createdProfile.username?.trim()
-      const cType = createdProfile.type
-      const destination = cUsername
-        ? cType === "business"
-          ? `/b/${encodeURIComponent(cUsername)}`
-          : cType === "team"
-            ? `/t/${encodeURIComponent(cUsername)}`
-            : `/u/${encodeURIComponent(cUsername)}`
-        : "/"
-
       if (isActive) {
-        void router.replace(destination)
+        void router.replace("/user?onboarding=true")
       }
     }
 

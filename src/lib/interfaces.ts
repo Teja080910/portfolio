@@ -1,5 +1,7 @@
 export type ProfileType = "user" | "team" | "business"
 
+export type PortfolioTemplate = "software" | "content_creator" | "marketer"
+
 export interface IUser {
     id?: string;
     username: string;
@@ -17,6 +19,7 @@ export interface IUser {
     confirmpassword?: string;
     show?: boolean;
     type?: ProfileType;
+    template?: PortfolioTemplate;
 }
 
 export type AboutHighlightIcon = "compass" | "rocket" | "users" | "sparkles";
@@ -95,6 +98,56 @@ export interface ISkills {
     skilltype: string;
     skills: string[];
     description: string;
+    show: boolean;
+}
+
+export type ContentPlatform = "youtube" | "instagram" | "tiktok" | "twitter" | "blog" | "podcast" | "newsletter" | "other"
+
+export interface IContentChannel {
+    id: string;
+    person: string;
+    platform: ContentPlatform | string;
+    url: string;
+    handle: string;
+    subscriberCount: string;
+    description: string;
+    show: boolean;
+}
+
+export type ContentType = "video" | "article" | "photo" | "podcast" | "reel" | "short" | "other"
+
+export interface IContentWork {
+    id: string;
+    person: string;
+    title: string;
+    type: ContentType | string;
+    url: string;
+    thumbnail: string;
+    description: string;
+    date: string;
+    views: string;
+    show: boolean;
+    sortOrder: number;
+}
+
+export interface ICollaboration {
+    id: string;
+    person: string;
+    brand: string;
+    description: string;
+    url: string;
+    date: string;
+    logo: string;
+    show: boolean;
+}
+
+export interface ICreatorTool {
+    id: string;
+    person: string;
+    name: string;
+    category: string;
+    description: string;
+    icon: string;
     show: boolean;
 }
 

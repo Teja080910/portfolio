@@ -7,6 +7,10 @@ import {
   createId,
   mapAboutContent,
   mapCertificatesContent,
+  mapCollaborationsContent,
+  mapContentChannelsContent,
+  mapContentWorksContent,
+  mapCreatorToolsContent,
   mapEducationContent,
   mapExperienceContent,
   mapProjectsContent,
@@ -18,7 +22,7 @@ import {
 import { supabase } from "@/lib/db"
 import { getCurrentSession } from "@/lib/auth-session"
 import { getFriendlySupabaseError } from "@/utils/supabase-error"
-import { AboutHighlightIcon, IAboutHighlight, ICertificate, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
+import { AboutHighlightIcon, IAboutHighlight, ICertificate, ICollaboration, IContentChannel, IContentWork, ICreatorTool, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -28,7 +32,7 @@ import Link from "next/link"
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 
 type Notice = { tone: "success" | "error"; message: string } | null
-type PortfolioEditSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | null
+type PortfolioEditSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | "content_channels" | "content_portfolio" | "collaborations" | "creator_tools" | null
 
 type PortfolioContentFormProps = {
   focusSection?: PortfolioEditSection
@@ -180,6 +184,10 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const experienceStore = useStore((state) => state.experience)
   const educationStore = useStore((state) => state.education)
   const certificateStore = useStore((state) => state.certificate)
+  const contentChannelsStore = useStore((state) => state.contentChannels)
+  const contentWorksStore = useStore((state) => state.contentWorks)
+  const collaborationsStore = useStore((state) => state.collaborations)
+  const creatorToolsStore = useStore((state) => state.creatorTools)
 
   const setAbout = useStore((state) => state.setAbout)
   const setSkills = useStore((state) => state.setSkills)
@@ -187,6 +195,10 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const setExperience = useStore((state) => state.setExperience)
   const setEducation = useStore((state) => state.setEducation)
   const setCertificate = useStore((state) => state.setCertificate)
+  const setContentChannels = useStore((state) => state.setContentChannels)
+  const setContentWorks = useStore((state) => state.setContentWorks)
+  const setCollaborations = useStore((state) => state.setCollaborations)
+  const setCreatorTools = useStore((state) => state.setCreatorTools)
   const setUser = useStore((state) => state.setUser)
   const hasHydratedRef = useRef(false)
   const skillSyncDoneRef = useRef(false)
@@ -194,6 +206,10 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const experienceSyncDoneRef = useRef(false)
   const educationSyncDoneRef = useRef(false)
   const certificateSyncDoneRef = useRef(false)
+  const contentChannelsSyncDoneRef = useRef(false)
+  const contentWorksSyncDoneRef = useRef(false)
+  const collaborationsSyncDoneRef = useRef(false)
+  const creatorToolsSyncDoneRef = useRef(false)
   const initialSyncRef = useRef(false)
 
   const [aboutHeading, setAboutHeading] = useState(about.type || "")
@@ -242,6 +258,30 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       certificateSyncDoneRef.current = true
     }
     return certificateStore
+  })
+  const [contentChannelsDraft, setContentChannelsDraft] = useState<IContentChannel[]>(() => {
+    if (contentChannelsStore.length > 0) {
+      contentChannelsSyncDoneRef.current = true
+    }
+    return contentChannelsStore
+  })
+  const [contentWorksDraft, setContentWorksDraft] = useState<IContentWork[]>(() => {
+    if (contentWorksStore.length > 0) {
+      contentWorksSyncDoneRef.current = true
+    }
+    return contentWorksStore
+  })
+  const [collaborationsDraft, setCollaborationsDraft] = useState<ICollaboration[]>(() => {
+    if (collaborationsStore.length > 0) {
+      collaborationsSyncDoneRef.current = true
+    }
+    return collaborationsStore
+  })
+  const [creatorToolsDraft, setCreatorToolsDraft] = useState<ICreatorTool[]>(() => {
+    if (creatorToolsStore.length > 0) {
+      creatorToolsSyncDoneRef.current = true
+    }
+    return creatorToolsStore
   })
   const [notice, setNotice] = useState<Notice>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -460,7 +500,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
 
       const { data: portfolioContent } = await supabase
         .from("portfolio_contents")
-        .select("about, skills, projects, experience, education, certificates")
+        .select("about, skills, projects, experience, education, certificates, content_channels, content_works, collaborations, creator_tools")
         .eq("user_id", sessionUser.id)
         .maybeSingle()
 
@@ -480,12 +520,20 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       setExperience(mappedExperience)
       setEducation(mappedEducation)
       setCertificate(mappedCertificates)
+      setContentChannels(mapContentChannelsContent(portfolioContent.content_channels, sessionUser.id))
+      setContentWorks(mapContentWorksContent(portfolioContent.content_works, sessionUser.id))
+      setCollaborations(mapCollaborationsContent(portfolioContent.collaborations, sessionUser.id))
+      setCreatorTools(mapCreatorToolsContent(portfolioContent.creator_tools, sessionUser.id))
 
       skillSyncDoneRef.current = true
       projectSyncDoneRef.current = true
       experienceSyncDoneRef.current = true
       educationSyncDoneRef.current = true
       certificateSyncDoneRef.current = true
+      contentChannelsSyncDoneRef.current = true
+      contentWorksSyncDoneRef.current = true
+      collaborationsSyncDoneRef.current = true
+      creatorToolsSyncDoneRef.current = true
     }
 
     void hydratePortfolioContent()
@@ -493,7 +541,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     return () => {
       isMounted = false
     }
-  }, [setAbout, setCertificate, setEducation, setExperience, setProjects, setSkills, setUser, user])
+  }, [setAbout, setCertificate, setEducation, setExperience, setProjects, setSkills, setUser, user, setContentChannels, setContentWorks, setCollaborations, setCreatorTools])
 
   useEffect(() => {
     setAboutHeading(about.type || "")
@@ -535,6 +583,22 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   useEffect(() => {
     setCertificatesDraft(certificateStore)
   }, [certificateStore])
+
+  useEffect(() => {
+    setContentChannelsDraft(contentChannelsStore)
+  }, [contentChannelsStore])
+
+  useEffect(() => {
+    setContentWorksDraft(contentWorksStore)
+  }, [contentWorksStore])
+
+  useEffect(() => {
+    setCollaborationsDraft(collaborationsStore)
+  }, [collaborationsStore])
+
+  useEffect(() => {
+    setCreatorToolsDraft(creatorToolsStore)
+  }, [creatorToolsStore])
 
   const handleProjectPhotoUpload = async (projectIdParam: string | undefined, event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
@@ -755,12 +819,61 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         photo: item.photo.trim(),
       }))
 
+    const contentChannelsPayload = contentChannelsDraft.map((item) => ({
+        ...item,
+        id: item.id || createId(),
+        person,
+        platform: item.platform.trim(),
+        url: item.url.trim(),
+        handle: item.handle.trim(),
+        subscriberCount: item.subscriberCount.trim(),
+        description: item.description.trim(),
+      }))
+
+    const contentWorksPayload = contentWorksDraft.map((item) => ({
+        ...item,
+        id: item.id || createId(),
+        person,
+        title: item.title.trim(),
+        type: item.type.trim(),
+        url: item.url.trim(),
+        thumbnail: item.thumbnail.trim(),
+        description: item.description.trim(),
+        date: item.date.trim(),
+        views: item.views.trim(),
+      }))
+
+    const collaborationsPayload = collaborationsDraft.map((item) => ({
+        ...item,
+        id: item.id || createId(),
+        person,
+        brand: item.brand.trim(),
+        description: item.description.trim(),
+        url: item.url.trim(),
+        date: item.date.trim(),
+        logo: item.logo.trim(),
+      }))
+
+    const creatorToolsPayload = creatorToolsDraft.map((item) => ({
+        ...item,
+        id: item.id || createId(),
+        person,
+        name: item.name.trim(),
+        category: item.category.trim(),
+        description: item.description.trim(),
+        icon: item.icon.trim(),
+      }))
+
     setAbout(aboutPayload)
     setSkills(skillsPayload)
     setProjects(projectsPayload)
     setExperience(experiencePayload)
     setEducation(educationPayload)
     setCertificate(certificatesPayload)
+    setContentChannels(contentChannelsPayload)
+    setContentWorks(contentWorksPayload)
+    setCollaborations(collaborationsPayload)
+    setCreatorTools(creatorToolsPayload)
 
     const { error } = await supabase.from("portfolio_contents").upsert(
       {
@@ -771,6 +884,10 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
         experience: experiencePayload,
         education: educationPayload,
         certificates: certificatesPayload,
+        content_channels: contentChannelsPayload,
+        content_works: contentWorksPayload,
+        collaborations: collaborationsPayload,
+        creator_tools: creatorToolsPayload,
       },
       { onConflict: "user_id" },
     )
@@ -786,12 +903,21 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   }
 
   const showAllSections = focusSection === null
+  const template = user.template || "software"
+  const isDev = template === "software"
+  const isCreator = template === "content_creator"
+  const isMarketer = template === "marketer"
+
   const showAboutEditor = showAllSections || focusSection === "about"
-  const showSkillsEditor = showAllSections || focusSection === "skills"
-  const showProjectsEditor = showAllSections || focusSection === "projects"
-  const showExperienceEditor = showAllSections || focusSection === "experience"
-  const showEducationEditor = showAllSections || focusSection === "education"
-  const showCertificateEditor = showAllSections || focusSection === "certificate"
+  const showSkillsEditor = (isDev || isMarketer || isCreator) && (showAllSections || focusSection === "skills")
+  const showProjectsEditor = (isDev || isMarketer) && (showAllSections || focusSection === "projects")
+  const showExperienceEditor = (isDev || isMarketer) && (showAllSections || focusSection === "experience")
+  const showEducationEditor = isDev && (showAllSections || focusSection === "education")
+  const showCertificateEditor = isDev && (showAllSections || focusSection === "certificate")
+  const showContentChannelsEditor = isCreator && (showAllSections || focusSection === "content_channels")
+  const showContentPortfolioEditor = isCreator && (showAllSections || focusSection === "content_portfolio")
+  const showCollaborationsEditor = (isCreator || isMarketer) && (showAllSections || focusSection === "collaborations")
+  const showCreatorToolsEditor = isCreator && (showAllSections || focusSection === "creator_tools")
 
   return (
     <motion.section
@@ -1992,6 +2118,463 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
             </div>
           )}
         </div>
+        )}
+
+        {(showContentChannelsEditor || showContentPortfolioEditor || showCollaborationsEditor || showCreatorToolsEditor) && (
+          <div className="grid gap-8">
+          {showContentChannelsEditor && (
+            <div id="edit-content-channels" className="glass-card scroll-mt-28 p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Content Channels</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContentChannelsDraft((prev) => [
+                      { id: createId(), person: user.id || "", platform: "", url: "", handle: "", subscriberCount: "", description: "", show: true },
+                      ...prev,
+                    ])
+                    const el = document.getElementById("edit-content-channels")
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Channel
+                </button>
+              </div>
+              <div className="space-y-4">
+                {contentChannelsDraft.map((item, index) => (
+                  <div key={item.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Channel #{index + 1}</p>
+                      <div className="flex items-center gap-3">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={item.show}
+                            onChange={(event) =>
+                              setContentChannelsDraft((prev) =>
+                                prev.map((row, rowIndex) => (rowIndex === index ? { ...row, show: event.target.checked } : row)),
+                              )
+                            }
+                          />
+                          Show
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setContentChannelsDraft((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <select
+                        value={item.platform}
+                        onChange={(event) =>
+                          setContentChannelsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, platform: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                      >
+                        <option value="">Select platform</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="twitter">Twitter/X</option>
+                        <option value="blog">Blog</option>
+                        <option value="podcast">Podcast</option>
+                        <option value="newsletter">Newsletter</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <input
+                        value={item.handle}
+                        onChange={(event) =>
+                          setContentChannelsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, handle: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Handle / Username"
+                      />
+                      <input
+                        value={item.url}
+                        onChange={(event) =>
+                          setContentChannelsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, url: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Channel URL"
+                      />
+                      <input
+                        value={item.subscriberCount}
+                        onChange={(event) =>
+                          setContentChannelsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, subscriberCount: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Subscriber / Follower count"
+                      />
+                      <textarea
+                        value={item.description}
+                        onChange={(event) =>
+                          setContentChannelsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)),
+                          )
+                        }
+                        rows={2}
+                        className={`${inputClassName} md:col-span-2`}
+                        placeholder="Channel description"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showContentPortfolioEditor && (
+            <div id="edit-content-portfolio" className="glass-card scroll-mt-28 p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Content Portfolio</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContentWorksDraft((prev) => [
+                      { id: createId(), person: user.id || "", title: "", type: "", url: "", thumbnail: "", description: "", date: "", views: "", show: true, sortOrder: 0 },
+                      ...prev,
+                    ])
+                    const el = document.getElementById("edit-content-portfolio")
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Content
+                </button>
+              </div>
+              <div className="space-y-4">
+                {contentWorksDraft.map((item, index) => (
+                  <div key={item.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Content #{index + 1}</p>
+                      <div className="flex items-center gap-3">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={item.show}
+                            onChange={(event) =>
+                              setContentWorksDraft((prev) =>
+                                prev.map((row, rowIndex) => (rowIndex === index ? { ...row, show: event.target.checked } : row)),
+                              )
+                            }
+                          />
+                          Show
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setContentWorksDraft((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <input
+                        value={item.title}
+                        onChange={(event) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, title: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Content title"
+                      />
+                      <select
+                        value={item.type}
+                        onChange={(event) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, type: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                      >
+                        <option value="">Select type</option>
+                        <option value="video">Video</option>
+                        <option value="article">Article</option>
+                        <option value="photo">Photo</option>
+                        <option value="podcast">Podcast</option>
+                        <option value="reel">Reel</option>
+                        <option value="short">Short</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <input
+                        value={item.url}
+                        onChange={(event) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, url: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Content URL"
+                      />
+                      <DatePicker
+                        value={item.date}
+                        placeholder="Date"
+                        onChange={(value) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, date: value } : row)),
+                          )
+                        }
+                      />
+                      <input
+                        value={item.thumbnail}
+                        onChange={(event) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, thumbnail: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Thumbnail URL"
+                      />
+                      <input
+                        value={item.views}
+                        onChange={(event) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, views: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Views / engagement count"
+                      />
+                      <textarea
+                        value={item.description}
+                        onChange={(event) =>
+                          setContentWorksDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)),
+                          )
+                        }
+                        rows={2}
+                        className={`${inputClassName} md:col-span-2`}
+                        placeholder="Description"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showCollaborationsEditor && (
+            <div id="edit-collaborations" className="glass-card scroll-mt-28 p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Brand Collaborations</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCollaborationsDraft((prev) => [
+                      { id: createId(), person: user.id || "", brand: "", description: "", url: "", date: "", logo: "", show: true },
+                      ...prev,
+                    ])
+                    const el = document.getElementById("edit-collaborations")
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Collaboration
+                </button>
+              </div>
+              <div className="space-y-4">
+                {collaborationsDraft.map((item, index) => (
+                  <div key={item.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Collaboration #{index + 1}</p>
+                      <div className="flex items-center gap-3">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={item.show}
+                            onChange={(event) =>
+                              setCollaborationsDraft((prev) =>
+                                prev.map((row, rowIndex) => (rowIndex === index ? { ...row, show: event.target.checked } : row)),
+                              )
+                            }
+                          />
+                          Show
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setCollaborationsDraft((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <input
+                        value={item.brand}
+                        onChange={(event) =>
+                          setCollaborationsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, brand: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Brand name"
+                      />
+                      <DatePicker
+                        value={item.date}
+                        placeholder="Date"
+                        onChange={(value) =>
+                          setCollaborationsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, date: value } : row)),
+                          )
+                        }
+                      />
+                      <input
+                        value={item.url}
+                        onChange={(event) =>
+                          setCollaborationsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, url: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Collaboration URL"
+                      />
+                      <input
+                        value={item.logo}
+                        onChange={(event) =>
+                          setCollaborationsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, logo: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Brand logo URL"
+                      />
+                      <textarea
+                        value={item.description}
+                        onChange={(event) =>
+                          setCollaborationsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)),
+                          )
+                        }
+                        rows={2}
+                        className={`${inputClassName} md:col-span-2`}
+                        placeholder="Collaboration description"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showCreatorToolsEditor && (
+            <div id="edit-creator-tools" className="glass-card scroll-mt-28 p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Creator Tools</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreatorToolsDraft((prev) => [
+                      { id: createId(), person: user.id || "", name: "", category: "", description: "", icon: "", show: true },
+                      ...prev,
+                    ])
+                    const el = document.getElementById("edit-creator-tools")
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Tool
+                </button>
+              </div>
+              <div className="space-y-4">
+                {creatorToolsDraft.map((item, index) => (
+                  <div key={item.id || index} className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Tool #{index + 1}</p>
+                      <div className="flex items-center gap-3">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={item.show}
+                            onChange={(event) =>
+                              setCreatorToolsDraft((prev) =>
+                                prev.map((row, rowIndex) => (rowIndex === index ? { ...row, show: event.target.checked } : row)),
+                              )
+                            }
+                          />
+                          Show
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setCreatorToolsDraft((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <input
+                        value={item.name}
+                        onChange={(event) =>
+                          setCreatorToolsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, name: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Tool name"
+                      />
+                      <input
+                        value={item.category}
+                        onChange={(event) =>
+                          setCreatorToolsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, category: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Category (e.g. Camera, Editing, Audio)"
+                      />
+                      <input
+                        value={item.icon}
+                        onChange={(event) =>
+                          setCreatorToolsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, icon: event.target.value } : row)),
+                          )
+                        }
+                        className={inputClassName}
+                        placeholder="Icon URL or emoji"
+                      />
+                      <textarea
+                        value={item.description}
+                        onChange={(event) =>
+                          setCreatorToolsDraft((prev) =>
+                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)),
+                          )
+                        }
+                        rows={2}
+                        className={`${inputClassName} md:col-span-2`}
+                        placeholder="Tool description"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          </div>
         )}
       </div>
     </motion.section>

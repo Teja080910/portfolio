@@ -13,6 +13,7 @@ export const TUser = {
     phone: "",
     password: "",
     show: true,
+    template: "software" as const,
 };
 
 export const TAboutMe = {
@@ -33,3 +34,11 @@ export const TExperience = [];
 export const TProjects = [];
 
 export const TSkills = [];
+
+export const TContentChannels = [];
+
+export const TContentWorks = [];
+
+export const TCollaborations = [];
+
+export const TCreatorTools = [];

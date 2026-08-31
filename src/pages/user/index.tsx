@@ -1,5 +1,7 @@
+import OnboardingModal from "@/app/components/onboarding-modal"
 import PortfolioContentForm from "@/app/forms/portfolio-content.form"
 import ProfileForm from "@/app/forms/profile.form"
+import { supabase } from "@/lib/db"
 import { useEffect, useState } from "react"
 
 type UserEditorView = "profile" | "portfolio"
@@ -41,6 +43,8 @@ export default function UserProfilePage() {
   const [activeView, setActiveView] = useState<UserEditorView>("profile")
   const [activePortfolioSection, setActivePortfolioSection] = useState<PortfolioEditorSection>(null)
   const [isViewReady, setIsViewReady] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [onboardingData, setOnboardingData] = useState<{ username: string; email: string; firstname: string } | null>(null)
 
   useEffect(() => {
     const syncViewFromHash = () => {
@@ -59,14 +63,10 @@ export default function UserProfilePage() {
   }, [])
 
   useEffect(() => {
-    if (!isViewReady) {
-      return
-    }
+    if (!isViewReady) return
 
     const hash = window.location.hash.replace("#", "")
-    if (!hash) {
-      return
-    }
+    if (!hash) return
 
     window.setTimeout(() => {
       const element = document.getElementById(hash)
@@ -75,6 +75,28 @@ export default function UserProfilePage() {
       }
     }, 100)
   }, [activeView, isViewReady])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("onboarding") === "true") {
+      supabase.auth.getUser().then(({ data }) => {
+        const user = data.user
+        if (!user) return
+
+        const meta = user.user_metadata ?? {}
+        setOnboardingData({
+          username: user.email?.split("@")[0] || "",
+          email: user.email || "",
+          firstname: (meta.name as string) || (meta.full_name as string) || "",
+        })
+        setShowOnboarding(true)
+
+        window.history.replaceState({}, "", "/user")
+      })
+    }
+  }, [])
 
   if (!isViewReady) {
     return (
@@ -103,6 +125,14 @@ export default function UserProfilePage() {
       <div className="relative z-10 mx-auto max-w-7xl">
         {activeView === "profile" ? <ProfileForm /> : <PortfolioContentForm focusSection={activePortfolioSection} />}
       </div>
+
+      {showOnboarding && onboardingData && (
+        <OnboardingModal
+          username={onboardingData.username}
+          email={onboardingData.email}
+          firstname={onboardingData.firstname}
+        />
+      )}
     </main>
   )
 }

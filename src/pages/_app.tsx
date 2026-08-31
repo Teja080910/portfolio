@@ -13,6 +13,8 @@ import { RefineKbarProvider } from "@refinedev/kbar";
 import { dataProvider as supabaseDataProvider } from "@refinedev/supabase";
 import "antd/dist/reset.css";
 import type { AppProps } from "next/app";
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -22,7 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
     () => [
       { name: "posts", list: "/posts" },
       { name: "user", list: "/user" },
-      { name: "signup", list: "/signup" }
+      { name: "guide", list: "/guide" }
     ],
     [],
   );
@@ -38,7 +40,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     if (router?.isReady) {
-      setIsAuthRoute(["/sign-in", "/sign-up", "/reset-password"].includes(router.pathname || ""));
+      setIsAuthRoute(["/sign-in", "/reset-password"].includes(router.pathname || ""));
     }
   }, [router?.isReady, router?.pathname]);
   return (
@@ -58,9 +60,20 @@ export default function App({ Component, pageProps }: AppProps) {
           <CursorTrail />
 
           {!isAuthRoute && (
-            <div className="fixed right-4 top-4 z-[60]">
-              <AuthActions />
-            </div>
+            <>
+              <div className="fixed left-4 top-4 z-[60]">
+                <Link
+                  href="/guide"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-300/80 bg-white/90 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/85 dark:hover:bg-slate-800"
+                  title="Guide"
+                >
+                  <BookOpen className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+                </Link>
+              </div>
+              <div className="fixed right-4 top-4 z-[60]">
+                <AuthActions />
+              </div>
+            </>
           )}
 
           <Component {...pageProps} />

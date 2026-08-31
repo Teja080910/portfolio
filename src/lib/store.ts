@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "./interfaces";
-import { TAboutMe, TCertificate, TEducation, TExperience, TProjects, TSkills, TUser } from "./setvalues";
+import { IAboutMe, ICertificate, ICollaboration, IContentChannel, IContentWork, ICreatorTool, IEducation, IExperience, IProjects, ISkills, IUser } from "./interfaces";
+import { TAboutMe, TCertificate, TCollaborations, TContentChannels, TContentWorks, TCreatorTools, TEducation, TExperience, TProjects, TSkills, TUser } from "./setvalues";
 
 export type StoreState = {
     user: IUser;
@@ -11,6 +11,10 @@ export type StoreState = {
     experience: IExperience[];
     skills: ISkills[];
     projects: IProjects[];
+    contentChannels: IContentChannel[];
+    contentWorks: IContentWork[];
+    collaborations: ICollaboration[];
+    creatorTools: ICreatorTool[];
     addUser: (user: IUser) => void;
     setUser: (user: IUser) => void;
     addAbout: (about: IAboutMe) => void;
@@ -25,6 +29,10 @@ export type StoreState = {
     setSkills: (skills: ISkills[]) => void;
     addProject: (project: IProjects) => void;
     setProjects: (projects: IProjects[]) => void;
+    setContentChannels: (channels: IContentChannel[]) => void;
+    setContentWorks: (works: IContentWork[]) => void;
+    setCollaborations: (collabs: ICollaboration[]) => void;
+    setCreatorTools: (tools: ICreatorTool[]) => void;
     removeUser: () => void;
     resetPortfolio: () => void;
 };
@@ -39,6 +47,10 @@ export const useStore = create(
             experience: TExperience,
             skills: TSkills,
             projects: TProjects,
+            contentChannels: TContentChannels,
+            contentWorks: TContentWorks,
+            collaborations: TCollaborations,
+            creatorTools: TCreatorTools,
             addUser: (user: IUser) => set({ user }),
             setUser: (user: IUser) => set({ user }),
             removeUser: () => set({ user: TUser }),
@@ -54,6 +66,10 @@ export const useStore = create(
             setSkills: (skills: ISkills[]) => set({ skills }),
             addProject: (project: IProjects) => set((prev) => ({ ...prev, projects: [...prev.projects, project] })),
             setProjects: (projects: IProjects[]) => set({ projects }),
+            setContentChannels: (contentChannels: IContentChannel[]) => set({ contentChannels }),
+            setContentWorks: (contentWorks: IContentWork[]) => set({ contentWorks }),
+            setCollaborations: (collaborations: ICollaboration[]) => set({ collaborations }),
+            setCreatorTools: (creatorTools: ICreatorTool[]) => set({ creatorTools }),
             resetPortfolio: () =>
                 set({
                     about: TAboutMe,
@@ -62,6 +78,10 @@ export const useStore = create(
                     experience: TExperience,
                     skills: TSkills,
                     projects: TProjects,
+                    contentChannels: TContentChannels,
+                    contentWorks: TContentWorks,
+                    collaborations: TCollaborations,
+                    creatorTools: TCreatorTools,
                 }),
         }),
         {

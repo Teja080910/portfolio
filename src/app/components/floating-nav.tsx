@@ -4,7 +4,7 @@ import { useStore, type StoreState } from "@/lib/store"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
-const sections = [
+const devSections = [
   { id: "user", label: "Home" },
   { id: "about", label: "About" },
   { id: "experience", label: "Experience" },
@@ -12,6 +12,27 @@ const sections = [
   { id: "projects", label: "Projects" },
   { id: "certificate", label: "Certificates" },
   { id: "education", label: "Education" },
+  { id: "contact", label: "Contact" },
+]
+
+const creatorSections = [
+  { id: "user", label: "Home" },
+  { id: "about", label: "About" },
+  { id: "content-channels", label: "Channels" },
+  { id: "content-portfolio", label: "Portfolio" },
+  { id: "skills", label: "Skills" },
+  { id: "creator-tools", label: "Tools" },
+  { id: "collaborations", label: "Collaborations" },
+  { id: "contact", label: "Contact" },
+]
+
+const marketerSections = [
+  { id: "user", label: "Home" },
+  { id: "about", label: "About" },
+  { id: "experience", label: "Experience" },
+  { id: "skills", label: "Skills" },
+  { id: "projects", label: "Projects" },
+  { id: "collaborations", label: "Collaborations" },
   { id: "contact", label: "Contact" },
 ]
 
@@ -29,6 +50,13 @@ export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
   const projects = useStore((state: StoreState) => state.projects)
   const certificate = useStore((state: StoreState) => state.certificate)
   const education = useStore((state: StoreState) => state.education)
+  const contentChannels = useStore((state: StoreState) => state.contentChannels)
+  const contentWorks = useStore((state: StoreState) => state.contentWorks)
+  const collaborations = useStore((state: StoreState) => state.collaborations)
+  const creatorTools = useStore((state: StoreState) => state.creatorTools)
+
+  const template = user.template || "software"
+  const sections = template === "content_creator" ? creatorSections : template === "marketer" ? marketerSections : devSections
 
   const isSectionVisible = (sectionId: string) => {
     if (!isReadOnly) {
@@ -52,6 +80,14 @@ export default function FloatingNav({ isReadOnly = false }: FloatingNavProps) {
         return education.some((item) => item.show)
       case "contact":
         return Boolean(user.email || user.phone || user.firstname || user.lastname || user.username || user.role)
+      case "content-channels":
+        return contentChannels.some((item) => item.show)
+      case "content-portfolio":
+        return contentWorks.some((item) => item.show)
+      case "collaborations":
+        return collaborations.some((item) => item.show)
+      case "creator-tools":
+        return creatorTools.some((item) => item.show)
       default:
         return false
     }

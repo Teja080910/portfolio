@@ -1,4 +1,4 @@
-import { AboutHighlightIcon, ICertificate, IEducation, IExperience, IProjects, ISkills } from "./interfaces"
+import { AboutHighlightIcon, ICertificate, ICollaboration, IContentChannel, IContentWork, ICreatorTool, IEducation, IExperience, IProjects, ISkills } from "./interfaces"
 
 export const ABOUT_HIGHLIGHT_ICONS: AboutHighlightIcon[] = ["compass", "rocket", "users", "sparkles"]
 
@@ -213,6 +213,88 @@ export const mapCertificatesContent = (value: unknown, person: string): ICertifi
       duration: asString(raw.duration),
       link: asString(raw.link),
       photo: asString(raw.photo),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+export const mapContentChannelsContent = (value: unknown, person: string): IContentChannel[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `content-channel-${person}-${index}`,
+      person: asString(raw.person) || person,
+      platform: asString(raw.platform),
+      url: asString(raw.url),
+      handle: asString(raw.handle),
+      subscriberCount: asString(raw.subscriberCount),
+      description: asString(raw.description),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+export const mapContentWorksContent = (value: unknown, person: string): IContentWork[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `content-work-${person}-${index}`,
+      person: asString(raw.person) || person,
+      title: asString(raw.title),
+      type: asString(raw.type),
+      url: asString(raw.url),
+      thumbnail: asString(raw.thumbnail),
+      description: asString(raw.description),
+      date: asString(raw.date),
+      views: asString(raw.views),
+      show: asBoolean(raw.show, true),
+      sortOrder: typeof raw.sortOrder === "number" ? raw.sortOrder : index,
+    }
+  })
+}
+
+export const mapCollaborationsContent = (value: unknown, person: string): ICollaboration[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `collaboration-${person}-${index}`,
+      person: asString(raw.person) || person,
+      brand: asString(raw.brand),
+      description: asString(raw.description),
+      url: asString(raw.url),
+      date: asString(raw.date),
+      logo: asString(raw.logo),
+      show: asBoolean(raw.show, true),
+    }
+  })
+}
+
+export const mapCreatorToolsContent = (value: unknown, person: string): ICreatorTool[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.map((item, index) => {
+    const raw = asObject(item)
+    return {
+      id: asString(raw.id) || `creator-tool-${person}-${index}`,
+      person: asString(raw.person) || person,
+      name: asString(raw.name),
+      category: asString(raw.category),
+      description: asString(raw.description),
+      icon: asString(raw.icon),
       show: asBoolean(raw.show, true),
     }
   })

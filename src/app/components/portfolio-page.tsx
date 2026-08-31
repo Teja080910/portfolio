@@ -4,11 +4,15 @@
 import FloatingNav from "@/app/components/floating-nav"
 import Hero from "@/app/components/hero"
 import { supabase } from "@/lib/db"
-import { IAboutHighlight, IAboutMe, ICertificate, IEducation, IExperience, IProjects, ISkills, IUser } from "@/lib/interfaces"
+import { IAboutHighlight, IAboutMe, ICertificate, ICollaboration, IContentChannel, IContentWork, ICreatorTool, IEducation, IExperience, IProjects, ISkills, IUser, PortfolioTemplate } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
 import About from "@/pages/components/about"
 import Certificate from "@/pages/components/certificate"
+import Collaborations from "@/pages/components/collaborations"
 import Contact from "@/pages/components/contact"
+import ContentChannels from "@/pages/components/content-channels"
+import ContentPortfolio from "@/pages/components/content-portfolio"
+import CreatorTools from "@/pages/components/creator-tools"
 import Education from "@/pages/components/education"
 import Experience from "@/pages/components/experience"
 import Projects from "@/pages/components/projects"
@@ -203,6 +207,72 @@ const mapCertificateContent = (value: unknown, userId: string): ICertificate[] =
         }))
     : []
 
+const mapContentChannelsContent = (value: unknown, userId: string): IContentChannel[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `content-channel-${userId}-${index}`,
+          person: userId,
+          platform: toString(item.platform),
+          url: toString(item.url),
+          handle: toString(item.handle),
+          subscriberCount: toString(item.subscriberCount),
+          description: toString(item.description),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
+const mapContentWorksContent = (value: unknown, userId: string): IContentWork[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `content-work-${userId}-${index}`,
+          person: userId,
+          title: toString(item.title),
+          type: toString(item.type),
+          url: toString(item.url),
+          thumbnail: toString(item.thumbnail),
+          description: toString(item.description),
+          date: toString(item.date),
+          views: toString(item.views),
+          show: typeof item.show === "boolean" ? item.show : true,
+          sortOrder: typeof item.sortOrder === "number" ? item.sortOrder : index,
+        }))
+    : []
+
+const mapCollaborationsContent = (value: unknown, userId: string): ICollaboration[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `collaboration-${userId}-${index}`,
+          person: userId,
+          brand: toString(item.brand),
+          description: toString(item.description),
+          url: toString(item.url),
+          date: toString(item.date),
+          logo: toString(item.logo),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
+const mapCreatorToolsContent = (value: unknown, userId: string): ICreatorTool[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: toString(item.id) || `creator-tool-${userId}-${index}`,
+          person: userId,
+          name: toString(item.name),
+          category: toString(item.category),
+          description: toString(item.description),
+          icon: toString(item.icon),
+          show: typeof item.show === "boolean" ? item.show : true,
+        }))
+    : []
+
 export default function PortfolioPage() {
   const user = useStore((state) => state.user)
   const about = useStore((state) => state.about)
@@ -211,6 +281,10 @@ export default function PortfolioPage() {
   const projects = useStore((state) => state.projects)
   const certificate = useStore((state) => state.certificate)
   const education = useStore((state) => state.education)
+  const contentChannels = useStore((state) => state.contentChannels)
+  const contentWorks = useStore((state) => state.contentWorks)
+  const collaborations = useStore((state) => state.collaborations)
+  const creatorTools = useStore((state) => state.creatorTools)
   const router = useRouter()
   const usernameFromRoute = router.isReady
     ? (typeof router.query.username === "string"
@@ -259,16 +333,30 @@ export default function PortfolioPage() {
   const hasCertificateContent = certificate.some((item) => item.show && (item.name || item.duration || item.link))
   const hasEducationContent = education.some((item) => item.show && (item.name || item.course || item.branch || item.keyachivements))
   const hasContactContent = Boolean(user.email || user.phone || user.firstname || user.lastname || user.username || user.role)
+  const hasContentChannelsContent = contentChannels.some((item) => item.show && (item.platform || item.handle || item.url))
+  const hasContentWorksContent = contentWorks.some((item) => item.show && (item.title || item.url || item.description))
+  const hasCollaborationsContent = collaborations.some((item) => item.show && (item.brand || item.description || item.url))
+  const hasCreatorToolsContent = creatorTools.some((item) => item.show && (item.name || item.category || item.description))
 
   const showHero = canRenderFromStore && (isOwnerView ? true : Boolean(user.show))
+  const template = user.template || "software"
   const hasAboutContent = Boolean(about?.type?.trim()) || Boolean(about?.list?.some((item) => item.trim()))
   const showAbout = canRenderFromStore && (isOwnerView || (hasAboutContent && Boolean(about.show)))
-  const showExperience = canRenderFromStore && (isOwnerView || hasExperienceContent)
-  const showSkills = canRenderFromStore && (isOwnerView || hasSkillsContent)
-  const showProjects = canRenderFromStore && (isOwnerView || hasProjectsContent)
-  const showCertificate = canRenderFromStore && (isOwnerView || hasCertificateContent)
-  const showEducation = canRenderFromStore && (isOwnerView || hasEducationContent)
   const showContact = canRenderFromStore && (isOwnerView || hasContactContent)
+
+  const isDev = template === "software"
+  const isCreator = template === "content_creator"
+  const isMarketer = template === "marketer"
+
+  const showExperience = canRenderFromStore && (isDev || isMarketer) && (isOwnerView || hasExperienceContent)
+  const showSkills = canRenderFromStore && (isDev || isMarketer || isCreator) && (isOwnerView || hasSkillsContent)
+  const showProjects = canRenderFromStore && (isDev || isMarketer) && (isOwnerView || hasProjectsContent)
+  const showCertificate = canRenderFromStore && isDev && (isOwnerView || hasCertificateContent)
+  const showEducation = canRenderFromStore && isDev && (isOwnerView || hasEducationContent)
+  const showContentChannels = canRenderFromStore && isCreator && (isOwnerView || hasContentChannelsContent)
+  const showContentPortfolio = canRenderFromStore && isCreator && (isOwnerView || hasContentWorksContent)
+  const showCollaborations = canRenderFromStore && (isCreator || isMarketer) && (isOwnerView || hasCollaborationsContent)
+  const showCreatorTools = canRenderFromStore && isCreator && (isOwnerView || hasCreatorToolsContent)
 
   // Detect route type from pathname since both /b/ and /t/ use [slug] param
   const isBusinessRoute = router.pathname === "/b/[slug]"
@@ -332,17 +420,24 @@ export default function PortfolioPage() {
 
     const { data: portfolioContent } = await supabase
       .from("portfolio_contents")
-      .select("about, skills, projects, experience, education, certificates")
+      .select("about, skills, projects, experience, education, certificates, content_channels, content_works, collaborations, creator_tools, template")
       .eq("user_id", userId)
       .maybeSingle()
 
     if (portfolioContent) {
+      if (portfolioContent.template) {
+        resolvedUser.template = portfolioContent.template as PortfolioTemplate
+      }
       storeApi.setAbout(mapAboutContent(portfolioContent.about, userId))
       storeApi.setSkills(mapSkillsContent(portfolioContent.skills, userId))
       storeApi.setProjects(mapProjectsContent(portfolioContent.projects, userId))
       storeApi.setExperience(mapExperienceContent(portfolioContent.experience, userId))
       storeApi.setEducation(mapEducationContent(portfolioContent.education, userId))
       storeApi.setCertificate(mapCertificateContent(portfolioContent.certificates, userId))
+      storeApi.setContentChannels(mapContentChannelsContent(portfolioContent.content_channels, userId))
+      storeApi.setContentWorks(mapContentWorksContent(portfolioContent.content_works, userId))
+      storeApi.setCollaborations(mapCollaborationsContent(portfolioContent.collaborations, userId))
+      storeApi.setCreatorTools(mapCreatorToolsContent(portfolioContent.creator_tools, userId))
     } else {
       storeApi.resetPortfolio()
     }
@@ -386,17 +481,25 @@ export default function PortfolioPage() {
 
     const { data: portfolioContent } = await supabase
       .from("portfolio_contents")
-      .select("about, skills, projects, experience, education, certificates")
+      .select("about, skills, projects, experience, education, certificates, content_channels, content_works, collaborations, creator_tools, template")
       .eq("user_id", profile.id)
       .maybeSingle()
 
     if (portfolioContent) {
+      if (portfolioContent.template) {
+        const updatedUser = { ...storeApi.user, template: portfolioContent.template as PortfolioTemplate }
+        storeApi.addUser(updatedUser)
+      }
       storeApi.setAbout(mapAboutContent(portfolioContent.about, profile.id))
       storeApi.setSkills(mapSkillsContent(portfolioContent.skills, profile.id))
       storeApi.setProjects(mapProjectsContent(portfolioContent.projects, profile.id))
       storeApi.setExperience(mapExperienceContent(portfolioContent.experience, profile.id))
       storeApi.setEducation(mapEducationContent(portfolioContent.education, profile.id))
       storeApi.setCertificate(mapCertificateContent(portfolioContent.certificates, profile.id))
+      storeApi.setContentChannels(mapContentChannelsContent(portfolioContent.content_channels, profile.id))
+      storeApi.setContentWorks(mapContentWorksContent(portfolioContent.content_works, profile.id))
+      storeApi.setCollaborations(mapCollaborationsContent(portfolioContent.collaborations, profile.id))
+      storeApi.setCreatorTools(mapCreatorToolsContent(portfolioContent.creator_tools, profile.id))
     } else {
       storeApi.resetPortfolio()
     }
@@ -520,6 +623,10 @@ export default function PortfolioPage() {
     showHero,
     showProjects,
     showSkills,
+    showContentChannels,
+    showContentPortfolio,
+    showCollaborations,
+    showCreatorTools,
   ])
 
   if (isNotFound) {
@@ -570,6 +677,10 @@ export default function PortfolioPage() {
       {showExperience && <Experience isReadOnly={isReadOnlyView} />}
       {showSkills && <Skills isReadOnly={isReadOnlyView} />}
       {showProjects && <Projects isReadOnly={isReadOnlyView} viewerUserId={viewerUserId} />}
+      {showContentChannels && <ContentChannels isReadOnly={isReadOnlyView} />}
+      {showContentPortfolio && <ContentPortfolio isReadOnly={isReadOnlyView} />}
+      {showCollaborations && <Collaborations isReadOnly={isReadOnlyView} />}
+      {showCreatorTools && <CreatorTools isReadOnly={isReadOnlyView} />}
       {showCertificate && <Certificate isReadOnly={isReadOnlyView} />}
       {showEducation && <Education isReadOnly={isReadOnlyView} />}
       {showContact && <Contact isReadOnly={isReadOnlyView} />}

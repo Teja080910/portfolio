@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
-type PortfolioEditorSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | null
+type PortfolioEditorSection = "about" | "skills" | "projects" | "experience" | "education" | "certificate" | "content_channels" | "content_portfolio" | "collaborations" | "creator_tools" | null
 
 type EditorView = "profile" | "portfolio"
 
@@ -18,6 +18,10 @@ const sectionToEditor: Record<string, { view: EditorView; focus: PortfolioEditor
   "edit-experience": { view: "portfolio", focus: "experience" },
   "edit-education": { view: "portfolio", focus: "education" },
   "edit-certificate": { view: "portfolio", focus: "certificate" },
+  "edit-content-channels": { view: "portfolio", focus: "content_channels" },
+  "edit-content-portfolio": { view: "portfolio", focus: "content_portfolio" },
+  "edit-collaborations": { view: "portfolio", focus: "collaborations" },
+  "edit-creator-tools": { view: "portfolio", focus: "creator_tools" },
 }
 
 export default function UserEditorBySectionPage() {

@@ -1,7 +1,7 @@
 "use client"
 
 import { supabase } from "@/lib/db"
-import { IUser } from "@/lib/interfaces"
+import { IUser, PortfolioTemplate } from "@/lib/interfaces"
 import { useStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
+  Code2,
   FileText,
   Github,
   ImageIcon,
@@ -19,7 +20,9 @@ import {
   Phone,
   Save,
   ShieldCheck,
-  UserRound
+  TrendingUp,
+  UserRound,
+  Video
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -30,6 +33,12 @@ import { z } from "zod"
 const PROFILE_PHOTOS_BUCKET = "profile-photos"
 const MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024
 const ALLOWED_PROFILE_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"]
+
+const templateRoles: Record<string, string[]> = {
+  software: ["Developer", "Designer", "Product Manager", "Other"],
+  content_creator: ["YouTuber", "Blogger", "Podcast Host", "Social Media Manager", "Influencer", "Video Editor", "Photographer", "Other"],
+  marketer: ["Marketing", "Sales", "Digital Marketer", "SEO Specialist", "Content Strategist", "Brand Manager", "Growth Hacker", "Email Marketer", "PPC Specialist", "Customer Support", "Other"],
+}
 
 const isValidUrl = (value: string) => {
   if (!value.trim()) {
@@ -240,12 +249,15 @@ export default function ProfileForm() {
   const [photoError, setPhotoError] = useState("")
   const [removePhoto, setRemovePhoto] = useState(false)
   const [photoInputKey, setPhotoInputKey] = useState(0)
+  const [currentTemplate, setCurrentTemplate] = useState<PortfolioTemplate>(currentUser.template || "software")
 
   const {
     register,
     handleSubmit,
     watch,
     reset,
+    getValues,
+    setValue,
     setError,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
@@ -294,6 +306,12 @@ export default function ProfileForm() {
 
       addUser(resolvedUser)
 
+      const { data: portfolioContent } = await supabase
+        .from("portfolio_contents")
+        .select("template")
+        .eq("user_id", authUser.id)
+        .maybeSingle()
+
       if (isActive) {
         reset(buildDefaults(resolvedUser))
         setPhotoUrl(resolvedUser.photo ?? "")
@@ -301,6 +319,9 @@ export default function ProfileForm() {
         setPhotoError("")
         setRemovePhoto(false)
         setPhotoInputKey((previous) => previous + 1)
+        if (portfolioContent?.template) {
+          setCurrentTemplate(portfolioContent.template as PortfolioTemplate)
+        }
         setIsHydrating(false)
       }
     }
@@ -573,200 +594,79 @@ export default function ProfileForm() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Personal Details — 2-column with preview */}
           <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="space-y-8">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Personal Details</p>
+                <div className="mt-1 h-px bg-slate-200 dark:bg-slate-700" />
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <button type="button" onClick={() => document.getElementById("photoUpload")?.click()} className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-100 text-slate-400 transition-colors hover:border-cyan-400 hover:text-cyan-500 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-cyan-500">
+                  {activePhotoPreview ? (
+                    <>
+                      <img src={activePhotoPreview} alt="Preview" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100"><ImageIcon className="size-5 text-white" /></div>
+                    </>
+                  ) : <ImageIcon className="size-6" />}
+                </button>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">JPG, PNG, or WEBP. Max 5 MB.</p>
+                  {selectedPhotoFile && <p className="text-xs text-slate-500">{selectedPhotoFile.name}</p>}
+                  {activePhotoPreview && <button type="button" onClick={handleRemovePhoto} className="mt-1 text-xs text-red-500 hover:text-red-600">Remove photo</button>}
+                </div>
+                <input key={photoInputKey} id="photoUpload" type="file" accept={ALLOWED_PROFILE_PHOTO_TYPES.join(",")} onChange={handlePhotoSelection} className="hidden" />
+              </div>
+              {photoError && <p className="text-center text-xs text-rose-500">{photoError}</p>}
+
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label htmlFor="firstname" className={labelClassName}>
-                    Display Name
-                  </label>
+                  <label htmlFor="firstname" className={labelClassName}>Display Name</label>
                   <input id="firstname" {...register("firstname")} className={textInputClassName} placeholder="Teja Simma" />
                   {errors.firstname && <p className="mt-2 text-sm text-rose-500">{errors.firstname.message}</p>}
                 </div>
-
                 <input id="lastname" type="hidden" {...register("lastname")} />
-
                 <div>
-                  <label htmlFor="username" className={labelClassName}>
-                    Username
-                  </label>
-                  <input
-                    id="username"
-                    {...register("username")}
-                    className={textInputClassName}
-                    placeholder="tejasimma"
-                    autoCapitalize="none"
-                  />
+                  <label htmlFor="username" className={labelClassName}>Username</label>
+                  <input id="username" {...register("username")} className={textInputClassName} placeholder="tejasimma" autoCapitalize="none" />
                   {errors.username && <p className="mt-2 text-sm text-rose-500">{errors.username.message}</p>}
                 </div>
-
                 <div>
-                  <label htmlFor="role" className={labelClassName}>
-                    Role
-                  </label>
-                  <input
-                    id="role"
-                    {...register("role")}
-                    className={textInputClassName}
-                    placeholder="Frontend Developer"
-                  />
-                  {errors.role && <p className="mt-2 text-sm text-rose-500">{errors.role.message}</p>}
-                </div>
-
-                <div>
-                  <label htmlFor="type" className={labelClassName}>
-                    Profile Type
-                  </label>
-                  <div className="relative">
-                    <Building2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <select
-                      id="type"
-                      {...register("type")}
-                      className={`${textInputClassName} appearance-none pl-11`}
-                    >
-                      <option value="user">Individual User</option>
-                      <option value="team">Team</option>
-                      <option value="business">Business</option>
-                    </select>
-                    <svg
-                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  {errors.type && <p className="mt-2 text-sm text-rose-500">{errors.type.message}</p>}
-                </div>
-
-                <div>
-                  <label htmlFor="phone" className={labelClassName}>
-                    Phone
-                  </label>
+                  <label htmlFor="phone" className={labelClassName}>Phone</label>
                   <div className="relative">
                     <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      id="phone"
-                      {...register("phone")}
-                      className={`${textInputClassName} pl-11`}
-                      placeholder="+91 98765 43210"
-                    />
+                    <input id="phone" {...register("phone")} className={`${textInputClassName} pl-11`} placeholder="+91 98765 43210" />
                   </div>
                   {errors.phone && <p className="mt-2 text-sm text-rose-500">{errors.phone.message}</p>}
                 </div>
-              </div>
-
-              <div>
-                <label htmlFor="email" className={labelClassName}>
-                  Account Email
-                </label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="email"
-                    value={accountEmail}
-                    readOnly
-                    className={`${textInputClassName} pl-11 text-slate-500 dark:text-slate-400`}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  Email is read-only here to avoid Supabase confirmation flow conflicts.
-                </p>
-              </div>
-
-              <div>
-                <label htmlFor="description" className={labelClassName}>
-                  Short Bio
-                </label>
-                <textarea
-                  id="description"
-                  {...register("description")}
-                  rows={5}
-                  className={`${textInputClassName} resize-none`}
-                  placeholder="Tell visitors what you build, what you enjoy working on, and what makes your portfolio yours."
-                />
-                <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>This copy appears in your hero section.</span>
-                  <span>{watchedValues.description.length}/320</span>
-                </div>
-                {errors.description && <p className="mt-2 text-sm text-rose-500">{errors.description.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="photoUpload" className={labelClassName}>
-                  Profile Photo
-                </label>
-                <div className="rounded-2xl border border-dashed border-slate-300/80 bg-white/70 p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-950/35">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
-                      <ImageIcon className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                        Upload your photo to the Supabase bucket
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        JPG, PNG, or WEBP. Max size 5 MB.
-                      </p>
-                    </div>
+                <div className="md:col-span-2">
+                  <label htmlFor="email" className={labelClassName}>Email</label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input id="email" value={accountEmail} readOnly className={`${textInputClassName} pl-11 text-slate-500 dark:text-slate-400`} />
                   </div>
-
-                  <input
-                    key={photoInputKey}
-                    id="photoUpload"
-                    type="file"
-                    accept={ALLOWED_PROFILE_PHOTO_TYPES.join(",")}
-                    onChange={handlePhotoSelection}
-                    className="mt-4 block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-cyan-600 file:px-4 file:py-2.5 file:font-semibold file:text-white hover:file:bg-cyan-500 dark:text-slate-300"
-                  />
-
-                  <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                    {selectedPhotoFile && <span>Selected: {selectedPhotoFile.name}</span>}
-                    {!selectedPhotoFile && activePhotoPreview && <span>Current photo ready</span>}
-                    {!selectedPhotoFile && !activePhotoPreview && <span>No photo uploaded yet</span>}
-                  </div>
-
-                  {activePhotoPreview && (
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="mt-4 inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition-colors duration-300 hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
-                    >
-                      Remove current photo
-                    </button>
-                  )}
                 </div>
-                {photoError && <p className="mt-2 text-sm text-rose-500">{photoError}</p>}
+                <div className="md:col-span-2">
+                  <label htmlFor="description" className={labelClassName}>Short Bio</label>
+                  <textarea id="description" {...register("description")} rows={3} className={`${textInputClassName} resize-none`} placeholder="Tell visitors what you build, what you enjoy working on, and what makes your portfolio yours." />
+                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span>This copy appears in your hero section.</span>
+                    <span>{watchedValues.description.length}/320</span>
+                  </div>
+                  {errors.description && <p className="mt-2 text-sm text-rose-500">{errors.description.message}</p>}
+                </div>
               </div>
             </div>
 
             <div className="space-y-6">
-              <motion.div
-                className="glass-card overflow-hidden"
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.55, delay: 0.12 }}
-              >
+              <motion.div className="glass-card overflow-hidden" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55, delay: 0.12 }}>
                 <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-slate-100 p-6 dark:border-slate-700/70 dark:bg-slate-950/55">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-cyan-500/20 via-teal-400/10 to-transparent" />
                   <div className="relative flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 to-teal-500 text-2xl font-bold text-white shadow-lg">
-                      {preview.photo ? (
-                          <div
-                            aria-label={preview.fullName}
-                            className="h-full w-full bg-cover bg-center"
-                            role="img"
-                            style={{ backgroundImage: `url(${preview.photo})` }}
-                          />
-                        ) : (
-                          preview.initials
-                        )}
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 to-teal-500 text-2xl font-bold text-white shadow-lg">
+                        {preview.photo ? <div aria-label={preview.fullName} className="h-full w-full bg-cover bg-center" role="img" style={{ backgroundImage: `url(${preview.photo})` }} /> : preview.initials}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Live Preview</p>
@@ -774,7 +674,6 @@ export default function ProfileForm() {
                         <p className="mt-1 break-words text-sm text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{preview.username}</p>
                       </div>
                     </div>
-
                     <div className="min-w-0 space-y-4">
                       <div className="flex min-w-0 items-start gap-3 text-slate-600 dark:text-slate-300">
                         <Briefcase className="mt-0.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
@@ -796,25 +695,14 @@ export default function ProfileForm() {
                   </div>
                 </div>
               </motion.div>
-
-              <motion.div
-                className="glass-card"
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.55, delay: 0.18 }}
-              >
+              <motion.div className="glass-card" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55, delay: 0.18 }}>
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
-                    <PencilLine className="h-5 w-5" />
-                  </div>
+                  <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300"><PencilLine className="h-5 w-5" /></div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">What updates from here</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      These fields feed the personalized sections we already switched away from starter content.
-                    </p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">These fields feed the personalized sections we already switched away from starter content.</p>
                   </div>
                 </div>
-
                 <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
                   <p>Your hero section uses your name, role, bio, photo, GitHub, LinkedIn, and email.</p>
                   <p>Your contact section uses your name, email, phone, and role.</p>
@@ -824,55 +712,183 @@ export default function ProfileForm() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            <div>
-              <label htmlFor="gitlink" className={labelClassName}>
-                GitHub URL
-              </label>
-              <div className="relative">
-                <Github className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="gitlink"
-                  {...register("gitlink")}
-                  className={`${textInputClassName} pl-11`}
-                  placeholder="https://github.com/your-handle"
-                />
-              </div>
-              {errors.gitlink && <p className="mt-2 text-sm text-rose-500">{errors.gitlink.message}</p>}
-            </div>
+          {/* Portfolio + Professional — full width */}
+          <div className="mt-8 space-y-8">
 
-            <div>
-              <label htmlFor="likedlin" className={labelClassName}>
-                LinkedIn URL
-              </label>
-              <div className="relative">
-                <Linkedin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="likedlin"
-                  {...register("likedlin")}
-                  className={`${textInputClassName} pl-11`}
-                  placeholder="https://linkedin.com/in/your-handle"
-                />
-              </div>
-              {errors.likedlin && <p className="mt-2 text-sm text-rose-500">{errors.likedlin.message}</p>}
-            </div>
+              {/* Portfolio */}
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Portfolio</p>
+                  <div className="mt-1 h-px bg-slate-200 dark:bg-slate-700" />
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <label htmlFor="type" className={labelClassName}>
+                      Profile Type
+                    </label>
+                    <div className="relative">
+                      <Building2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <select
+                        id="type"
+                        {...register("type")}
+                        className={`${textInputClassName} appearance-none pl-11`}
+                      >
+                        <option value="user">Individual User</option>
+                        <option value="team">Team</option>
+                        <option value="business">Business</option>
+                      </select>
+                      <svg
+                        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  {errors.type && <p className="mt-2 text-sm text-rose-500">{errors.type.message}</p>}
+                </div>
 
-            <div>
-              <label htmlFor="resumelink" className={labelClassName}>
-                Resume URL
-              </label>
-              <div className="relative">
-                <FileText className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="resumelink"
-                  {...register("resumelink")}
-                  className={`${textInputClassName} pl-11`}
-                  placeholder="https://drive.google.com/..."
-                />
+                <div className="md:col-span-2">
+                  <label className={labelClassName}>
+                    Portfolio Template
+                  </label>
+                  <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                    Choose the template that best fits your work. This controls which sections appear on your portfolio.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { id: "software" as const, label: "Software", icon: Code2, desc: "Projects, Skills, Experience, Education." },
+                      { id: "content_creator" as const, label: "Content Creator", icon: Video, desc: "Channels, Portfolio, Collaborations." },
+                      { id: "marketer" as const, label: "Marketer", icon: TrendingUp, desc: "Skills, Campaigns, Collaborations." },
+                    ]).map(({ id, label, icon: Icon, desc }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={async () => {
+                          setCurrentTemplate(id)
+                          const newRoles = templateRoles[id] || templateRoles.software
+                          const currentRole = getValues("role")
+                          if (currentRole && !newRoles.includes(currentRole)) {
+                            setValue("role", "", { shouldDirty: true })
+                          }
+                          const { data: { user: authUser } } = await supabase.auth.getUser()
+                          if (authUser) {
+                            await supabase
+                              .from("portfolio_contents")
+                              .upsert({ user_id: authUser.id, template: id }, { onConflict: "user_id" })
+                          }
+                          addUser({ ...useStore.getState().user, template: id })
+                        }}
+                        className={`flex items-center gap-2 rounded-xl border-2 px-4 py-3 text-left transition-all duration-200 ${
+                          currentTemplate === id
+                            ? "border-cyan-400 bg-cyan-50/70 dark:border-cyan-500/50 dark:bg-cyan-950/30"
+                            : "border-slate-200 bg-white/60 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-600"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{label}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <label htmlFor="role" className={labelClassName}>
+                      Role
+                    </label>
+                    <select
+                      id="role"
+                      {...register("role")}
+                      className={textInputClassName}
+                      onChange={(e) => {
+                        register("role").onChange(e)
+                        const val = e.target.value
+                        if (val && !templateRoles[currentTemplate]?.includes(val)) {
+                          e.target.value = ""
+                        }
+                      }}
+                    >
+                      <option value="">Select a role</option>
+                      {(templateRoles[currentTemplate] || templateRoles.software).map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                    {errors.role && <p className="mt-2 text-sm text-rose-500">{errors.role.message}</p>}
+                  </div>
+                </div>
               </div>
-              {errors.resumelink && <p className="mt-2 text-sm text-rose-500">{errors.resumelink.message}</p>}
-            </div>
-          </div>
+              </div>
+
+              {/* Professional — template-aware */}
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Professional</p>
+                  <div className="mt-1 h-px bg-slate-200 dark:bg-slate-700" />
+                </div>
+                <div className="grid gap-6 md:grid-cols-3">
+                  {currentTemplate === "software" && (
+                    <div>
+                      <label htmlFor="gitlink" className={labelClassName}>
+                        GitHub URL
+                      </label>
+                      <div className="relative">
+                        <Github className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                          id="gitlink"
+                          {...register("gitlink")}
+                          className={`${textInputClassName} pl-11`}
+                          placeholder="https://github.com/your-handle"
+                        />
+                      </div>
+                      {errors.gitlink && <p className="mt-2 text-sm text-rose-500">{errors.gitlink.message}</p>}
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="likedlin" className={labelClassName}>
+                      LinkedIn URL
+                    </label>
+                    <div className="relative">
+                      <Linkedin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="likedlin"
+                        {...register("likedlin")}
+                        className={`${textInputClassName} pl-11`}
+                        placeholder="https://linkedin.com/in/your-handle"
+                      />
+                    </div>
+                    {errors.likedlin && <p className="mt-2 text-sm text-rose-500">{errors.likedlin.message}</p>}
+                  </div>
+
+                  {currentTemplate !== "content_creator" && (
+                    <div>
+                      <label htmlFor="resumelink" className={labelClassName}>
+                        {currentTemplate === "marketer" ? "Website URL" : "Resume URL"}
+                      </label>
+                      <div className="relative">
+                        <FileText className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                          id="resumelink"
+                          {...register("resumelink")}
+                          className={`${textInputClassName} pl-11`}
+                          placeholder={currentTemplate === "marketer" ? "https://yourwebsite.com" : "https://drive.google.com/..."}
+                        />
+                      </div>
+                      {errors.resumelink && <p className="mt-2 text-sm text-rose-500">{errors.resumelink.message}</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+              </div>
 
           {status && (
             <div
