@@ -424,6 +424,104 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingProjectPhotos, setIsUploadingProjectPhotos] = useState(false)
   const [isUploadingContentMedia, setIsUploadingContentMedia] = useState(false)
+  const [contentMetaStatus, setContentMetaStatus] = useState<Record<string, "idle" | "loading" | "done" | "error" | "unavailable">>({})
+  const contentMetaTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const fetchContentMeta = async (index: number, itemId: string, url: string) => {
+    const detected = detectLink(url)
+    if (detected.platform === "unknown" || url.length < 10) {
+      setContentMetaStatus((prev) => ({ ...prev, [itemId]: "idle" }))
+      return
+    }
+    const key = itemId || `row-${index}`
+    if (contentMetaTimers.current[key]) {
+      clearTimeout(contentMetaTimers.current[key])
+    }
+    contentMetaTimers.current[key] = setTimeout(async () => {
+      setContentMetaStatus((prev) => ({ ...prev, [key]: "loading" }))
+      try {
+        const res = await fetch(`/api/content-meta?url=${encodeURIComponent(url)}`)
+        if (res.ok) {
+          const json = (await res.json()) as { meta?: { title?: string; author?: string; thumbnail?: string; date?: string; views?: string } }
+          const meta = json.meta ?? {}
+          const updates: Partial<IContentWork> = {}
+          if (meta.thumbnail) {
+            updates.thumbnail = meta.thumbnail
+          }
+          if (meta.title) {
+            updates.title = meta.title
+          }
+          if (meta.date) {
+            updates.date = meta.date
+          }
+          if (meta.views) {
+            updates.views = meta.views
+          }
+          if (Object.keys(updates).length > 0) {
+            setContentWorksDraft((prev) =>
+              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, ...updates, title: row.title || updates.title || "" } : row)),
+            )
+            setContentMetaStatus((prev) => ({ ...prev, [key]: "done" }))
+          } else {
+            setContentMetaStatus((prev) => ({ ...prev, [key]: "unavailable" }))
+          }
+        } else {
+          setContentMetaStatus((prev) => ({ ...prev, [key]: "error" }))
+        }
+      } catch {
+        setContentMetaStatus((prev) => ({ ...prev, [key]: "error" }))
+      }
+    }, 400)
+  }
+  const [projectMetaStatus, setProjectMetaStatus] = useState<Record<string, "idle" | "loading" | "done" | "error" | "unavailable">>({})
+  const projectMetaTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const fetchProjectMeta = async (projectId: string, url: string, source: "weblink" | "gitlink") => {
+    if (url.length < 10) {
+      setProjectMetaStatus((prev) => ({ ...prev, [projectId]: "idle" }))
+      return
+    }
+    if (projectMetaTimers.current[projectId]) {
+      clearTimeout(projectMetaTimers.current[projectId])
+    }
+    projectMetaTimers.current[projectId] = setTimeout(async () => {
+      setProjectMetaStatus((prev) => ({ ...prev, [projectId]: "loading" }))
+      try {
+        const res = await fetch(`/api/content-meta?url=${encodeURIComponent(url)}`)
+        if (res.ok) {
+          const json = (await res.json()) as {
+            meta?: {
+              title?: string
+              description?: string
+              language?: string
+              stars?: number
+              topics?: string[]
+              thumbnail?: string
+            }
+          }
+          const meta = json.meta ?? {}
+          const updates: Partial<IProjects> = {}
+          if (meta.title) updates.name = meta.title
+          if (meta.description) updates.description = meta.description
+          if (source === "gitlink" && meta.language) {
+            const currentSkills = (updates.skills ?? []).slice()
+            if (!currentSkills.includes(meta.language)) currentSkills.push(meta.language)
+            updates.skills = currentSkills
+          }
+          if (Object.keys(updates).length > 0) {
+            setProjectsDraft((prev) =>
+              prev.map((row) => (row.id === projectId ? { ...row, ...updates, name: row.name || updates.name || "", description: row.description || updates.description || "" } : row)),
+            )
+            setProjectMetaStatus((prev) => ({ ...prev, [projectId]: "done" }))
+          } else {
+            setProjectMetaStatus((prev) => ({ ...prev, [projectId]: "unavailable" }))
+          }
+        } else {
+          setProjectMetaStatus((prev) => ({ ...prev, [projectId]: "error" }))
+        }
+      } catch {
+        setProjectMetaStatus((prev) => ({ ...prev, [projectId]: "error" }))
+      }
+    }, 400)
+  }
   const [activeSkillTypeRow, setActiveSkillTypeRow] = useState<number | null>(null)
   const [activeSkillValueRow, setActiveSkillValueRow] = useState<number | null>(null)
   const [activeSkillDescriptionRow, setActiveSkillDescriptionRow] = useState<number | null>(null)
@@ -1889,64 +1987,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                     </button>
                   </div>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <input
-                    value={item.name}
-                    onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, name: event.target.value } : row)))
-                    }
-                    className={inputClassName}
-                    placeholder="Project name"
-                  />
-                  <DatePicker
-                    value={item.startDate}
-                    placeholder="Start date"
-                    onChange={(value) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, startDate: value } : row)))
-                    }
-                  />
-                  <DatePicker
-                    value={item.endDate}
-                    placeholder="End date"
-                    onChange={(value) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, endDate: value } : row)))
-                    }
-                  />
-                  <input
-                    value={item.projectType || ""}
-                    onChange={(event) => {
-                      const projectType = event.target.value
-                      const newTypes = parseProjectTypes(projectType)
-                      setProjectsDraft((prev) =>
-                        prev.map((row, rowIndex) => {
-                          if (row.id !== item.id) return row
-                          const keep = newTypes.length > 0 ? (row.weblinks ?? []).filter((l) => newTypes.includes(l.type)) : row.weblinks
-                          return { ...row, projectType, weblinks: keep }
-                        }),
-                      )
-                    }}
-                    className={inputClassName}
-                    placeholder="Project type (e.g. App, Web, Script, ML Model)"
-                    list="project-type-suggestions"
-                  />
-                  <datalist id="project-type-suggestions">
-                    <option value="App" />
-                    <option value="Web" />
-                    <option value="Script" />
-                    <option value="ML Model" />
-                    <option value="API" />
-                    <option value="CLI" />
-                    <option value="Library" />
-                    <option value="Mobile" />
-                  </datalist>
-                  <input
-                    value={item.gitlink}
-                    onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, gitlink: event.target.value } : row)))
-                    }
-                    className={inputClassName}
-                    placeholder="GitHub link"
-                  />
+                <div className="space-y-3">
                   {(parseProjectTypes(item.projectType || "").length > 0 ? parseProjectTypes(item.projectType || "") : ["Live"]).map((linkType, linkIndex) => {
                     const typedLink = (item.weblinks ?? []).find((link) => link.type === linkType)
                     const isDefault = item.weblinks && item.weblinks.length === 0
@@ -1971,42 +2012,113 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                               return { ...row, weblinks: next }
                             }),
                           )
+                          void fetchProjectMeta(item.id, url, "weblink")
                         }}
                         className={inputClassName}
-                        placeholder={`${linkType === "Live" ? "" : linkType + ": "}Live demo link`}
+                        placeholder={`${linkType === "Live" ? "" : linkType + ": "}Live demo link (e.g. your-app.com)`}
                       />
                     )
                   })}
                   <input
-                    value={projectSkillInputDrafts[item.id ?? index] ?? toCsv(item.skills)}
-                    onBlur={() => {
-                      window.setTimeout(() => {
-                        setProjectSkillInputDrafts((prev) => {
-                          const next = { ...prev }
-                          delete next[item.id ?? index]
-                          return next
-                        })
-                      }, 100)
-                    }}
+                    value={item.gitlink}
                     onChange={(event) => {
-                      const inputValue = event.target.value
-                      setProjectSkillInputDrafts((prev) => ({ ...prev, [item.id ?? index]: inputValue }))
-                      setProjectsDraft((prev) =>
-                        prev.map((row, rowIndex) => (row.id === item.id ? { ...row, skills: fromCsv(inputValue) } : row)),
-                      )
+                      const url = event.target.value
+                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, gitlink: url } : row)))
+                      void fetchProjectMeta(item.id, url, "gitlink")
                     }}
                     className={inputClassName}
-                    placeholder="Tech stack (comma separated)"
+                    placeholder="GitHub link (optional)"
                   />
-                  <textarea
-                    value={item.description}
-                    onChange={(event) =>
-                      setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, description: event.target.value } : row)))
-                    }
-                    className={`${inputClassName} md:col-span-2`}
-                    rows={3}
-                    placeholder="Project description"
-                  />
+                  {((item.weblinks ?? []).some((l) => l.url) || item.weblink || item.gitlink) && (
+                    <p className="text-xs text-cyan-600 dark:text-cyan-400">
+                      {projectMetaStatus[item.id] === "loading" && "Fetching project details from link..."}
+                      {projectMetaStatus[item.id] === "done" && "Project details auto-filled (name, description)"}
+                      {projectMetaStatus[item.id] === "unavailable" && "No readable details for this link"}
+                      {projectMetaStatus[item.id] === "error" && "Could not fetch details for this link"}
+                    </p>
+                  )}
+                </div>
+                {((item.weblinks ?? []).some((l) => l.url) || item.weblink || item.gitlink || item.name || item.description) && (
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input
+                      value={item.name}
+                      onChange={(event) =>
+                        setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, name: event.target.value } : row)))
+                      }
+                      className={inputClassName}
+                      placeholder="Project name"
+                    />
+                    <input
+                      value={item.projectType || ""}
+                      onChange={(event) => {
+                        const projectType = event.target.value
+                        const newTypes = parseProjectTypes(projectType)
+                        setProjectsDraft((prev) =>
+                          prev.map((row, rowIndex) => {
+                            if (row.id !== item.id) return row
+                            const keep = newTypes.length > 0 ? (row.weblinks ?? []).filter((l) => newTypes.includes(l.type)) : row.weblinks
+                            return { ...row, projectType, weblinks: keep }
+                          }),
+                        )
+                      }}
+                      className={inputClassName}
+                      placeholder="Project type (e.g. App, Web, Script, ML Model)"
+                      list="project-type-suggestions"
+                    />
+                    <datalist id="project-type-suggestions">
+                      <option value="App" />
+                      <option value="Web" />
+                      <option value="Script" />
+                      <option value="ML Model" />
+                      <option value="API" />
+                      <option value="CLI" />
+                      <option value="Library" />
+                      <option value="Mobile" />
+                    </datalist>
+                    <DatePicker
+                      value={item.startDate}
+                      placeholder="Start date"
+                      onChange={(value) =>
+                        setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, startDate: value } : row)))
+                      }
+                    />
+                    <DatePicker
+                      value={item.endDate}
+                      placeholder="End date"
+                      onChange={(value) =>
+                        setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, endDate: value } : row)))
+                      }
+                    />
+                    <input
+                      value={projectSkillInputDrafts[item.id ?? index] ?? toCsv(item.skills)}
+                      onBlur={() => {
+                        window.setTimeout(() => {
+                          setProjectSkillInputDrafts((prev) => {
+                            const next = { ...prev }
+                            delete next[item.id ?? index]
+                            return next
+                          })
+                        }, 100)
+                      }}
+                      onChange={(event) => {
+                        const inputValue = event.target.value
+                        setProjectSkillInputDrafts((prev) => ({ ...prev, [item.id ?? index]: inputValue }))
+                        setProjectsDraft((prev) =>
+                          prev.map((row, rowIndex) => (row.id === item.id ? { ...row, skills: fromCsv(inputValue) } : row)),
+                        )
+                      }}
+                      className={inputClassName}
+                      placeholder="Tech stack (comma separated)"
+                    />
+                    <textarea
+                      value={item.description}
+                      onChange={(event) =>
+                        setProjectsDraft((prev) => prev.map((row, rowIndex) => (row.id === item.id ? { ...row, description: event.target.value } : row)))
+                      }
+                      className={`${inputClassName} md:col-span-2`}
+                      rows={3}
+                      placeholder="Project description"
+                    />
                   <div className="md:col-span-2">
                     <input
                       type="file"
@@ -2051,7 +2163,8 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       </div>
                     )}
                   </div>
-                </div>
+                  </div>
+                  )}
               </div>
             ))}
           </div>
@@ -2523,35 +2636,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         </button>
                       </div>
                     </div>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <input
-                        value={item.title}
-                        onChange={(event) =>
-                          setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, title: event.target.value } : row)),
-                          )
-                        }
-                        className={inputClassName}
-                        placeholder="Content title"
-                      />
-                      <select
-                        value={item.type}
-                        onChange={(event) =>
-                          setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, type: event.target.value } : row)),
-                          )
-                        }
-                        className={inputClassName}
-                      >
-                        <option value="">Select type</option>
-                        <option value="video">Video</option>
-                        <option value="article">Article</option>
-                        <option value="photo">Photo</option>
-                        <option value="podcast">Podcast</option>
-                        <option value="reel">Reel</option>
-                        <option value="short">Short</option>
-                        <option value="other">Other</option>
-                      </select>
+                    <div className="space-y-3">
                       <input
                         value={item.url}
                         onChange={(event) => {
@@ -2570,55 +2655,99 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                               return { ...row, ...updates }
                             }),
                           )
+                          void fetchContentMeta(index, item.id || `row-${index}`, url)
                         }}
                         className={inputClassName}
                         placeholder="Paste a link (YouTube, Vimeo, Instagram, TikTok...)"
                       />
                       {item.url && detectLink(item.url).platform !== "unknown" && (
-                        <p className="md:col-span-2 text-xs text-cyan-600 dark:text-cyan-400">
-                          Detected: {getPlatformLabel(detectLink(item.url).platform)} — thumbnail and type auto-filled
+                        <p className="text-xs text-cyan-600 dark:text-cyan-400">
+                          Detected: {getPlatformLabel(detectLink(item.url).platform)}
+                          {contentMetaStatus[item.id || `row-${index}`] === "loading" && " — fetching details..."}
+                          {contentMetaStatus[item.id || `row-${index}`] === "done" && " — title, date, views and thumbnail auto-filled"}
+                          {contentMetaStatus[item.id || `row-${index}`] === "error" && " — could not fetch details, fill fields manually"}
+                          {contentMetaStatus[item.id || `row-${index}`] === "unavailable" &&
+                            detectLink(item.url).platform === "instagram" &&
+                            " — Instagram blocks auto-fetching. Right-click the post image, copy image address, and paste it in Thumbnail URL"}
+                          {contentMetaStatus[item.id || `row-${index}`] === "unavailable" && detectLink(item.url).platform !== "instagram" && " — metadata unavailable for this link, fill fields manually"}
                         </p>
                       )}
-                      <DatePicker
-                        value={item.date}
-                        placeholder="Date"
-                        onChange={(value) =>
-                          setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, date: value } : row)),
-                          )
-                        }
-                      />
-                      <input
-                        value={item.thumbnail}
-                        onChange={(event) =>
-                          setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, thumbnail: event.target.value } : row)),
-                          )
-                        }
-                        className={inputClassName}
-                        placeholder="Thumbnail URL"
-                      />
-                      <input
-                        value={item.views}
-                        onChange={(event) =>
-                          setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, views: event.target.value } : row)),
-                          )
-                        }
-                        className={inputClassName}
-                        placeholder="Views / engagement count"
-                      />
-                      <textarea
-                        value={item.description}
-                        onChange={(event) =>
-                          setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)),
-                          )
-                        }
-                        rows={2}
-                        className={`${inputClassName} md:col-span-2`}
-                        placeholder="Description"
-                      />
+                      {!item.url && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Paste a link — the remaining fields appear automatically. At least the link and a title are used.
+                        </p>
+                      )}
+                    </div>
+                    {item.url && (
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        <input
+                          value={item.title}
+                          onChange={(event) =>
+                            setContentWorksDraft((prev) =>
+                              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, title: event.target.value } : row)),
+                            )
+                          }
+                          className={inputClassName}
+                          placeholder="Content title"
+                        />
+                        <select
+                          value={item.type}
+                          onChange={(event) =>
+                            setContentWorksDraft((prev) =>
+                              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, type: event.target.value } : row)),
+                            )
+                          }
+                          className={inputClassName}
+                        >
+                          <option value="">Select type</option>
+                          <option value="video">Video</option>
+                          <option value="article">Article</option>
+                          <option value="photo">Photo</option>
+                          <option value="podcast">Podcast</option>
+                          <option value="reel">Reel</option>
+                          <option value="short">Short</option>
+                          <option value="other">Other</option>
+                        </select>
+                        <DatePicker
+                          value={item.date}
+                          placeholder="Date"
+                          onChange={(value) =>
+                            setContentWorksDraft((prev) =>
+                              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, date: value } : row)),
+                            )
+                          }
+                        />
+                        <input
+                          value={item.thumbnail}
+                          onChange={(event) =>
+                            setContentWorksDraft((prev) =>
+                              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, thumbnail: event.target.value } : row)),
+                            )
+                          }
+                          className={inputClassName}
+                          placeholder="Thumbnail URL"
+                        />
+                        <input
+                          value={item.views}
+                          onChange={(event) =>
+                            setContentWorksDraft((prev) =>
+                              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, views: event.target.value } : row)),
+                            )
+                          }
+                          className={inputClassName}
+                          placeholder="Views / engagement count"
+                        />
+                        <textarea
+                          value={item.description}
+                          onChange={(event) =>
+                            setContentWorksDraft((prev) =>
+                              prev.map((row, rowIndex) => (rowIndex === index ? { ...row, description: event.target.value } : row)),
+                            )
+                          }
+                          rows={2}
+                          className={`${inputClassName} md:col-span-2`}
+                          placeholder="Description"
+                        />
                       <div className="md:col-span-2">
                         <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                           Media (photos/videos)
@@ -2667,6 +2796,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         )}
                       </div>
                     </div>
+                    )}
                   </div>
                 ))}
               </div>
