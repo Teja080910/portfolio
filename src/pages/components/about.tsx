@@ -2,19 +2,13 @@
 
 import { useStore } from "@/lib/store"
 import { motion } from "framer-motion"
-import { Compass, PencilLine, Rocket, Sparkles, Users } from "lucide-react"
+import { Compass, PencilLine, Rocket, Sparkles, Users, Tv, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 
 type AboutProps = {
   isReadOnly?: boolean
 }
-
-const fallbackAboutPoints = [
-  "I build fast, scalable web experiences with a product-first mindset and clean engineering standards.",
-  "My workflow is AI-assisted, API-driven, and focused on shipping value in short feedback loops.",
-  "I care about performance, accessibility, and interfaces that feel modern on both desktop and mobile.",
-]
 
 const looksLikeNoise = (text: string) => {
   const normalized = text.toLowerCase().replace(/[^a-z]/g, "")
@@ -34,6 +28,8 @@ const highlightIcons = {
   rocket: Rocket,
   users: Users,
   sparkles: Sparkles,
+  tv: Tv,
+  trendingup: TrendingUp,
 } as const
 
 const highlightColors = [
@@ -51,19 +47,31 @@ export default function About({ isReadOnly = false }: AboutProps) {
   const projects = useStore((state) => state.projects)
   const experiences = useStore((state) => state.experience)
   const education = useStore((state) => state.education)
+  const contentWorks = useStore((state) => state.contentWorks)
+  const contentChannels = useStore((state) => state.contentChannels)
+  const collaborations = useStore((state) => state.collaborations)
+  const creatorTools = useStore((state) => state.creatorTools)
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
   const editAboutHref = `/u/${encodeURIComponent(username || "me")}/edit-about`
 
+  const template = user.template || "software"
+  const isCreator = template === "content_creator"
+  const isMarketer = template === "marketer"
+
   const aboutPoints = (about.list ?? []).map((item) => item.trim()).filter(Boolean)
   const hasReadableAbout = aboutPoints.some((point) => !looksLikeNoise(point))
-  const displayAboutPoints = hasReadableAbout ? aboutPoints : fallbackAboutPoints
+  const displayAboutPoints = hasReadableAbout ? aboutPoints : []
   const visibleProjectsList = projects.filter((item) => item.show && (item.name || item.description))
   const visibleExperienceList = experiences.filter((item) => item.show && (item.type || item.role || item.decription))
   const visibleEducationList = education.filter((item) => item.show && (item.name || item.course))
   const visibleProjects = visibleProjectsList.length
   const visibleExperience = visibleExperienceList.length
   const visibleEducation = visibleEducationList.length
+  const visibleContentWorks = contentWorks.filter((item) => item.show && (item.title || item.url)).length
+  const visibleChannels = contentChannels.filter((item) => item.show && (item.platform || item.handle)).length
+  const visibleCollabs = collaborations.filter((item) => item.show && (item.brand)).length
+  const visibleTools = creatorTools.filter((item) => item.show && (item.name)).length
 
   const aboutHeading = about.type?.trim()
   const roleLabel = user.role?.trim()
@@ -82,50 +90,118 @@ export default function About({ isReadOnly = false }: AboutProps) {
       }
     })
 
-  const trendSignals = [
-    user.role?.trim() || "Open to opportunities",
-    visibleProjects > 0 ? `${visibleProjects} live project${visibleProjects === 1 ? "" : "s"}` : "Projects in progress",
-    visibleExperience > 0 ? `${visibleExperience} experience entr${visibleExperience === 1 ? "y" : "ies"}` : "Experience building",
-    visibleEducation > 0 ? `${visibleEducation} education entr${visibleEducation === 1 ? "y" : "ies"}` : "Continuous learning",
-  ]
-    .filter(Boolean)
-    .slice(0, 3)
+  const trendSignals = isCreator
+    ? [
+        user.role?.trim() || "Open to opportunities",
+        visibleChannels > 0 ? `${visibleChannels} channel${visibleChannels === 1 ? "" : "s"}` : "Building channels",
+        visibleContentWorks > 0 ? `${visibleContentWorks} content piece${visibleContentWorks === 1 ? "" : "s"}` : "Creating content",
+      ]
+    : isMarketer
+      ? [
+          user.role?.trim() || "Open to opportunities",
+          visibleCollabs > 0 ? `${visibleCollabs} collaboratio${visibleCollabs === 1 ? "n" : "ns"}` : "Building partnerships",
+          visibleProjects > 0 ? `${visibleProjects} campaign${visibleProjects === 1 ? "" : "s"}` : "Running campaigns",
+        ]
+      : [
+          user.role?.trim() || "Open to opportunities",
+          visibleProjects > 0 ? `${visibleProjects} live project${visibleProjects === 1 ? "" : "s"}` : "Projects in progress",
+          visibleExperience > 0 ? `${visibleExperience} experience entr${visibleExperience === 1 ? "y" : "ies"}` : "Experience building",
+        ]
 
-  const portfolioHighlights = [
-    {
-      id: "default-highlight-focus",
-      title: aboutHeading || roleLabel || "Current Focus",
-      description: user.role?.trim()
-        ? `Working as ${user.role.trim()} and building with a modern product + engineering mindset.`
-        : "Focused on shipping modern digital products with strong UX and reliable engineering.",
-      icon: Compass,
-    },
-    {
-      id: "default-highlight-project",
-      title: primaryProject ? `Project: ${primaryProject}` : `${visibleProjects || 0} Project${visibleProjects === 1 ? "" : "s"}`,
-      description:
-        visibleProjects > 0
-          ? `${visibleProjects} portfolio project${visibleProjects === 1 ? "" : "s"} published, with iterative improvements and measurable outcomes.`
-          : "Actively building and refining projects with short feedback loops.",
-      icon: Rocket,
-    },
-    {
-      id: "default-highlight-growth",
-      title: primaryExperienceLabel
-        ? `Role: ${primaryExperienceLabel}`
-        : primaryEducationLabel
-          ? `Learning: ${primaryEducationLabel}`
-          : "Growth Path",
-      description:
-        visibleExperience > 0 || visibleEducation > 0
-          ? `Showcasing ${visibleExperience} experience entr${visibleExperience === 1 ? "y" : "ies"} and ${visibleEducation} education entr${visibleEducation === 1 ? "y" : "ies"}.`
-          : "Growing through practical work, continuous learning, and collaboration.",
-      icon: Users,
-    },
-  ]
+  const portfolioHighlights = isCreator
+    ? [
+        {
+          id: "default-creator-role",
+          title: aboutHeading || roleLabel || "Current Focus",
+          description: user.role?.trim()
+            ? `Working as ${user.role.trim()} and creating impactful digital content.`
+            : "Creating content that connects, inspires, and grows communities.",
+          icon: Tv,
+        },
+        {
+          id: "default-creator-content",
+          title: `${visibleContentWorks || 0} Content Piece${visibleContentWorks === 1 ? "" : "s"}`,
+          description:
+            visibleContentWorks > 0
+              ? `${visibleContentWorks} content piece${visibleContentWorks === 1 ? "" : "s"} published, with growing engagement and reach.`
+              : "Crafting engaging content across platforms with consistent quality.",
+          icon: Sparkles,
+        },
+        {
+          id: "default-creator-channels",
+          title: `${visibleChannels || 0} Channel${visibleChannels === 1 ? "" : "s"}`,
+          description:
+            visibleChannels > 0
+              ? `Active on ${visibleChannels} platform${visibleChannels === 1 ? "" : "s"}, building a loyal audience.`
+              : "Expanding presence across multiple content platforms.",
+          icon: Users,
+        },
+      ]
+    : isMarketer
+      ? [
+          {
+            id: "default-marketer-role",
+            title: aboutHeading || roleLabel || "Current Focus",
+            description: user.role?.trim()
+              ? `Working as ${user.role.trim()} and driving growth through data-driven strategies.`
+              : "Driving growth through data-driven marketing strategies.",
+            icon: Compass,
+          },
+          {
+            id: "default-marketer-campaigns",
+            title: `${visibleProjects || 0} Campaign${visibleProjects === 1 ? "" : "s"}`,
+            description:
+              visibleProjects > 0
+                ? `${visibleProjects} campaign${visibleProjects === 1 ? "" : "s"} delivered with measurable results.`
+                : "Building and optimizing campaigns that deliver measurable outcomes.",
+            icon: Rocket,
+          },
+          {
+            id: "default-marketer-collabs",
+            title: `${visibleCollabs || 0} Collaboratio${visibleCollabs === 1 ? "n" : "ns"}`,
+            description:
+              visibleCollabs > 0
+                ? `Partnered with ${visibleCollabs} brand${visibleCollabs === 1 ? "" : "s"} on successful campaigns.`
+                : "Growing partnerships and brand relationships.",
+            icon: Users,
+          },
+        ]
+      : [
+          {
+            id: "default-highlight-focus",
+            title: aboutHeading || roleLabel || "Current Focus",
+            description: user.role?.trim()
+              ? `Working as ${user.role.trim()} and building with a modern product + engineering mindset.`
+              : "Focused on shipping modern digital products with strong UX and reliable engineering.",
+            icon: Compass,
+          },
+          {
+            id: "default-highlight-project",
+            title: primaryProject ? `Project: ${primaryProject}` : `${visibleProjects || 0} Project${visibleProjects === 1 ? "" : "s"}`,
+            description:
+              visibleProjects > 0
+                ? `${visibleProjects} portfolio project${visibleProjects === 1 ? "" : "s"} published, with iterative improvements and measurable outcomes.`
+                : "Actively building and refining projects with short feedback loops.",
+            icon: Rocket,
+          },
+          {
+            id: "default-highlight-growth",
+            title: primaryExperienceLabel
+              ? `Role: ${primaryExperienceLabel}`
+              : primaryEducationLabel
+                ? `Learning: ${primaryEducationLabel}`
+                : "Growth Path",
+            description:
+              visibleExperience > 0 || visibleEducation > 0
+                ? `Showcasing ${visibleExperience} experience entr${visibleExperience === 1 ? "y" : "ies"} and ${visibleEducation} education entr${visibleEducation === 1 ? "y" : "ies"}.`
+                : "Growing through practical work, continuous learning, and collaboration.",
+            icon: Users,
+          },
+        ]
+
   const renderedHighlights = customHighlights.length > 0 ? customHighlights : portfolioHighlights
 
-  const hasHighlightContent = Boolean(user.role?.trim()) || visibleProjects > 0 || visibleExperience > 0 || visibleEducation > 0
+  const hasHighlightContent = Boolean(user.role?.trim()) || visibleProjects > 0 || visibleExperience > 0 || visibleEducation > 0 || visibleContentWorks > 0 || visibleChannels > 0
   const aboutChipLabel = aboutHeading || roleLabel || "Who I Am Now"
 
   if (isReadOnly && aboutPoints.length === 0 && !hasHighlightContent) {

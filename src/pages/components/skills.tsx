@@ -10,7 +10,7 @@ type SkillsProps = {
   isReadOnly?: boolean
 }
 
-const skillCategoryIcons: Record<string, string> = {
+const devSkillCategoryIcons: Record<string, string> = {
   frontend: "🎨",
   backend: "⚙️",
   database: "🗄️",
@@ -23,8 +23,43 @@ const skillCategoryIcons: Record<string, string> = {
   other: "🔧",
 }
 
-const getCategoryIcon = (type: string) => {
-  const key = Object.entries(skillCategoryIcons).find(([k]) =>
+const creatorSkillCategoryIcons: Record<string, string> = {
+  video: "🎬",
+  editing: "✂️",
+  content: "📝",
+  social: "📱",
+  design: "🎨",
+  audio: "🎙️",
+  analytics: "📊",
+  photography: "📷",
+  animation: "🎞️",
+  writing: "✍️",
+  other: "🔧",
+}
+
+const marketerSkillCategoryIcons: Record<string, string> = {
+  seo: "🔍",
+  ads: "📢",
+  email: "📧",
+  analytics: "📊",
+  social: "📱",
+  content: "📝",
+  brand: "🏷️",
+  growth: "📈",
+  strategy: "🎯",
+  copywriting: "✍️",
+  other: "🔧",
+}
+
+const skillSubtitles: Record<string, string> = {
+  software: "Technologies and tools I work with.",
+  content_creator: "Skills and tools of my creative craft.",
+  marketer: "Marketing skills and channel expertise.",
+}
+
+const getCategoryIcon = (type: string, template: string) => {
+  const icons = template === "content_creator" ? creatorSkillCategoryIcons : template === "marketer" ? marketerSkillCategoryIcons : devSkillCategoryIcons
+  const key = Object.entries(icons).find(([k]) =>
     type?.toLowerCase().includes(k)
   )
   return key ? key[1] : "🔧"
@@ -34,6 +69,7 @@ export default function Skills({ isReadOnly = false }: SkillsProps) {
   const skillsStore = useStore((state) => state.skills)
   const userId = useStore((state) => state.user.id)
   const username = useStore((state) => state.user.username)
+  const template = useStore((state) => state.user.template || "software")
   const editSkillsHref = `/u/${encodeURIComponent(username || "me")}/edit-skills`
   const skills = skillsStore.filter((item) => item.show && (item.skilltype || item.skills.length || item.description))
 
@@ -82,7 +118,7 @@ export default function Skills({ isReadOnly = false }: SkillsProps) {
           </div>
         )}
 
-        <AnimatedSectionHeader title="Skills & Expertise" subtitle="Technologies and tools I work with." />
+        <AnimatedSectionHeader title="Skills & Expertise" subtitle={skillSubtitles[template] || skillSubtitles.software} />
 
         {/* Skills cloud */}
         {flattenedUniqueSkills.length > 0 && (
@@ -123,7 +159,7 @@ export default function Skills({ isReadOnly = false }: SkillsProps) {
                   <div className="mb-4 flex items-center gap-3">
                     {/* Category icon */}
                     <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 bg-background/50 text-lg">
-                      {getCategoryIcon(skill.skilltype)}
+                      {getCategoryIcon(skill.skilltype, template)}
                     </div>
                     <div>
                       <h3 className="text-base font-semibold text-foreground transition-colors duration-300 group-hover:text-primary">

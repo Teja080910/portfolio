@@ -234,6 +234,7 @@ const mapContentWorksContent = (value: unknown, userId: string): IContentWork[] 
           type: toString(item.type),
           url: toString(item.url),
           thumbnail: toString(item.thumbnail),
+          media: Array.isArray(item.media) ? (item.media as unknown[]).map((m) => toString(m)) : [],
           description: toString(item.description),
           date: toString(item.date),
           views: toString(item.views),
@@ -453,14 +454,19 @@ export default function PortfolioPage() {
       return
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("username", trimmedUsername)
       .eq("show", true)
       .maybeSingle()
 
+    if (profileError) {
+      console.error("[Portfolio] profile query error:", profileError.message)
+    }
+
     if (!profile) {
+      console.log("[Portfolio] no profile found for:", trimmedUsername)
       storeApi.removeUser()
       storeApi.resetPortfolio()
       setIsNotFound(true)
@@ -487,7 +493,8 @@ export default function PortfolioPage() {
 
     if (portfolioContent) {
       if (portfolioContent.template) {
-        const updatedUser = { ...storeApi.user, template: portfolioContent.template as PortfolioTemplate }
+        const currentUser = useStore.getState().user
+        const updatedUser = { ...currentUser, template: portfolioContent.template as PortfolioTemplate }
         storeApi.addUser(updatedUser)
       }
       storeApi.setAbout(mapAboutContent(portfolioContent.about, profile.id))
@@ -506,7 +513,7 @@ export default function PortfolioPage() {
   }, [setIsNotFound, validateRouteType])
 
   useEffect(() => {
-    if (!router.isReady || !usernameFromRoute) {
+    if (!router.isReady || !usernameFromRoute || !hydrated) {
       return
     }
 
@@ -520,11 +527,13 @@ export default function PortfolioPage() {
       isSyncingSession.current = true
 
       try {
-        const { data } = await supabase.auth.getSession()
+        const { data, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          console.error("[Portfolio] getSession error:", sessionError.message)
+        }
         const sessionUser = data.session?.user
         let sessionUsername = ""
 
-        // First determine the session user's username without loading their full portfolio
         if (sessionUser) {
           const { data: sessionProfile } = await supabase
             .from("profiles")
@@ -542,18 +551,14 @@ export default function PortfolioPage() {
         setViewerUserId(sessionUser?.id || "")
 
         if (sessionUsername && sessionUsername.toLowerCase() === normalizedRouteUsername) {
-          // Session user is viewing their own portfolio — load full data
           await loadPortfolioByUserId(sessionUser!.id, sessionUser!)
         } else {
-          // Viewing someone else's portfolio — load public profile directly
           await loadPublicProfileByUsername(usernameFromRoute)
         }
 
         if (isActive) {
           setViewerUsername(sessionUsername)
           setViewerUserId(sessionUser?.id || "")
-          // Mark data as ready only after ALL data (user + portfolio content) is loaded
-          // This prevents the intermediate state where user.id is set but content hasn't arrived
           setIsDataReady(true)
         }
       } finally {
@@ -575,7 +580,7 @@ export default function PortfolioPage() {
       isSyncingSession.current = false
       sub.data.subscription.unsubscribe()
     }
-  }, [normalizedRouteUsername, router.isReady, usernameFromRoute, loadPortfolioByUserId, loadPublicProfileByUsername])
+  }, [normalizedRouteUsername, router.isReady, usernameFromRoute, loadPortfolioByUserId, loadPublicProfileByUsername, hydrated])
 
   useEffect(() => {
     if (!canRenderFromStore) {

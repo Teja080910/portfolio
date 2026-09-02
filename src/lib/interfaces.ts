@@ -123,6 +123,7 @@ export interface IContentWork {
     type: ContentType | string;
     url: string;
     thumbnail: string;
+    media: string[];
     description: string;
     date: string;
     views: string;

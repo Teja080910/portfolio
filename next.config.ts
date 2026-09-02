@@ -18,6 +18,16 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
     hostname: "db.portfoli.store",
     pathname: "/storage/v1/object/public/**",
   },
+  {
+    protocol: "http",
+    hostname: "localhost",
+    port: "54400",
+    pathname: "/storage/v1/object/public/**",
+  },
+  {
+    protocol: "https",
+    hostname: "api.dicebear.com",
+  },
 ]
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

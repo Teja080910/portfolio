@@ -6,7 +6,7 @@ import { supabase } from "@/lib/db"
 import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
-import { Github, Loader2, ShieldCheck, Sparkles } from "lucide-react"
+import { Github, Loader2 } from "lucide-react"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
@@ -94,46 +94,13 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
     return (
         <motion.section
             className={cn(
-                "w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/50 bg-white/75 shadow-[0_30px_120px_rgba(15,23,42,0.25)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-950/55",
+                "w-full max-w-md overflow-hidden rounded-[2rem] border border-white/50 bg-white/75 p-8 shadow-[0_30px_120px_rgba(15,23,42,0.25)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-950/55 sm:p-10",
                 className,
             )}
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.55, ease: "easeOut" }}
         >
-            <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-cyan-600 via-sky-500 to-teal-500 p-8 text-white sm:p-10 lg:p-12">
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.28),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.18),transparent_34%)]" />
-                    <div className="pointer-events-none absolute -left-14 top-10 h-40 w-40 rounded-full border border-white/20 bg-white/10 blur-3xl" />
-                    <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-56 rounded-full border border-white/10 bg-slate-950/15 blur-3xl" />
-
-                    <div className="relative flex h-full flex-col">
-                        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
-                            <Sparkles className="size-4" />
-                            Welcome back
-                        </div>
-                        <h1 className="mt-8 text-4xl font-semibold tracking-tight sm:text-5xl">Sign in to your portfolio workspace.</h1>
-                        <p className="mt-4 text-base leading-7 text-cyan-50/90 sm:text-lg">
-                            Continue where you left off with secure login, smoother interactions, and a cleaner account entry flow.
-                        </p>
-
-                        <div className="mt-10 rounded-[1.75rem] border border-white/15 bg-slate-950/15 p-5 backdrop-blur">
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-2xl bg-white/15 p-2">
-                                    <ShieldCheck className="size-5" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold">Secure session handling</p>
-                                    <p className="mt-1 text-sm leading-6 text-cyan-50/80">
-                                        Authentication is validated before routing, so users land straight on their personalized dashboard.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="relative bg-white/88 p-6 sm:p-8 lg:p-10 dark:bg-slate-950/78">
                     <Card className="border-none bg-transparent shadow-none">
                         <CardHeader className="p-0 pb-8">
                             <CardTitle className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">Sign in</CardTitle>
@@ -190,8 +157,6 @@ export function UserLogin({ className }: React.ComponentProps<typeof Card>) {
                             </p>
                         </CardContent>
                     </Card>
-                </div>
-            </div>
         </motion.section>
     )
 }

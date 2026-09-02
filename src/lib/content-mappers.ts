@@ -252,6 +252,7 @@ export const mapContentWorksContent = (value: unknown, person: string): IContent
       type: asString(raw.type),
       url: asString(raw.url),
       thumbnail: asString(raw.thumbnail),
+      media: asStringArray(raw.media),
       description: asString(raw.description),
       date: asString(raw.date),
       views: asString(raw.views),

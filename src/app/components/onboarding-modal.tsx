@@ -27,7 +27,7 @@ import {
   X,
 } from "lucide-react"
 import { useRouter } from "next/router"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 const PROFILE_PHOTOS_BUCKET = "profile-photos"
 
@@ -201,6 +201,13 @@ export default function OnboardingModal({ username, email, firstname }: { userna
 
   const inputClass = "h-11 rounded-xl border-slate-200 bg-white/90 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-950/70"
   const inputWithIcon = cn(inputClass, "pl-10")
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [])
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">

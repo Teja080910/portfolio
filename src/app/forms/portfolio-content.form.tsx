@@ -20,6 +20,7 @@ import {
   parseProjectTypes,
 } from "@/lib/content-mappers"
 import { supabase } from "@/lib/db"
+import { detectLink, getPlatformLabel } from "@/lib/detect-link"
 import { getCurrentSession } from "@/lib/auth-session"
 import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { AboutHighlightIcon, IAboutHighlight, ICertificate, ICollaboration, IContentChannel, IContentWork, ICreatorTool, IEducation, IExperience, IProjects, ISkills } from "@/lib/interfaces"
@@ -41,47 +42,105 @@ type PortfolioContentFormProps = {
 const PROJECT_PHOTOS_BUCKET = "profile-photos"
 const MAX_PROJECT_PHOTO_SIZE = 5 * 1024 * 1024
 const ALLOWED_PROJECT_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"]
-const ABOUT_HIGHLIGHT_TEMPLATES: Array<Pick<IAboutHighlight, "title" | "description" | "icon">> = [
+type HighlightPackTemplate = "software" | "content_creator" | "marketer"
+
+const ABOUT_HIGHLIGHT_TEMPLATES: Array<Pick<IAboutHighlight, "title" | "description" | "icon"> & { for: HighlightPackTemplate[] }> = [
   {
     title: "Product Thinking",
     description: "I focus on user outcomes and business impact, not just feature delivery.",
     icon: "compass",
+    for: ["software"],
   },
   {
     title: "Fast Delivery",
     description: "I ship in short iterations with clear milestones and continuous feedback.",
     icon: "rocket",
+    for: ["software"],
   },
   {
     title: "Team Collaboration",
     description: "I work closely with designers, founders, and engineers to keep momentum high.",
     icon: "users",
+    for: ["software"],
   },
   {
     title: "Modern Stack",
     description: "Building with current web patterns, automation, and scalable architecture.",
     icon: "sparkles",
+    for: ["software"],
   },
   {
     title: "Performance First",
     description: "I optimize for speed, accessibility, and clean user interactions.",
     icon: "rocket",
+    for: ["software"],
   },
   {
     title: "Continuous Learning",
     description: "I adapt quickly and keep upgrading my toolkit as tech evolves.",
     icon: "sparkles",
+    for: ["software"],
+  },
+  {
+    title: "Audience First",
+    description: "I create content that resonates with my audience and drives engagement.",
+    icon: "compass",
+    for: ["content_creator"],
+  },
+  {
+    title: "Brand Storytelling",
+    description: "I craft authentic narratives that connect brands with their communities.",
+    icon: "sparkles",
+    for: ["content_creator"],
+  },
+  {
+    title: "Multi-Platform Reach",
+    description: "I optimize content for every platform to maximize visibility and growth.",
+    icon: "rocket",
+    for: ["content_creator"],
+  },
+  {
+    title: "Community Builder",
+    description: "I foster engaged communities through consistent, valuable content.",
+    icon: "users",
+    for: ["content_creator"],
+  },
+  {
+    title: "Data-Driven",
+    description: "I use analytics and insights to refine strategies and maximize ROI.",
+    icon: "compass",
+    for: ["marketer"],
+  },
+  {
+    title: "Growth Focused",
+    description: "I design campaigns that drive measurable business results.",
+    icon: "rocket",
+    for: ["marketer"],
+  },
+  {
+    title: "Channel Expert",
+    description: "I leverage the right channels to reach target audiences effectively.",
+    icon: "sparkles",
+    for: ["marketer"],
+  },
+  {
+    title: "Campaign Strategy",
+    description: "I plan and execute multi-channel campaigns that deliver impact.",
+    icon: "users",
+    for: ["marketer"],
   },
 ]
 
 const ABOUT_HIGHLIGHT_PACKS: Array<{
   id: string
   label: string
+  for: HighlightPackTemplate[]
   templates: Array<Pick<IAboutHighlight, "title" | "description" | "icon">>
 }> = [
   {
     id: "frontend",
     label: "Frontend Developer",
+    for: ["software"],
     templates: [
       { title: "UI Craft", description: "I build polished, responsive interfaces with clear visual hierarchy.", icon: "sparkles" },
       { title: "Performance First", description: "I optimize loading, interactions, and accessibility from day one.", icon: "rocket" },
@@ -91,6 +150,7 @@ const ABOUT_HIGHLIGHT_PACKS: Array<{
   {
     id: "backend",
     label: "Backend Developer",
+    for: ["software"],
     templates: [
       { title: "Scalable Systems", description: "I design APIs and services that stay reliable as usage grows.", icon: "rocket" },
       { title: "Clean Architecture", description: "I focus on maintainable structure, observability, and consistency.", icon: "compass" },
@@ -100,6 +160,7 @@ const ABOUT_HIGHLIGHT_PACKS: Array<{
   {
     id: "freelancer",
     label: "Freelancer",
+    for: ["software"],
     templates: [
       { title: "Client Focused", description: "I align technical decisions with each client\'s business goals.", icon: "users" },
       { title: "Fast Delivery", description: "I ship quickly with transparent updates and clear milestones.", icon: "rocket" },
@@ -109,6 +170,7 @@ const ABOUT_HIGHLIGHT_PACKS: Array<{
   {
     id: "student",
     label: "Student",
+    for: ["software"],
     templates: [
       { title: "Learning by Building", description: "I turn concepts into real projects to deepen practical skills.", icon: "sparkles" },
       { title: "Growth Mindset", description: "I continuously learn new technologies and improve my problem solving.", icon: "compass" },
@@ -118,10 +180,81 @@ const ABOUT_HIGHLIGHT_PACKS: Array<{
   {
     id: "founder",
     label: "Startup Founder",
+    for: ["software"],
     templates: [
       { title: "Vision to Product", description: "I turn ideas into working products with measurable user value.", icon: "compass" },
       { title: "Ship and Learn", description: "I launch fast, collect feedback, and improve through rapid cycles.", icon: "rocket" },
       { title: "Cross-Functional Leadership", description: "I collaborate across design, engineering, and growth to move fast.", icon: "users" },
+    ],
+  },
+  {
+    id: "youtuber",
+    label: "YouTuber",
+    for: ["content_creator"],
+    templates: [
+      { title: "Video Storytelling", description: "I craft compelling video narratives that keep viewers watching.", icon: "sparkles" },
+      { title: "Audience Growth", description: "I build loyal audiences through consistent, valuable content.", icon: "rocket" },
+      { title: "Brand Voice", description: "I develop authentic brand identities that resonate with communities.", icon: "compass" },
+    ],
+  },
+  {
+    id: "blogger",
+    label: "Blogger",
+    for: ["content_creator"],
+    templates: [
+      { title: "SEO Content", description: "I write content that ranks and drives organic traffic consistently.", icon: "compass" },
+      { title: "Engaging Writing", description: "I create content that informs, entertains, and converts readers.", icon: "sparkles" },
+      { title: "Content Strategy", description: "I plan editorial calendars and content funnels that deliver results.", icon: "rocket" },
+    ],
+  },
+  {
+    id: "social_media",
+    label: "Social Media Creator",
+    for: ["content_creator"],
+    templates: [
+      { title: "Viral Content", description: "I create shareable content that captures attention fast.", icon: "rocket" },
+      { title: "Community Builder", description: "I foster engaged communities through authentic interactions.", icon: "users" },
+      { title: "Trend Navigator", description: "I stay ahead of trends and adapt content for maximum reach.", icon: "sparkles" },
+    ],
+  },
+  {
+    id: "podcaster",
+    label: "Podcaster",
+    for: ["content_creator"],
+    templates: [
+      { title: "Audio Storytelling", description: "I create immersive audio experiences that listeners love.", icon: "compass" },
+      { title: "Interview Mastery", description: "I bring out the best in guests through thoughtful conversations.", icon: "users" },
+      { title: "Consistent Output", description: "I maintain a regular publishing schedule that builds loyalty.", icon: "rocket" },
+    ],
+  },
+  {
+    id: "seo_specialist",
+    label: "SEO Specialist",
+    for: ["marketer"],
+    templates: [
+      { title: "Search Visibility", description: "I optimize content and sites to rank higher and drive organic growth.", icon: "compass" },
+      { title: "Keyword Strategy", description: "I research and target keywords that drive qualified traffic.", icon: "sparkles" },
+      { title: "Technical SEO", description: "I ensure sites are fast, crawlable, and search-engine friendly.", icon: "rocket" },
+    ],
+  },
+  {
+    id: "social_media_manager",
+    label: "Social Media Manager",
+    for: ["marketer"],
+    templates: [
+      { title: "Engagement Driver", description: "I build brand presence through strategic social media campaigns.", icon: "users" },
+      { title: "Content Calendar", description: "I plan and execute consistent, on-brand social content.", icon: "rocket" },
+      { title: "Platform Expert", description: "I leverage each platform's strengths for maximum impact.", icon: "compass" },
+    ],
+  },
+  {
+    id: "growth_marketer",
+    label: "Growth Marketer",
+    for: ["marketer"],
+    templates: [
+      { title: "Experimentation", description: "I run rapid tests and iterate on what drives measurable growth.", icon: "rocket" },
+      { title: "Funnel Optimization", description: "I optimize every stage of the customer journey for conversion.", icon: "compass" },
+      { title: "Data-Led Decisions", description: "I use metrics and analytics to guide marketing strategy.", icon: "sparkles" },
     ],
   },
 ]
@@ -215,7 +348,11 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [aboutHeading, setAboutHeading] = useState(about.type || "")
   const [aboutBody, setAboutBody] = useState((about.list || []).join("\n"))
   const [aboutVisible, setAboutVisible] = useState(Boolean(about.show))
-  const [selectedAboutPackId, setSelectedAboutPackId] = useState(ABOUT_HIGHLIGHT_PACKS[0]?.id || "")
+  const [selectedAboutPackId, setSelectedAboutPackId] = useState(() => {
+    const tpl = user.template || "software"
+    const firstMatch = ABOUT_HIGHLIGHT_PACKS.find((p) => p.for.includes(tpl as HighlightPackTemplate))
+    return firstMatch?.id || ABOUT_HIGHLIGHT_PACKS[0]?.id || ""
+  })
   const [aboutHighlights, setAboutHighlights] = useState<IAboutHighlight[]>(
     about.highlights?.length
       ? about.highlights
@@ -286,6 +423,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
   const [notice, setNotice] = useState<Notice>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingProjectPhotos, setIsUploadingProjectPhotos] = useState(false)
+  const [isUploadingContentMedia, setIsUploadingContentMedia] = useState(false)
   const [activeSkillTypeRow, setActiveSkillTypeRow] = useState<number | null>(null)
   const [activeSkillValueRow, setActiveSkillValueRow] = useState<number | null>(null)
   const [activeSkillDescriptionRow, setActiveSkillDescriptionRow] = useState<number | null>(null)
@@ -309,9 +447,19 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     () => Array.from(new Set(skills.map((item) => (item.description || "").trim()).filter(Boolean))),
     [skills],
   )
+
+  const currentTemplate: HighlightPackTemplate = (user.template || "software") as HighlightPackTemplate
+  const filteredAboutPacks = useMemo(
+    () => ABOUT_HIGHLIGHT_PACKS.filter((pack) => pack.for.includes(currentTemplate)),
+    [currentTemplate],
+  )
+  const filteredAboutTemplates = useMemo(
+    () => ABOUT_HIGHLIGHT_TEMPLATES.filter((tpl) => tpl.for.includes(currentTemplate)),
+    [currentTemplate],
+  )
   const selectedAboutPack = useMemo(
-    () => ABOUT_HIGHLIGHT_PACKS.find((pack) => pack.id === selectedAboutPackId) || ABOUT_HIGHLIGHT_PACKS[0],
-    [selectedAboutPackId],
+    () => ABOUT_HIGHLIGHT_PACKS.find((pack) => pack.id === selectedAboutPackId) || filteredAboutPacks[0] || ABOUT_HIGHLIGHT_PACKS[0],
+    [selectedAboutPackId, filteredAboutPacks],
   )
 
   const applySkillValueSuggestion = (rowIndex: number, rowKey: string, suggestedValue: string) => {
@@ -709,6 +857,87 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
     )
   }
 
+  const handleContentMediaUpload = async (workId: string | undefined, event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? [])
+    const person = user.id || ""
+
+    if (!files.length) return
+
+    if (!person) {
+      setNotice({ tone: "error", message: "Sign in again before uploading media." })
+      event.target.value = ""
+      return
+    }
+
+    const invalidFile = files.find(
+      (file) => !ALLOWED_PROJECT_PHOTO_TYPES.includes(file.type) || file.size > MAX_PROJECT_PHOTO_SIZE,
+    )
+
+    if (invalidFile) {
+      setNotice({ tone: "error", message: "Only JPG, PNG, or WEBP files up to 5 MB are allowed." })
+      event.target.value = ""
+      return
+    }
+
+    const resolvedId = workId || createId()
+    setIsUploadingContentMedia(true)
+
+    try {
+      const uploadedUrls: string[] = []
+
+      for (const [fileIndex, file] of files.entries()) {
+        const fileExtension = file.name.includes(".") ? file.name.split(".").pop() : undefined
+        const safeFileName = sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) || "content-media"
+        const objectPath = `${person}/content/${resolvedId}/${Date.now()}-${fileIndex}-${safeFileName}${
+          fileExtension ? `.${fileExtension.toLowerCase()}` : ""
+        }`
+
+        const { error: uploadError } = await supabase.storage.from(PROJECT_PHOTOS_BUCKET).upload(objectPath, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+        })
+
+        if (uploadError) {
+          throw new Error(uploadError.message || "Content media upload failed.")
+        }
+
+        const { data } = supabase.storage.from(PROJECT_PHOTOS_BUCKET).getPublicUrl(objectPath)
+        uploadedUrls.push(data.publicUrl)
+      }
+
+      setContentWorksDraft((prev) =>
+        prev.map((row) => {
+          if (row.id !== (workId || row.id)) return row
+          const existingMedia = Array.isArray(row.media) ? row.media : []
+          return { ...row, id: row.id || resolvedId, media: Array.from(new Set([...existingMedia, ...uploadedUrls])) }
+        }),
+      )
+
+      setNotice({ tone: "success", message: `${uploadedUrls.length} file${uploadedUrls.length > 1 ? "s" : ""} uploaded.` })
+    } catch (error) {
+      setNotice({ tone: "error", message: error instanceof Error ? error.message : "Content media upload failed." })
+    } finally {
+      setIsUploadingContentMedia(false)
+      event.target.value = ""
+    }
+  }
+
+  const handleContentMediaRemove = async (workId: string, mediaUrl: string) => {
+    const objectPath = getStorageObjectPath(mediaUrl)
+    if (objectPath) {
+      await supabase.storage.from(PROJECT_PHOTOS_BUCKET).remove([objectPath])
+    }
+
+    setContentWorksDraft((prev) =>
+      prev.map((row) => {
+        if (row.id !== workId) return row
+        const existingMedia = Array.isArray(row.media) ? row.media : []
+        return { ...row, media: existingMedia.filter((m) => m !== mediaUrl) }
+      }),
+    )
+  }
+
   const saveContent = async () => {
     const person = user.id || ""
 
@@ -1027,7 +1256,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
               <p className="mb-2 text-sm font-semibold text-cyan-900 dark:text-cyan-100">Template Packs</p>
               <p className="mb-3 text-xs text-cyan-800 dark:text-cyan-200">Choose a profile style to replace cards, or merge cards into your existing set.</p>
               <div className="mb-3 flex flex-wrap gap-2">
-                {ABOUT_HIGHLIGHT_PACKS.map((pack) => (
+                {filteredAboutPacks.map((pack) => (
                   <button
                     key={pack.id}
                     type="button"
@@ -1062,7 +1291,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
 
               <p className="mb-3 text-sm font-medium text-cyan-800 dark:text-cyan-200">Quick Templates: select a card and it will be added to this section.</p>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {ABOUT_HIGHLIGHT_TEMPLATES.map((template) => (
+                {filteredAboutTemplates.map((template) => (
                   <button
                     key={template.title}
                     type="button"
@@ -1352,7 +1581,11 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         }
                       }}
                       className={inputClassName}
-                      placeholder="Skill type"
+                      placeholder={
+                        isCreator ? "e.g. Video Editing, Content Creation" :
+                        isMarketer ? "e.g. SEO, Paid Ads, Analytics" :
+                        "e.g. Frontend, Backend, DevOps"
+                      }
                     />
                     {activeSkillTypeRow === index && filteredSkillTypeSuggestions.length > 0 && (
                       <div className="absolute z-[90] mt-1 max-h-48 w-full overflow-y-auto rounded-2xl border border-slate-200/80 bg-white/95 p-1 shadow-xl backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/95">
@@ -1446,7 +1679,11 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         }
                       }}
                       className={inputClassName}
-                      placeholder="React, Next.js, TypeScript"
+                      placeholder={
+                        isCreator ? "e.g. Premiere Pro, After Effects, Photoshop" :
+                        isMarketer ? "e.g. Google Ads, SEMrush, HubSpot" :
+                        "e.g. React, Next.js, TypeScript"
+                      }
                     />
                     {activeSkillValueRow === index && filteredSkillValueSuggestions.length > 0 && (
                       <div className="absolute z-[90] mt-1 max-h-48 w-full overflow-y-auto rounded-2xl border border-slate-200/80 bg-white/95 p-1 shadow-xl backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/95">
@@ -2246,7 +2483,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                   type="button"
                   onClick={() => {
                     setContentWorksDraft((prev) => [
-                      { id: createId(), person: user.id || "", title: "", type: "", url: "", thumbnail: "", description: "", date: "", views: "", show: true, sortOrder: 0 },
+                      { id: createId(), person: user.id || "", title: "", type: "", url: "", thumbnail: "", media: [], description: "", date: "", views: "", show: true, sortOrder: 0 },
                       ...prev,
                     ])
                     const el = document.getElementById("edit-content-portfolio")
@@ -2317,14 +2554,31 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                       </select>
                       <input
                         value={item.url}
-                        onChange={(event) =>
+                        onChange={(event) => {
+                          const url = event.target.value
                           setContentWorksDraft((prev) =>
-                            prev.map((row, rowIndex) => (rowIndex === index ? { ...row, url: event.target.value } : row)),
+                            prev.map((row, rowIndex) => {
+                              if (rowIndex !== index) return row
+                              const detected = detectLink(url)
+                              const updates: Partial<IContentWork> = { url }
+                              if (detected.thumbnailUrl && !row.thumbnail) {
+                                updates.thumbnail = detected.thumbnailUrl
+                              }
+                              if (detected.platform !== "unknown" && detected.displayType && !row.type) {
+                                updates.type = detected.displayType
+                              }
+                              return { ...row, ...updates }
+                            }),
                           )
-                        }
+                        }}
                         className={inputClassName}
-                        placeholder="Content URL"
+                        placeholder="Paste a link (YouTube, Vimeo, Instagram, TikTok...)"
                       />
+                      {item.url && detectLink(item.url).platform !== "unknown" && (
+                        <p className="md:col-span-2 text-xs text-cyan-600 dark:text-cyan-400">
+                          Detected: {getPlatformLabel(detectLink(item.url).platform)} — thumbnail and type auto-filled
+                        </p>
+                      )}
                       <DatePicker
                         value={item.date}
                         placeholder="Date"
@@ -2365,6 +2619,53 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
                         className={`${inputClassName} md:col-span-2`}
                         placeholder="Description"
                       />
+                      <div className="md:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                          Media (photos/videos)
+                        </label>
+                        <input
+                          type="file"
+                          multiple
+                          accept={ALLOWED_PROJECT_PHOTO_TYPES.join(",")}
+                          onChange={(e) => {
+                            void handleContentMediaUpload(item.id, e)
+                          }}
+                          className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-cyan-600 file:px-4 file:py-2.5 file:font-semibold file:text-white hover:file:bg-cyan-500 disabled:opacity-70 dark:text-slate-300"
+                          disabled={isSaving || isUploadingContentMedia}
+                        />
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          Upload multiple photos or images. JPG, PNG, WEBP up to 5 MB each.
+                        </p>
+                        {Array.isArray(item.media) && item.media.length > 0 && (
+                          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                            {item.media.map((mediaUrl, mediaIndex) => (
+                              <div
+                                key={`${item.id || index}-media-${mediaIndex}`}
+                                className="overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 dark:border-slate-700/80 dark:bg-slate-900/40"
+                              >
+                                <div className="relative h-24 w-full">
+                                  <Image
+                                    src={mediaUrl}
+                                    alt={`Media ${mediaIndex + 1}`}
+                                    fill
+                                    sizes="(max-width: 640px) 50vw, 25vw"
+                                    className="object-cover"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void handleContentMediaRemove(item.id, mediaUrl)
+                                  }}
+                                  className="w-full border-t border-slate-200/80 bg-white/80 px-2 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:border-slate-700/80 dark:bg-slate-900/70 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
