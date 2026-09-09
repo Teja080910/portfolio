@@ -130,7 +130,7 @@ export default function AuthCallbackPage() {
       })
 
       if (isActive) {
-        void router.replace("/user?onboarding=true")
+        void router.replace(`/u/${encodeURIComponent(createdProfile.username)}?onboarding=true`)
       }
     }
 
