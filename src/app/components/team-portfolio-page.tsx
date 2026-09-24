@@ -130,11 +130,13 @@ function SectionShell({
   id,
   title,
   count,
+  unit = "item",
   children,
 }: {
   id: string
   title: string
   count: number
+  unit?: string
   children: React.ReactNode
 }) {
   return (
@@ -143,7 +145,7 @@ function SectionShell({
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {count} {count === 1 ? "item" : "items"} shared by the team
+            {count} {count === 1 ? unit : `${unit}s`} shared by the team
           </p>
         </div>
       </div>
@@ -230,26 +232,110 @@ function ProjectItem({ item, member, index }: { item: Record<string, unknown>; m
   )
 }
 
-function SkillItem({ item, member, index }: { item: Record<string, unknown>; member?: ITeamMember; index: number }) {
-  const skills = asArray(item.skills).map(asString).filter(Boolean)
+type MergedSkill = { label: string; members: ITeamMember[] }
+type MergedSkillGroup = { label: string; skills: MergedSkill[] }
+
+function mergeSkillGroups(
+  items: Record<string, unknown>[],
+  membersById: Map<string, ITeamMember>,
+): MergedSkillGroup[] {
+  const groups = new Map<string, { label: string; skills: Map<string, { label: string; memberIds: Set<string> }> }>()
+
+  for (const item of items) {
+    const typeLabel = asString(item.skilltype).trim() || "Skills"
+    const typeKey = typeLabel.toLowerCase()
+    const group = groups.get(typeKey) ?? { label: typeLabel, skills: new Map() }
+    const memberId = asString(item.person)
+
+    for (const raw of asArray(item.skills)) {
+      const label = asString(raw).trim()
+      if (!label) continue
+
+      const skillKey = label.toLowerCase()
+      const skill = group.skills.get(skillKey) ?? { label, memberIds: new Set<string>() }
+      if (memberId) skill.memberIds.add(memberId)
+      group.skills.set(skillKey, skill)
+    }
+
+    groups.set(typeKey, group)
+  }
+
+  return Array.from(groups.values()).map((group) => ({
+    label: group.label,
+    skills: Array.from(group.skills.values()).map((skill) => ({
+      label: skill.label,
+      members: Array.from(skill.memberIds)
+        .map((id) => membersById.get(id))
+        .filter((member): member is ITeamMember => Boolean(member)),
+    })),
+  }))
+}
+
+function MemberAvatarStack({ members }: { members: ITeamMember[] }) {
+  if (members.length === 0) return null
+
+  const visible = members.slice(0, 3)
 
   return (
-    <ItemCard member={member} index={index}>
-      <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
-        <Sparkles className="h-4 w-4 text-primary" />
-        {asString(item.skilltype) || "Skills"}
-      </h3>
-      {asString(item.description) && (
-        <p className="mt-2 text-sm text-muted-foreground">{asString(item.description)}</p>
-      )}
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {skills.map((skill) => (
-          <span key={skill} className="rounded-lg border border-border/60 bg-secondary/40 px-2.5 py-1 text-xs font-medium text-foreground/90">
-            {skill}
+    <span className="flex items-center -space-x-1.5">
+      {visible.map((member) => {
+        const name = getMemberName(member)
+        const photo = getProxiedImageUrl(member.photo)
+
+        return (
+          <span
+            key={member.id}
+            title={name}
+            className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-background bg-gradient-to-br from-cyan-500 to-teal-500 text-[8px] font-bold text-white"
+          >
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo} alt={name} className="h-full w-full object-cover" />
+            ) : (
+              name.charAt(0).toUpperCase()
+            )}
           </span>
-        ))}
-      </div>
-    </ItemCard>
+        )
+      })}
+      {members.length > visible.length && (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-background bg-secondary text-[8px] font-bold text-muted-foreground">
+          +{members.length - visible.length}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function MergedSkills({ groups }: { groups: MergedSkillGroup[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {groups.map((group, groupIndex) => (
+        <motion.article
+          key={group.label.toLowerCase()}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.4, delay: Math.min(groupIndex, 5) * 0.06 }}
+          className="rounded-2xl border border-border/50 bg-card/60 p-5 backdrop-blur-xl"
+        >
+          <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {group.label}
+          </h3>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {group.skills.map((skill) => (
+              <span
+                key={skill.label.toLowerCase()}
+                className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 px-2.5 py-1 text-xs font-medium text-foreground/90"
+              >
+                {skill.label}
+                <MemberAvatarStack members={skill.members} />
+              </span>
+            ))}
+          </div>
+        </motion.article>
+      ))}
+    </div>
   )
 }
 
@@ -409,8 +495,6 @@ function renderItem(section: TeamSectionKey, item: Record<string, unknown>, memb
   switch (section) {
     case "projects":
       return <ProjectItem item={item} member={member} index={index} />
-    case "skills":
-      return <SkillItem item={item} member={member} index={index} />
     case "experience":
       return <ExperienceItem item={item} member={member} index={index} />
     case "education":
@@ -694,24 +778,37 @@ export default function TeamPortfolioPage() {
         {/* Shared content */}
         {visibleSections.map(({ section, items }) => {
           const Icon = SECTION_ICONS[section] ?? Layers
+          const isSkills = section === "skills"
+          const skillGroups = isSkills ? mergeSkillGroups(items, membersById) : []
+          const uniqueSkills = skillGroups.reduce((total, group) => total + group.skills.length, 0)
 
           return (
-            <SectionShell key={section} id={section} title={TEAM_SECTION_LABELS[section]} count={items.length}>
+            <SectionShell
+              key={section}
+              id={section}
+              title={TEAM_SECTION_LABELS[section]}
+              count={isSkills ? uniqueSkills : items.length}
+              unit={isSkills ? "skill" : "item"}
+            >
               <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
                 <Icon className="h-4 w-4 text-primary" />
-                Work shared with this team
+                {isSkills ? "Skills merged across the team" : "Work shared with this team"}
               </div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {items.map((raw, index) => {
-                  const item = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>
-                  const member = membersById.get(asString(item.person))
-                  return (
-                    <div key={asString(item.id) || `${section}-${index}`}>
-                      {renderItem(section, item, member, index)}
-                    </div>
-                  )
-                })}
-              </div>
+              {isSkills ? (
+                <MergedSkills groups={skillGroups} />
+              ) : (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {items.map((raw, index) => {
+                    const item = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>
+                    const member = membersById.get(asString(item.person))
+                    return (
+                      <div key={asString(item.id) || `${section}-${index}`}>
+                        {renderItem(section, item, member, index)}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </SectionShell>
           )
         })}
