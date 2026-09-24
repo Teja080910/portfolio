@@ -1,7 +1,3 @@
-import dynamic from "next/dynamic"
+import TeamPortfolioPage from "@/app/components/team-portfolio-page"
 
-const PortfolioPage = dynamic(() => import("@/app/components/portfolio-page"), { ssr: false })
-
-export default function TeamPortfolioPage() {
-  return <PortfolioPage />
-}
+export default TeamPortfolioPage

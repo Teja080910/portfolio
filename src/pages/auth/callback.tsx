@@ -1,3 +1,4 @@
+import { consumePostAuthRedirect } from "@/lib/auth-session"
 import { supabase } from "@/lib/db"
 import { useStore } from "@/lib/store"
 import { useRouter } from "next/router"
@@ -27,6 +28,7 @@ export default function AuthCallbackPage() {
     let isActive = true
 
     const resolveRedirect = async () => {
+      const pendingRedirect = consumePostAuthRedirect()
       const { data } = await supabase.auth.getSession()
       const sessionUser = data.session?.user
 
@@ -64,13 +66,15 @@ export default function AuthCallbackPage() {
 
         const pUsername = profile?.username?.trim()
         const pType = profile?.type
-        const destination = pUsername
-          ? pType === "business"
-            ? `/b/${encodeURIComponent(pUsername)}`
-            : pType === "team"
-              ? `/t/${encodeURIComponent(pUsername)}`
-              : `/u/${encodeURIComponent(pUsername)}`
-          : "/"
+        const destination =
+          pendingRedirect ||
+          (pUsername
+            ? pType === "business"
+              ? `/b/${encodeURIComponent(pUsername)}`
+              : pType === "team"
+                ? `/t/${encodeURIComponent(pUsername)}`
+                : `/u/${encodeURIComponent(pUsername)}`
+            : "/")
 
         if (isActive) {
           void router.replace(destination)
@@ -130,7 +134,9 @@ export default function AuthCallbackPage() {
       })
 
       if (isActive) {
-        void router.replace(`/u/${encodeURIComponent(createdProfile.username)}?onboarding=true`)
+        void router.replace(
+          pendingRedirect || `/u/${encodeURIComponent(createdProfile.username)}?onboarding=true`,
+        )
       }
     }
 

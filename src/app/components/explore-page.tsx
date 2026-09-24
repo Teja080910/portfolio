@@ -1,11 +1,13 @@
 "use client"
 
+import TeamCard from "@/app/components/team-card"
 import UserCard from "@/app/components/user-card"
 import { Input } from "@/components/ui/input"
 import { getFriendlySupabaseError } from "@/utils/supabase-error"
 import { supabase } from "@/lib/db"
 import { getProxiedImageUrl } from "@/lib/image-proxy"
-import { IUser, ProfileType } from "@/lib/interfaces"
+import { ITeam, IUser, ProfileType } from "@/lib/interfaces"
+import { getPublicTeams } from "@/lib/teams"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Building2, ChevronLeft, ChevronRight, Compass, Search, UserRound, Users, BookOpen } from "lucide-react"
@@ -31,6 +33,7 @@ const tabs: Tab[] = [
 
 export default function ExplorePage() {
   const [profiles, setProfiles] = useState<IUser[]>([])
+  const [teams, setTeams] = useState<ITeam[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
@@ -74,6 +77,9 @@ export default function ExplorePage() {
         setProfiles(data.filter((profile) => profile.username))
       }
 
+      const publicTeams = await getPublicTeams()
+      setTeams(publicTeams)
+
       setLoading(false)
     }
 
@@ -92,6 +98,8 @@ export default function ExplorePage() {
 
   const filteredProfiles = useMemo(() => {
     return profiles.filter((profile) => {
+      if ((profile.type ?? "user") === "team") return false
+
       const searchLower = searchQuery.toLowerCase()
       const fullName = `${profile.firstname || ""} ${profile.lastname || ""}`.toLowerCase()
 
@@ -106,18 +114,41 @@ export default function ExplorePage() {
     })
   }, [profiles, searchQuery, activeTab])
 
-  const totalPages = Math.max(1, Math.ceil(filteredProfiles.length / ITEMS_PER_PAGE))
-  const paginatedProfiles = filteredProfiles.slice(
+  const filteredTeams = useMemo(() => {
+    if (activeTab !== "all" && activeTab !== "team") return []
+
+    const searchLower = searchQuery.toLowerCase()
+
+    return teams.filter((team) => {
+      return (
+        team.name.toLowerCase().includes(searchLower) ||
+        team.slug.toLowerCase().includes(searchLower) ||
+        (team.tagline || "").toLowerCase().includes(searchLower) ||
+        (team.description || "").toLowerCase().includes(searchLower)
+      )
+    })
+  }, [teams, searchQuery, activeTab])
+
+  const combinedItems = useMemo(
+    () => [
+      ...filteredProfiles.map((profile) => ({ kind: "profile" as const, id: profile.id || profile.username, profile })),
+      ...filteredTeams.map((team) => ({ kind: "team" as const, id: team.id, team })),
+    ],
+    [filteredProfiles, filteredTeams],
+  )
+
+  const totalPages = Math.max(1, Math.ceil(combinedItems.length / ITEMS_PER_PAGE))
+  const paginatedItems = combinedItems.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   )
 
   const tabCounts = useMemo(() => ({
-    all: profiles.length,
+    all: profiles.filter((p) => (p.type ?? "user") !== "team").length + teams.length,
     user: profiles.filter((p) => p.type === "user" || !p.type).length,
-    team: profiles.filter((p) => p.type === "team").length,
+    team: teams.length,
     business: profiles.filter((p) => p.type === "business").length,
-  }), [profiles])
+  }), [profiles, teams])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -202,13 +233,22 @@ export default function ExplorePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.4 }}
           >
-            <Link
-              href="/guide"
-              className="inline-flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-3.5 text-sm font-semibold text-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 hover:shadow-md"
-            >
-              <BookOpen className="h-4 w-4" />
-              New to portfolios? Read the Guide
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/guide"
+                className="inline-flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-3.5 text-sm font-semibold text-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 hover:shadow-md"
+              >
+                <BookOpen className="h-4 w-4" />
+                New to portfolios? Read the Guide
+              </Link>
+              <Link
+                href="/teams"
+                className="inline-flex items-center gap-3 rounded-2xl border border-border/60 bg-card/50 px-6 py-3.5 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-md"
+              >
+                <Users className="h-4 w-4" />
+                Build a team portfolio
+              </Link>
+            </div>
           </motion.div>
 
           {/* Logged-in user's own portfolio */}
@@ -320,7 +360,7 @@ export default function ExplorePage() {
                 {errorMessage}
               </p>
             </div>
-          ) : paginatedProfiles.length > 0 ? (
+          ) : paginatedItems.length > 0 ? (
             <>
               <motion.div
                 className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
@@ -328,14 +368,14 @@ export default function ExplorePage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
               >
-                {paginatedProfiles.map((profile, index) => (
+                {paginatedItems.map((item, index) => (
                   <motion.div
-                    key={profile.id || profile.username}
+                    key={`${item.kind}-${item.id}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * (index % 6), duration: 0.4 }}
                   >
-                    <UserCard user={profile} />
+                    {item.kind === "team" ? <TeamCard team={item.team} /> : <UserCard user={item.profile} />}
                   </motion.div>
                 ))}
               </motion.div>
@@ -410,7 +450,7 @@ export default function ExplorePage() {
                 <Search className="h-8 w-8" />
               </div>
               <h3 className="text-xl font-semibold text-foreground">No portfolios found</h3>
-              <p className="mt-2 text-muted-foreground">Try adjusting your search or check back later for new profiles.</p>
+              <p className="mt-2 text-muted-foreground">Try adjusting your search or check back later for new profiles and teams.</p>
             </div>
           )}
         </div>

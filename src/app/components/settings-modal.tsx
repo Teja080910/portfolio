@@ -3,7 +3,7 @@
 import ApiTokenSection from "@/app/components/api-token-section"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
-import { ExternalLink, Pencil, Settings2, X } from "lucide-react"
+import { ExternalLink, Pencil, Settings2, Users, X } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
@@ -110,6 +110,29 @@ export default function SettingsModal({ open, onClose }: { open: boolean; onClos
                     Edit profile
                   </Link>
                 </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/60">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-500 dark:text-cyan-300">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Teams</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Create a team or manage teams you belong to while keeping your own portfolio.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/teams"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-500 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:opacity-90"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Manage teams
+                </Link>
               </div>
             </div>
 

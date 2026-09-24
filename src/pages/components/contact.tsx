@@ -15,7 +15,6 @@ import AnimatedSectionHeader from "../../app/components/animatedsectionheader"
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  toEmail: z.string().email("Please enter a valid recipient email address"),
   subject: z.string().min(5, "Subject must be at least 5 characters"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 })
@@ -91,6 +90,7 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
   }, [isReadOnly, router.isReady, router.query.username, router.query.slug])
 
   const displayEmail = isReadOnly && ownerContact ? ownerContact.email : user.email
+  const recipientEmail = (displayEmail || "").trim()
   const displayPhone = isReadOnly && ownerContact ? ownerContact.phone : user.phone
   const displayName = isReadOnly && ownerContact ? ownerContact.name : fullName
   const displayRole = isReadOnly && ownerContact ? ownerContact.role : user.role
@@ -109,7 +109,6 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
     defaultValues: {
       name: "",
       email: "",
-      toEmail: "",
       subject: "",
       message: "",
     },
@@ -119,7 +118,6 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
     reset({
       name: "",
       email: "",
-      toEmail: "",
       subject: "",
       message: "",
     })
@@ -130,6 +128,11 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
   }
 
   const onSubmit = async (data: FormData) => {
+    if (!recipientEmail) {
+      alert("This portfolio doesn't have a contact email yet.")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const response = await fetch('/api/send-email', {
@@ -139,7 +142,7 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
         },
         body: JSON.stringify({
           ...data,
-          toEmail: data.toEmail,
+          toEmail: recipientEmail,
         }),
       })
 
@@ -236,7 +239,15 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
               viewport={{ once: false, amount: 0.4 }}
               transition={{ duration: 0.55 }}
             >
+              {recipientEmail ? (
               <form onSubmit={handleSubmit(onSubmit)} className="glass-card p-8">
+                {recipientEmail && (
+                  <p className="mb-6 rounded-xl border border-border/50 bg-background/40 px-4 py-3 text-xs text-muted-foreground">
+                    Your message will be sent to{" "}
+                    <span className="font-medium text-foreground">{recipientEmail}</span>.
+                  </p>
+                )}
+
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
                     <label htmlFor="name" className="mb-2 block text-sm font-medium text-foreground/80">
@@ -266,21 +277,6 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
                     />
                     {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>}
                   </div>
-                </div>
-
-                <div className="mt-6">
-                  <label htmlFor="toEmail" className="mb-2 block text-sm font-medium text-foreground/80">
-                    Recipient Email
-                  </label>
-                  <input
-                    {...register("toEmail")}
-                    type="email"
-                    className={`w-full rounded-xl border bg-background/50 px-4 py-2.5 text-foreground transition-all duration-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                      errors.toEmail ? "border-destructive" : "border-border"
-                    }`}
-                    placeholder="recipient@email.com"
-                  />
-                  {errors.toEmail && <p className="mt-1.5 text-xs text-destructive">{errors.toEmail.message}</p>}
                 </div>
 
                 <div className="mt-6">
@@ -340,6 +336,12 @@ export default function Contact({ isReadOnly = false }: ContactProps) {
                   </motion.div>
                 )}
               </form>
+              ) : (
+                <div className="glass-card p-8 text-sm text-muted-foreground">
+                  This portfolio doesn&apos;t have a contact email yet. Use the contact details on the left to get in
+                  touch.
+                </div>
+              )}
             </motion.div>
 
         </div>

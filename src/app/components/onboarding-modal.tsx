@@ -21,10 +21,8 @@ import {
   Loader2,
   Phone,
   UserRound,
-  Users,
   Video,
   TrendingUp,
-  X,
 } from "lucide-react"
 import { useRouter } from "next/router"
 import { useEffect, useRef, useState } from "react"
@@ -58,7 +56,7 @@ export default function OnboardingModal({ username, email, firstname }: { userna
     role: "",
   })
 
-  const [profileType, setProfileType] = useState<"user" | "team" | "business">("user")
+  const [profileType, setProfileType] = useState<"user" | "business">("user")
   const [selectedTemplate, setSelectedTemplate] = useState<"software" | "content_creator" | "marketer">("software")
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -177,9 +175,7 @@ export default function OnboardingModal({ username, email, firstname }: { userna
       const portfolioPath =
         profileType === "business"
           ? `/b/${encodeURIComponent(generatedUsername)}`
-          : profileType === "team"
-            ? `/t/${encodeURIComponent(generatedUsername)}`
-            : `/u/${encodeURIComponent(generatedUsername)}`
+          : `/u/${encodeURIComponent(generatedUsername)}`
 
       void router.replace(portfolioPath)
     } catch (err) {
@@ -479,10 +475,9 @@ export default function OnboardingModal({ username, email, firstname }: { userna
                 {/* Profile Type */}
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account Type</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {[
                       { type: "user" as const, label: "Individual", icon: UserRound, color: "cyan" },
-                      { type: "team" as const, label: "Team", icon: Users, color: "teal" },
                       { type: "business" as const, label: "Business", icon: Building2, color: "purple" },
                     ].map(({ type, label, icon: Icon, color }) => (
                       <button
@@ -500,6 +495,10 @@ export default function OnboardingModal({ username, email, firstname }: { userna
                       </button>
                     ))}
                   </div>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    Looking to build with a team? Create your profile first, then start or join a team from{" "}
+                    <span className="font-semibold">Settings → Teams</span>.
+                  </p>
                 </div>
 
                 {/* Template */}

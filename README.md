@@ -26,6 +26,7 @@ A full-stack SaaS portfolio builder where users sign up, create customizable por
 - **Portfolio editor** — Manage About, Skills, Projects, Experience, Education, and Certificates sections
 - **Resume auto-fill** — Upload a PDF resume; Gemini AI extracts structured data and populates your portfolio
 - **Public gallery** — Browse, search, and filter all public portfolios
+- **Teams** — Create a team, invite members by email or link, and share selected portfolio items to a team page. Members keep their own portfolios and are linked from the team page
 - **Contact form** — Visitors can send messages via each portfolio's contact section (powered by Resend)
 - **Dark/light theme** — Toggle between light, dark, and system preferences
 - **Image proxy** — Proxies Google/GitHub avatar images to same-origin to bypass browser tracking protection
@@ -106,10 +107,14 @@ src/
 | `/user`                 | User workspace (profile + portfolio edit) |
 | `/u/[username]`         | User portfolio page                       |
 | `/t/[slug]`             | Team portfolio page                       |
+| `/t/[slug]/workspace`   | Team workspace (settings, members, invites, content sharing) |
+| `/teams`                | My teams hub (create team, pending invites) |
+| `/invite/[token]`       | Accept a team invitation                  |
 | `/b/[slug]`             | Business portfolio page                   |
 | `/api/send-email`       | Contact form email endpoint               |
 | `/api/parse-resume`     | Resume auto-fill endpoint                 |
 | `/api/image-proxy`      | Avatar image proxy                        |
+| `/api/team-invite`      | Team invitation email endpoint            |
 
 ## Scripts
 

@@ -152,6 +152,84 @@ export interface ICreatorTool {
     show: boolean;
 }
 
+export type TeamRole = "owner" | "member"
+
+export type TeamSectionKey =
+    | "skills"
+    | "projects"
+    | "experience"
+    | "education"
+    | "certificates"
+    | "content_channels"
+    | "content_works"
+    | "collaborations"
+    | "creator_tools"
+
+export interface ITeam {
+    id: string;
+    owner_id: string;
+    slug: string;
+    name: string;
+    tagline?: string | null;
+    description?: string | null;
+    logo?: string | null;
+    show: boolean;
+    created_at?: string;
+    updated_at?: string;
+    member_count?: number;
+}
+
+export interface ITeamMember {
+    id: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+    photo?: string | null;
+    role: TeamRole;
+    jobRole?: string | null;
+    type?: ProfileType;
+    show?: boolean;
+    joinedAt?: string;
+}
+
+export interface ITeamInvite {
+    id: string;
+    teamId?: string;
+    email?: string | null;
+    expiresAt?: string;
+    createdAt?: string;
+    acceptedAt?: string | null;
+    revoked?: boolean;
+    valid?: boolean;
+    team?: Pick<ITeam, "id" | "slug" | "name" | "logo">;
+}
+
+export interface ITeamInviteRecord {
+    id: string;
+    team_id: string;
+    email: string | null;
+    invited_by: string | null;
+    expires_at: string;
+    accepted_at: string | null;
+    revoked: boolean;
+    created_at: string;
+}
+
+export interface ITeamPortfolio {
+    team: {
+        id: string;
+        slug: string;
+        name: string;
+        tagline?: string | null;
+        description?: string | null;
+        logo?: string | null;
+        ownerId: string;
+        createdAt?: string;
+    };
+    members: ITeamMember[];
+    sections: Partial<Record<TeamSectionKey, unknown[]>>;
+}
+
 export type CheckResponse = {
     authenticated: boolean;
     redirectTo?: string;

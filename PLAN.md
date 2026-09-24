@@ -58,6 +58,7 @@ Client (Next.js Pages Router)
 - [x] Cursor trail effect
 - [x] Toast notifications and popup modals
 - [x] 404 page
+- [x] Teams — multi-user team portfolios with email/link invitations, per-item content sharing, member cards linked to personal portfolios, and public team pages (see `TEAMS_PLAN.md`)
 
 ---
 
@@ -94,7 +95,8 @@ Client (Next.js Pages Router)
 
 ## 6. Future Considerations
 
-- Multi-user team portfolios (shared editing)
+- Team roles beyond owner/member (admin/editor/viewer) and owner transfer
+- Team API-token support (programmatic sharing to teams)
 - Custom domain support
 - Portfolio analytics dashboard
 - Template/themes marketplace
