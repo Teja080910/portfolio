@@ -115,6 +115,21 @@ src/
 | `/api/parse-resume`     | Resume auto-fill endpoint                 |
 | `/api/image-proxy`      | Avatar image proxy                        |
 | `/api/team-invite`      | Team invitation email endpoint            |
+| `/api/team`             | Team data API for external apps (PAT auth) |
+
+### Team API
+
+External applications can read a team's public data with a folio API token (`folio_…`, created in Settings → API tokens). The token owner must be a member of the team.
+
+```bash
+# One team (by slug)
+curl "https://portfoli.store/api/team?slug=ast" -H "Authorization: Bearer folio_xxx"
+
+# All teams the token owner belongs to
+curl "https://portfoli.store/api/team" -H "Authorization: Bearer folio_xxx"
+```
+
+Response: team name, slug, tagline, description, logo, `portfolioUrl`, `memberCount`, `projectsCount` (shared + visible projects), and `members[]` (id, username, name, photo, team role, job role, type, `profileUrl`).
 
 ## Scripts
 
