@@ -186,6 +186,7 @@ export interface ITeamMember {
     lastname: string;
     photo?: string | null;
     role: TeamRole;
+    title?: string | null;
     jobRole?: string | null;
     type?: ProfileType;
     show?: boolean;

@@ -21,6 +21,7 @@ import {
   TEAM_SECTION_LABELS,
   unshareItem,
   unshareSectionItems,
+  updateMemberTitle,
   updateTeam,
   uploadTeamLogo,
 } from "@/lib/teams"
@@ -39,6 +40,7 @@ import {
   Mail,
   Settings2,
   Share2,
+  Tag,
   Trash2,
   UserMinus,
   Users,
@@ -140,6 +142,9 @@ export default function TeamWorkspace() {
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteText, setDeleteText] = useState("")
+  const [editingTitleFor, setEditingTitleFor] = useState<string | null>(null)
+  const [titleDraft, setTitleDraft] = useState("")
+  const [savingTitle, setSavingTitle] = useState(false)
 
   const loadWorkspace = useCallback(async () => {
     if (!slug) return
@@ -409,6 +414,30 @@ export default function TeamWorkspace() {
     }
     setMembers((prev) => prev.filter((entry) => entry.id !== member.id))
     toast(`${member.firstname || member.username} was removed from the team.`)
+  }
+
+  const startEditTitle = (member: ITeamMember) => {
+    setEditingTitleFor(member.id)
+    setTitleDraft(member.title ?? "")
+  }
+
+  const handleSaveTitle = async (member: ITeamMember) => {
+    if (!team || savingTitle) return
+
+    setSavingTitle(true)
+    const { error } = await updateMemberTitle(team.id, member.id, titleDraft)
+    setSavingTitle(false)
+
+    if (error) {
+      toast(error, "error")
+      return
+    }
+
+    setMembers((prev) =>
+      prev.map((entry) => (entry.id === member.id ? { ...entry, title: titleDraft.trim() || null } : entry)),
+    )
+    setEditingTitleFor(null)
+    toast("Team role updated.")
   }
 
   const handleLeaveTeam = async () => {
@@ -815,67 +844,147 @@ export default function TeamWorkspace() {
                 Member profiles link back to their own personal portfolios.
               </p>
 
+              <datalist id="team-title-suggestions">
+                {[
+                  "CEO",
+                  "CTO",
+                  "COO",
+                  "Founder",
+                  "Manager",
+                  "Team Lead",
+                  "Developer",
+                  "Designer",
+                  "Marketing",
+                  "Sales",
+                  "Support",
+                  "Intern",
+                ].map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
+
               <ul className="mt-6 divide-y divide-border/60">
                 {members.map((member) => {
                   const name = `${member.firstname || ""} ${member.lastname || ""}`.trim() || member.username
                   const profileHref = member.type === "business" ? `/b/${member.username}` : `/u/${member.username}`
+                  const isEditingTitle = editingTitleFor === member.id
 
                   return (
-                    <li key={member.id} className="flex items-center gap-4 py-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-sm font-bold text-white">
-                        {member.photo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={getProxiedImageUrl(member.photo) || member.photo}
-                            alt={name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          name.charAt(0).toUpperCase()
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate font-semibold text-foreground">{name}</p>
-                          {member.role === "owner" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300">
-                              <Crown className="h-3 w-3" />
-                              Owner
-                            </span>
-                          )}
-                          {member.id === userId && (
-                            <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300">
-                              You
-                            </span>
+                    <li key={member.id} className="py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-sm font-bold text-white">
+                          {member.photo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={getProxiedImageUrl(member.photo) || member.photo}
+                              alt={name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            name.charAt(0).toUpperCase()
                           )}
                         </div>
-                        <p className="truncate text-xs text-muted-foreground">
-                          @{member.username}
-                          {member.jobRole ? ` · ${member.jobRole}` : ""}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate font-semibold text-foreground">{name}</p>
+                            {member.role === "owner" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300">
+                                <Crown className="h-3 w-3" />
+                                Owner
+                              </span>
+                            )}
+                            {member.title && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-400/15 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300">
+                                <Tag className="h-3 w-3" />
+                                {member.title}
+                              </span>
+                            )}
+                            {member.id === userId && (
+                              <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <p className="truncate text-xs text-muted-foreground">
+                            @{member.username}
+                            {member.jobRole ? ` · ${member.jobRole}` : ""}
+                          </p>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          {owner && (
+                            <button
+                              type="button"
+                              onClick={() => startEditTitle(member)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                            >
+                              <Tag className="h-3 w-3" />
+                              {member.title ? "Edit role" : "Set role"}
+                            </button>
+                          )}
+                          {member.show !== false && (
+                            <Link
+                              href={profileHref}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                            >
+                              Portfolio
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          )}
+                          {owner && member.role !== "owner" && member.id !== userId && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(member)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-rose-300 hover:text-rose-600"
+                            >
+                              <UserMinus className="h-3 w-3" />
+                              Remove
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
-                        {member.show !== false && (
-                          <Link
-                            href={profileHref}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/30 hover:text-primary"
-                          >
-                            Portfolio
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        )}
-                        {owner && member.role !== "owner" && member.id !== userId && (
+                      {owner && isEditingTitle && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 pl-16">
+                          <input
+                            list="team-title-suggestions"
+                            value={titleDraft}
+                            onChange={(event) => setTitleDraft(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault()
+                                void handleSaveTitle(member)
+                              }
+                              if (event.key === "Escape") {
+                                setEditingTitleFor(null)
+                              }
+                            }}
+                            placeholder="e.g. CEO, CTO, Developer"
+                            autoFocus
+                            className="h-9 w-full max-w-xs rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/40"
+                          />
                           <button
                             type="button"
-                            onClick={() => handleRemoveMember(member)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-rose-300 hover:text-rose-600"
+                            onClick={() => void handleSaveTitle(member)}
+                            disabled={savingTitle}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
                           >
-                            <UserMinus className="h-3 w-3" />
-                            Remove
+                            {savingTitle ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Check className="h-3.5 w-3.5" />
+                            )}
+                            Save
                           </button>
-                        )}
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingTitleFor(null)}
+                            className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </li>
                   )
                 })}

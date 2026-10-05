@@ -56,8 +56,8 @@ describe("buildTeamApiPayload", () => {
     const payload = buildTeamApiPayload({
       team,
       memberships: [
-        { user_id: "member-1", role: "member" },
-        { user_id: "owner-1", role: "owner" },
+        { user_id: "member-1", role: "member", title: "Marketing Lead" },
+        { user_id: "owner-1", role: "owner", title: "CEO" },
       ],
       profiles: [
         {
@@ -99,14 +99,40 @@ describe("buildTeamApiPayload", () => {
     expect(payload.members[0]).toMatchObject({
       username: "teja",
       name: "Teja",
+      title: "CEO",
       profileUrl: "https://portfoli.store/u/teja",
     })
     expect(payload.members[1]).toMatchObject({
       username: "sarah",
       name: "Sarah Creator",
+      title: "Marketing Lead",
       jobRole: "Content Creator",
       profileUrl: "https://portfoli.store/u/sarah",
     })
+  })
+
+  it("defaults the team title to null when unset", () => {
+    const payload = buildTeamApiPayload({
+      team,
+      memberships: [{ user_id: "member-1", role: "member" }],
+      profiles: [
+        {
+          id: "member-1",
+          username: "sarah",
+          firstname: "Sarah",
+          lastname: "Creator",
+          photo: null,
+          role: "Content Creator",
+          type: "user",
+          show: true,
+        },
+      ],
+      shares: [],
+      contents: [],
+      origin: "https://portfoli.store",
+    })
+
+    expect(payload.members[0].title).toBeNull()
   })
 
   it("hides profile URLs for private profiles and falls back to username", () => {

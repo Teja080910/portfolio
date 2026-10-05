@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const buildPayload = async (team: TeamApiTeamRow) => {
     const [{ data: memberRows }, { data: shareRows }] = await Promise.all([
-      client.from("folio_team_members").select("user_id, role, joined_at").eq("team_id", team.id),
+      client.from("folio_team_members").select("user_id, role, title, joined_at").eq("team_id", team.id),
       client
         .from("folio_team_content_shares")
         .select("user_id, item_id")

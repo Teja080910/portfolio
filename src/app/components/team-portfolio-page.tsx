@@ -744,17 +744,17 @@ export default function TeamPortfolioPage() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate font-bold text-foreground">{name}</p>
-                      {member.role === "owner" && (
-                        <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-300">
-                          Owner
+                      {member.title && (
+                        <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">
+                          {member.title}
                         </span>
                       )}
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
                       @{member.username}
-                      {member.jobRole ? ` · ${member.jobRole}` : ""}
+                      {!member.title && member.jobRole ? ` · ${member.jobRole}` : ""}
                     </p>
                     {member.show === false && (
                       <p className="mt-1 text-[11px] text-muted-foreground/70">Private portfolio</p>

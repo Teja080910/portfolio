@@ -283,6 +283,20 @@ export const removeTeamMember = async (teamId: string, userId: string): Promise<
   return { error: error?.message ?? null }
 }
 
+export const updateMemberTitle = async (
+  teamId: string,
+  userId: string,
+  title: string,
+): Promise<{ error: string | null }> => {
+  const { error } = await supabase
+    .from("folio_team_members")
+    .update({ title: title.trim() || null })
+    .eq("team_id", teamId)
+    .eq("user_id", userId)
+
+  return { error: error?.message ?? null }
+}
+
 // ---------------------------------------------------------------------------
 // Invites
 // ---------------------------------------------------------------------------

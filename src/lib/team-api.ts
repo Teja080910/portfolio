@@ -6,6 +6,7 @@ export interface TeamApiMember {
   name: string
   photo: string | null
   role: TeamRole
+  title: string | null
   jobRole: string | null
   type: string
   profileUrl: string | null
@@ -36,6 +37,7 @@ export type TeamApiTeamRow = {
 export type TeamApiMembershipRow = {
   user_id: string
   role: string
+  title?: string | null
   joined_at?: string
 }
 
@@ -120,6 +122,7 @@ export const buildTeamApiPayload = (input: {
         name,
         photo: profile.photo || null,
         role: (membership.role === "owner" ? "owner" : "member") as TeamRole,
+        title: membership.title || null,
         jobRole: profile.role || null,
         type,
         profileUrl,
