@@ -912,7 +912,7 @@ export default function TeamWorkspace() {
                         </div>
 
                         <div className="flex shrink-0 items-center gap-2">
-                          {owner && (
+                          {(owner || member.id === userId) && (
                             <button
                               type="button"
                               onClick={() => startEditTitle(member)}
@@ -944,7 +944,7 @@ export default function TeamWorkspace() {
                         </div>
                       </div>
 
-                      {owner && isEditingTitle && (
+                      {(owner || member.id === userId) && isEditingTitle && (
                         <div className="mt-3 flex flex-wrap items-center gap-2 pl-16">
                           <input
                             list="team-title-suggestions"
