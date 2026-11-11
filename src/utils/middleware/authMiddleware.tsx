@@ -5,7 +5,7 @@ import { supabase } from "@/lib/db";
 import { IUser } from "@/lib/interfaces";
 import { useStore } from "@/lib/store";
 import { AuthProvider } from "@refinedev/core";
-import { User } from "@supabase/supabase-js";
+import { User } from "@/lib/db";
 
 const enhancePhotoUrl = (url?: string | null) => {
     if (!url) return "";
@@ -62,7 +62,7 @@ const buildProfileFromAuthUser = (user: User) => {
     return {
         id: user.id,
         email: user.email ?? "",
-        username: buildGeneratedUsername(metadata.username || oauthFullName, user.email, user.id.slice(0, 4)),
+        username: buildGeneratedUsername(String(metadata.username ?? oauthFullName ?? ""), user.email, user.id.slice(0, 4)),
         firstname: oauthFullName || (metadata.firstname as string | undefined)?.trim() || "New",
         lastname: (metadata.lastname as string | undefined)?.trim() || "",
         role: (metadata.role as string | undefined)?.trim() || "Developer",

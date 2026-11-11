@@ -118,11 +118,11 @@ export const getMyTeams = async (): Promise<{ team: ITeam; role: TeamRole }[]> =
   }
 
   return data
-    .map((row) => ({
+    .map((row: Record<string, unknown>) => ({
       role: row.role as TeamRole,
       team: (Array.isArray(row.team) ? row.team[0] : row.team) as ITeam | null,
     }))
-    .filter((entry): entry is { role: TeamRole; team: ITeam } => Boolean(entry.team))
+    .filter((entry: { role: TeamRole; team: ITeam | null }): entry is { role: TeamRole; team: ITeam } => Boolean(entry.team))
 }
 
 export const getTeamBySlug = async (slug: string): Promise<ITeam | null> => {
@@ -456,7 +456,7 @@ export const getMyShares = async (teamId: string): Promise<Set<string>> => {
     return new Set()
   }
 
-  return new Set(data.map((row) => `${row.section}:${row.item_id}`))
+  return new Set(data.map((row: Record<string, unknown>) => `${row.section}:${row.item_id}`))
 }
 
 export const shareItems = async (

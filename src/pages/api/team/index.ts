@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .select("team_id, role")
     .eq("user_id", userId)
 
-  const teamIds = (memberships ?? []).map((membership) => membership.team_id)
+  const teamIds = (memberships ?? []).map((membership: Record<string, unknown>) => membership.team_id)
 
   const buildPayload = async (team: TeamApiTeamRow) => {
     const [{ data: memberRows }, { data: shareRows }] = await Promise.all([
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq("section", "projects"),
     ])
 
-    const memberIds = (memberRows ?? []).map((row) => row.user_id)
+    const memberIds = (memberRows ?? []).map((row: Record<string, unknown>) => row.user_id)
 
     const [{ data: profiles }, { data: contents }] = await Promise.all([
       memberIds.length > 0

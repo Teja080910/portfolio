@@ -17,7 +17,7 @@ import Education from "@/pages/components/education"
 import Experience from "@/pages/components/experience"
 import Projects from "@/pages/components/projects"
 import Skills from "@/pages/components/skills"
-import { User } from "@supabase/supabase-js"
+import { User } from "@/lib/db";
 import { useRouter } from "next/router"
 import { useCallback, useEffect, useRef, useState } from "react"
 

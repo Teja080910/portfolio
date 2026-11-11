@@ -10,9 +10,8 @@ import "@/styles/globals.css";
 import { authProvider } from "@/utils/middleware/authMiddleware";
 import { notificationProvider } from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
-import { Refine } from "@refinedev/core";
+import { Refine, type DataProvider } from "@refinedev/core";
 import { RefineKbarProvider } from "@refinedev/kbar";
-import { dataProvider as supabaseDataProvider } from "@refinedev/supabase";
 import "antd/dist/reset.css";
 import type { AppProps } from "next/app";
 import Link from "next/link";
@@ -21,7 +20,18 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function App({ Component, pageProps }: AppProps) {
-  const dataProvider = useMemo(() => supabaseDataProvider(supabase), []);
+  const dataProvider = useMemo(
+    () => ({
+      getList: async () => ({ data: [], total: 0 }),
+      getOne: async () => ({ data: {} }),
+      create: async ({ variables }: { variables: Record<string, unknown> }) => ({ data: variables }),
+      update: async ({ variables }: { variables: Record<string, unknown> }) => ({ data: variables }),
+      deleteOne: async () => ({ data: {} }),
+      getApiUrl: () => "",
+    }),
+    [],
+  ) as unknown as DataProvider;
+
   const resources = useMemo(
     () => [
       { name: "posts", list: "/posts" },

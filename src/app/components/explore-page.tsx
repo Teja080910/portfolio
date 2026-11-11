@@ -74,7 +74,7 @@ export default function ExplorePage() {
         setProfiles([])
         setErrorMessage(getFriendlySupabaseError(error))
       } else if (data) {
-        setProfiles(data.filter((profile) => profile.username))
+        setProfiles(data.filter((profile: IUser) => profile.username))
       }
 
       const publicTeams = await getPublicTeams()
