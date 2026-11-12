@@ -230,7 +230,7 @@ const buildPhotoUploadErrorMessage = (message?: string) => {
   const normalizedMessage = message?.toLowerCase() ?? ""
 
   if (normalizedMessage.includes("bucket") || normalizedMessage.includes("row-level security")) {
-    return "Profile photo upload needs the latest Supabase storage migration. Apply it, then try uploading again."
+    return "Profile photo upload is temporarily unavailable. Please try again."
   }
 
   return message || "We could not upload your profile photo right now."
@@ -565,7 +565,7 @@ export default function ProfileForm() {
               Edit the details your portfolio shows after login
             </h1>
             <p className="mt-3 text-base leading-7 text-slate-600 dark:text-slate-300">
-              This page updates your personal profile row in Supabase and refreshes the app state immediately, so your
+              This page updates your personal profile and refreshes the app state immediately, so your
               hero section and contact card stop showing starter content.
             </p>
           </div>

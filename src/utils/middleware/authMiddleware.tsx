@@ -190,7 +190,7 @@ export const authProvider: AuthProvider = {
                 error: {
                     message:
                         profileError?.code === "42501"
-                            ? "Your account signed in, but the profile row could not be created. Apply the latest Supabase migrations, then try again."
+                            ? "Your account signed in, but your profile could not be created. Please try again or contact support."
                             : profileError?.message || "Profile setup is incomplete for this account.",
                     name: "LoginError",
                 },

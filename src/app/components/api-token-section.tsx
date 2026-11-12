@@ -9,7 +9,7 @@ const SAMPLE_PROMPTS = [
   },
   {
     label: "Add a new project",
-    prompt: 'Add a new project called "My App" with description "A full-stack web app built with Next.js and Supabase" and skills ["Next.js", "Supabase", "TypeScript"].',
+    prompt: 'Add a new project called "My App" with description "A full-stack web app built with Next.js and PostgreSQL" and skills ["Next.js", "PostgreSQL", "TypeScript"].',
   },
   {
     label: "Update my skills",

@@ -1225,7 +1225,7 @@ export default function PortfolioContentForm({ focusSection = null }: PortfolioC
       return
     }
 
-    setNotice({ tone: "success", message: "Portfolio content saved and synced to Supabase." })
+    setNotice({ tone: "success", message: "Portfolio content saved." })
     setIsSaving(false)
   }
 
