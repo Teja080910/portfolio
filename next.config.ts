@@ -15,6 +15,23 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
   },
   {
     protocol: "https",
+    hostname: "files.arkasodhara.tech",
+    pathname: "/portfolio-profile-photos/**",
+  },
+  {
+    protocol: "http",
+    hostname: "localhost",
+    port: "19000",
+    pathname: "/portfolio-profile-photos/**",
+  },
+  {
+    protocol: "http",
+    hostname: "127.0.0.1",
+    port: "19000",
+    pathname: "/portfolio-profile-photos/**",
+  },
+  {
+    protocol: "https",
     hostname: "db.portfoli.store",
     pathname: "/storage/v1/object/public/**",
   },
